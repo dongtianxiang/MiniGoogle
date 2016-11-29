@@ -1,0 +1,58 @@
+package edu.upenn.cis455.database;
+
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import com.sleepycat.persist.model.Entity;
+import com.sleepycat.persist.model.PrimaryKey;
+
+@Entity
+public class Node {
+	
+	@PrimaryKey
+	String id;
+	
+	private List<String> neighbors;
+	boolean converge;
+	
+	public Node() {}
+	
+	public Node(String id) {
+		this.id = id;
+		neighbors = new LinkedList<>();
+		converge = false;
+	}
+	
+	public boolean convergenceTest() {
+		
+		// TODO
+		 
+		return converge; 
+	}
+	
+	public Iterator<String> getNeighborsIterator() {
+		return neighbors.iterator();
+	}
+	
+	public int getNumberNeighbors() {
+		return neighbors.size();
+	}
+	
+	public void addNeighbor(String id) {
+		if (neighbors.contains(id)) {
+			throw new IllegalStateException();
+		}
+		neighbors.add(id);
+	}
+	
+	public void deleteNeighbor(String id) throws IllegalStateException{
+		if (neighbors.contains(id)) {
+			neighbors.remove(id);
+		} 
+		else throw new IllegalStateException();		
+	}
+	
+	public String getID() {
+		return id;
+	}
+}
