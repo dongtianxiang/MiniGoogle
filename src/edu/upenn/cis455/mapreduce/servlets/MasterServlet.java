@@ -219,6 +219,7 @@ public class MasterServlet extends HttpServlet {
 			  out.println("<h3 style=\"color: blue\"> Worker Status </h3>");
 			  out.println("<p>");
 			  out.println("<table style=\"width:90%\">");
+			  
 			  out.println("<tr>");
 			  out.println("<th>");  out.println(" IP "); out.println("</th>");
 			  out.println("<th>");  out.println(" Job ");  out.println("</th>");
@@ -227,7 +228,8 @@ public class MasterServlet extends HttpServlet {
 			  out.println("<th>");  out.println(" Keys Written "); out.println("</th>");			  
 			  out.println("<th>");  out.println(" Job Class "); out.println("</th>");
 			  
-		      out.println("</tr>");		      	  
+		      out.println("</tr>");		
+		      
 			  for (String workerID: workers.keySet()) {			  
 				  
 				  out.println("<tr>");			  

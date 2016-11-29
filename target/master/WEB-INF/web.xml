@@ -4,7 +4,7 @@
      <display-name>HW3 (Master)</display-name> 
      <servlet>
          <servlet-name>MasterServlet</servlet-name>
-         <servlet-class>edu.upenn.cis455.mapreduce.MasterServlet</servlet-class>
+         <servlet-class>edu.upenn.cis455.mapreduce.servlets.MasterServlet</servlet-class>
      </servlet>
      <servlet-mapping>
          <servlet-name>MasterServlet</servlet-name>
