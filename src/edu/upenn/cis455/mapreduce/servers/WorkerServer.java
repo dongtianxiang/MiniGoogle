@@ -29,7 +29,6 @@ import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Tuple;
 import edu.upenn.cis455.database.DBInstance;
-import edu.upenn.cis455.database.DBManager;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -51,7 +50,7 @@ public class WorkerServer {
 	public int myPortNumber;
 	public String myAddress;
 	public Thread checker;
-	public Map<String, String> conf;
+	public Configuration currJobConfig;
 	public String tempStore;
 	public String workerIndex;
 	
@@ -61,17 +60,11 @@ public class WorkerServer {
 			throws MalformedURLException, FileNotFoundException {
 			
 		log.info("Creating server listener at socket " + myPort);
-		conf = new HashMap<>();
+		currJobConfig = new Configuration();
 		workerIndex = config.get("workerIndex");
 		myPortNumber = myPort;
 		setPort(myPort);
 		myAddress = myAddr;
-		
-		// initialize database instance
-		tempStore = config.get("databaseDir");
-		tempStore = tempStore + "/" + workerIndex;
-		DBManager.createDBInstance(tempStore);
-
 		
 		Runnable messenger = new Runnable(){
 			@Override
@@ -83,13 +76,12 @@ public class WorkerServer {
 							
 							if (!masterAddr.toString().startsWith("http://")) {
 								masterAddr = new StringBuilder("http://" + masterAddr.toString());
-								
 							}
 							
-							String currJob     = conf.get("job");
-							String keysRead    = conf.get("keysRead");
-							String keysWritten = conf.get("keyWritten");
-							String status      = conf.get("status");
+							String currJob     = currJobConfig.get("job");
+							String keysRead    = currJobConfig.get("keysRead");
+							String keysWritten = currJobConfig.get("keyWritten");
+							String status      = currJobConfig.get("status");
 									
 							masterAddr.append("/workerstatus?");							
 							masterAddr.append("port=" + myPort);								
@@ -147,8 +139,11 @@ public class WorkerServer {
 				if (workerJob == null) throw new IllegalStateException();				
 				
 				Configuration config = workerJob.getConfig();
-				// other information about job should be already in config
+				currJobConfig = config;
+				
+				// other information about job should be already in configuration object
 				String inputDirectory  = config.get("inputDir");	
+				tempStore = config.get("databaseDir");
 				
 				config.put("keysRead", "0");
 				config.put("keysWritten", "0");
@@ -169,15 +164,15 @@ public class WorkerServer {
 						contexts.add(cluster.submitTopology(config.get("job"), config, workerJob.getTopology()));	
 						topologies.add(config.get("job"));
 					}	
-				} catch (ClassNotFoundException e) {
+				} 
+	        	catch (ClassNotFoundException e) {
 					e.printStackTrace();
-				}		        	
+				}
 	            return "Job launched";
 			}
         	
         });
         
-        // what does the Spark post method do exactly ?
         Spark.post(new Route("/runjob") {
 			@Override
 			public Object handle(Request arg0, Response arg1) {

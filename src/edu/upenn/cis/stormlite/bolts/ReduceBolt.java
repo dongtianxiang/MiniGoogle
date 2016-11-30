@@ -71,7 +71,8 @@ public class ReduceBolt implements IRichBolt {
     		TopologyContext context, OutputCollector collector) {
     	
     	config = stormConf;
- 
+    	
+    	DBManager.createDBInstance(stormConf.get("databaseDir"));
     	db = DBManager.getDBInstance(stormConf.get("databaseDir"));
     	d = Double.parseDouble(stormConf.get("decayFactor"));
     	

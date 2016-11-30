@@ -1,3 +1,0 @@
-google->amazon
-amazon->google yahoo
-yahoo->amazon google

@@ -96,7 +96,7 @@ public class PRReduceBolt implements IRichBolt {
 		
 		if (serverIndex != null) {
 			graphDataDir += "." + serverIndex;
-			databaseDir  += "." + serverIndex;
+			databaseDir  += "/" + serverIndex;
 		}
 		
 		graphDB = DBManager.getDBInstance(graphDataDir);		
