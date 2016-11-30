@@ -75,8 +75,12 @@ public class PRReduceBolt implements IRichBolt {
     	}
     	else {
     		String key = input.getStringByField("key");
-	        String value = input.getStringByField("value");	        
-	        Double realVal = Double.parseDouble(value) * d;	        
+	        String value = input.getStringByField("value");       
+	        Double realVal = Double.parseDouble(value) * d;
+	        
+	        int written = Integer.parseInt(config.get("keysWritten"));
+	        config.put("keysWritten", (new Integer(written + 1)).toString());
+	        
 	        log.info("Reduce bolt received: " + key + " / " + value);  
 	        tempDB.addValue(executorId, key, (new Double(realVal * d)).toString());
 	        tempDB.synchronize();

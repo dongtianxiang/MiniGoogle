@@ -166,7 +166,7 @@ public class DBInstance {
 		for (String boltID: boltIDs) {
 			index.delete(boltID);
 		}
-		System.out.println("Graph data in database " + envDirectory + " has been cleared.");
+		System.out.println("DBInstance: Temporary data in database " + envDirectory + " has been cleared.");
 	}
 	
 	public void clearGraphData() {

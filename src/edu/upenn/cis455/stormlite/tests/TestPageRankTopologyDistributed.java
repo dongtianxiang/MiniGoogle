@@ -43,7 +43,7 @@ public class TestPageRankTopologyDistributed {
 	    
 	    // build topology
 		TopologyBuilder builder = new TopologyBuilder();			    			    
-        builder.setSpout(SPOUT, spout, 1);		        
+        builder.setSpout(SPOUT, spout, 1);
         builder.setBolt(MAP_BOLT, mapBolt, numMappers).fieldsGrouping(SPOUT, new Fields("value"));		        
         builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
         builder.setBolt(RESULT_BOLT, printer, 1).shuffleGrouping(REDUCE_BOLT);		        
