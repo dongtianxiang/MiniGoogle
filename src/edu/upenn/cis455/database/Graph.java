@@ -16,7 +16,7 @@ public class Graph {
 	
 	public void buildGraphFromFile(String path) throws IllegalStateException {
 		
-		File srcFile = new File(path);
+		File srcFile = new File (path);
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new FileReader(srcFile));

@@ -79,7 +79,6 @@ public class WordSpout implements IRichSpout {
         	log.debug(getExecutorId() + " opening file reader");
 			reader = new BufferedReader(new FileReader("words.txt"));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
@@ -93,7 +92,6 @@ public class WordSpout implements IRichSpout {
 	    	try {
 				reader.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
     }

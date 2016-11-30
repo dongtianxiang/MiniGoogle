@@ -19,15 +19,15 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.MapBolt;
-import edu.upenn.cis.stormlite.bolts.PrintBolt;
-import edu.upenn.cis.stormlite.bolts.ReduceBolt;
+import edu.upenn.cis.stormlite.bolts.PRMapBolt;
+import edu.upenn.cis.stormlite.bolts.PRReduceBolt;
+import edu.upenn.cis.stormlite.bolts.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.SimpleFileSpout;
-import edu.upenn.cis.stormlite.spouts.WordFileSpout;
+import edu.upenn.cis.stormlite.spouts.RankFileSpout;
+import edu.upenn.cis.stormlite.spouts.RankSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.database.WorkerInfo;
 
@@ -37,7 +37,7 @@ public class MasterServlet extends HttpServlet {
   private static final String SPOUT  = "LINK_SPOUT";
   private static final String MAP_BOLT = "MAP_BOLT";
   private static final String REDUCE_BOLT = "REDUCE_BOLT";
-  private static final String PRINT_BOLT  = "PRINT_BOLT";
+  private static final String RESULT_BOLT  = "RES_BOLT";
   private static final Integer totalWorkers = 2;
   private static Integer availableWorkers = 0;
   
@@ -130,7 +130,6 @@ public class MasterServlet extends HttpServlet {
 		  String job = request.getParameter("job");
 		  String keysRead = request.getParameter("keysRead");
 		  String keysWritten = request.getParameter("keysWritten");
-		  String results = request.getParameter("results");
 		  		  		  
 		  Date date = new Date();		  
 		  String remoteHost = request.getRemoteHost() + ":" + port;	
@@ -139,8 +138,8 @@ public class MasterServlet extends HttpServlet {
 		  try {			  
 			  
 			  workerStatus.currentJob = job;
-			  workerStatus.keysRead = Integer.parseInt(keysRead);
-			  workerStatus.keysWritten = Integer.parseInt(keysWritten);
+			  workerStatus.keysRead = keysRead;
+			  workerStatus.keysWritten = keysWritten;			  
 			  workerStatus.IPAddress = remoteHost;
 			  workerStatus.status = status;
 			  workerStatus.lastCheckIn = date.getTime();
@@ -151,7 +150,7 @@ public class MasterServlet extends HttpServlet {
 				 }
 			 }
 			 
-			 System.out.println(availableWorkers);
+//			 System.out.println(availableWorkers);
 			  
 			  synchronized(workers) {
 				  workers.put(remoteHost, workerStatus);
@@ -161,24 +160,20 @@ public class MasterServlet extends HttpServlet {
 			  e.printStackTrace();
 			  response.setStatus(400);
 			  return;
-		  }
-		  
-		  
+		  }		  
   
 		  System.out.println("Port:" + port);
 		  System.out.println("Status: " + status);
 		  System.out.println("Job: " + job);
 		  System.out.println("KeysRead: " + keysRead);
-		  System.out.println("keysWritten: " + keysWritten);
-		  System.out.println("Results: " + results);		  
+		  System.out.println("keysWritten: " + keysWritten);		  
 		  System.out.println("----------------------------------");
 		  
 		  if (port        == null || 
 			  status      == null || 
 			  job         == null || 
 			  keysRead    == null || 
-			  keysWritten == null ||
-			  results     == null) {
+			  keysWritten == null ) {
 			  
 			  response.setStatus(400);
 			  response.setContentType("text/html");
@@ -341,7 +336,7 @@ public class MasterServlet extends HttpServlet {
 				// invalid input
 			}
 			else {
-				distributeStandardJob(jobClass, numMappers, numReducers, inputDir, outputDir, jobName);
+				distributePRJob(jobClass, numMappers, numReducers, inputDir, outputDir, jobName);
 			}
 			
 			response.sendRedirect("status");
@@ -393,7 +388,7 @@ public class MasterServlet extends HttpServlet {
 	  }
   }
   
-  static HttpURLConnection sendJob(String dest, String reqType, Configuration config, String job, String parameters) throws IOException {
+  public static HttpURLConnection sendJob(String dest, String reqType, Configuration config, String job, String parameters) throws IOException {
 		
 	  	if (!dest.startsWith("http://")) {
 	  		dest = "http://" + dest;
@@ -420,21 +415,20 @@ public class MasterServlet extends HttpServlet {
 		return conn;
   }
   
-  public static void distributeStandardJob(String jobClass, int numMappers, int numReducers, String inputDir, String outputDir, String jobName) throws IOException {
+  public static void distributePRJob(String jobClass, int numMappers, int numReducers, String inputDir, String outputDir, String jobName) throws IOException {
 	  
-		SimpleFileSpout spout = new WordFileSpout();
-		
-//		FileSpout spout = new LinksFileSpout();
-	    MapBolt mapBolt = new MapBolt();
-	    ReduceBolt reduceBolt = new ReduceBolt();
-	    PrintBolt printer = new PrintBolt();
+	  
+		RankFileSpout spout = new RankSpout();		
+	    PRMapBolt mapBolt = new PRMapBolt();
+	    PRReduceBolt reduceBolt = new PRReduceBolt();
+	    PRResultBolt printer = new PRResultBolt();
 	    
 	    // build topology
 		TopologyBuilder builder = new TopologyBuilder();			    			    
         builder.setSpout(SPOUT, spout, 1);		        
         builder.setBolt(MAP_BOLT, mapBolt, numMappers).fieldsGrouping(SPOUT, new Fields("value"));		        
         builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
-        builder.setBolt(PRINT_BOLT, printer, 1).firstGrouping(REDUCE_BOLT);		        
+        builder.setBolt(RESULT_BOLT, printer, 1).firstGrouping(REDUCE_BOLT);		        
         Topology topo = builder.createTopology();
         
         // create configuration object
@@ -443,8 +437,8 @@ public class MasterServlet extends HttpServlet {
         config.put("mapClass", jobClass);
         config.put("reduceClass", jobClass);
         config.put("spoutExecutors", "1");
-        config.put("mapExecutors", "" + numMappers);
-        config.put("reduceExecutors", "" + numReducers);
+        config.put("mapExecutors",    (new Integer(numMappers)).toString());
+        config.put("reduceExecutors", (new Integer(numReducers)).toString());
         config.put("inputDir", inputDir);
         config.put("outputDir", outputDir);
         config.put("job", jobName);
@@ -464,7 +458,7 @@ public class MasterServlet extends HttpServlet {
         globalConf = config;
         
 		try {
-			int j = 0;				
+			int j = 0;
 			for (String dest: workersList) {
 		        config.put("workerIndex", String.valueOf(j++));
 				if (sendJob(dest, "POST", config, "definejob", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(job)).getResponseCode() != HttpURLConnection.HTTP_OK) {					
@@ -488,7 +482,6 @@ public class MasterServlet extends HttpServlet {
   
   public void doPost(HttpServletRequest request, HttpServletResponse response)  {
 	 
-	  System.out.println(request.toString());
   }
   
 }

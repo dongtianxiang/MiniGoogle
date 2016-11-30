@@ -17,7 +17,6 @@ import edu.upenn.cis.stormlite.spouts.IRichSpout;
 import edu.upenn.cis.stormlite.spouts.SpoutOutputCollector;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Values;
-import edu.upenn.cis455.mapreduce.servers.WorkerServer;
 
 /**
  * Simple word spout, largely derived from

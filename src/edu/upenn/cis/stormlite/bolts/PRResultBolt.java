@@ -5,7 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.UUID;
+
 import org.apache.log4j.Logger;
+
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
@@ -23,7 +25,8 @@ public class PRResultBolt implements IRichBolt {
     public File targetFile;
     public PrintWriter pw;    
     public int eosReceived = 0;  
-    public Map<String, String> config;
+    public Map<String, String> config;    
+    public String serverIndex;
     
 	@Override
 	public String getExecutorId() {
@@ -45,8 +48,8 @@ public class PRResultBolt implements IRichBolt {
 		
 		if (!input.isEndOfStream()) {
 			
-			String key = input.getStringByField("pageUrl");
-			String val = input.getStringByField("rank");			
+			String key = input.getStringByField("key");
+			String val = input.getStringByField("value");			
 			String output = key + " -> " + val;	
 			log.info(output);
 			pw.println(output);
@@ -57,7 +60,7 @@ public class PRResultBolt implements IRichBolt {
 			if (eosRequired == eosReceived) {
 				log.info("******** Map-Reduce job completed! ********");
 				eosReceived = 0;
-				pw.close();
+				pw.close();			
 			}
 			log.debug("EOS Receved: " + eosReceived);
 		}
@@ -66,30 +69,28 @@ public class PRResultBolt implements IRichBolt {
 	@Override
 	public void prepare(Map<String, String> stormConf, TopologyContext context, OutputCollector collector) {
 		
-		
-
 		int numMappers = Integer.parseInt(stormConf.get("mapExecutors"));	
 		int numSpouts = Integer.parseInt(stormConf.get("spoutExecutors"));	
 		int numReducers = Integer.parseInt(stormConf.get("reduceExecutors"));			
 		int numWorkers = Integer.parseInt(stormConf.get("workers"));		
-		int M = ((numWorkers - 1) * numMappers  + 1) * numSpouts;		
+		int M = ((numWorkers - 1) * numMappers + 1) * numSpouts;		
         int N = M * numReducers * (numWorkers - 1) * numMappers + M * numMappers; 
         
         eosRequired = numWorkers * numReducers * N;
-        log.info("Num EOS required for PrintBolt: " + this.eosRequired);   
+        log.info("Num EOS required for Result Bolt: " + this.eosRequired);  
         
-        config = stormConf;
-        targetDirectory = new File(config.get("outputDir"));
-        
-        if (!targetDirectory.exists()) {
-        	targetDirectory.mkdirs();
+        config = stormConf;        
+        serverIndex = stormConf.get("workerIndex");
+                
+        String outputDir = stormConf.get("outputDir");
+        String targetFileDirectory = outputDir;
+        if (serverIndex != null) {
+        	targetFileDirectory = outputDir + "." + serverIndex;
         }
-        targetFile = new File(targetDirectory, "result.txt");
-        try { 	
-        	System.out.println(targetFile.getAbsolutePath());       	
-			pw = new PrintWriter(targetFile);			
-		} 
-        catch (FileNotFoundException e) {
+        targetFile = new File(targetFileDirectory);
+        try {
+			pw = new PrintWriter(targetFile);
+		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 	}

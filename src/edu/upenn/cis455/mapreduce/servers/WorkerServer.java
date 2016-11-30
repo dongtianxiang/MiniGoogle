@@ -53,6 +53,7 @@ public class WorkerServer {
 	public Thread checker;
 	public Map<String, String> conf;
 	public String tempStore;
+	public String workerIndex;
 	
 	public static Map<String, Thread> checkers = new HashMap<>();
 	
@@ -61,7 +62,7 @@ public class WorkerServer {
 			
 		log.info("Creating server listener at socket " + myPort);
 		conf = new HashMap<>();
-		String workerIndex = config.get("workerIndex");
+		workerIndex = config.get("workerIndex");
 		myPortNumber = myPort;
 		setPort(myPort);
 		myAddress = myAddr;
@@ -92,18 +93,17 @@ public class WorkerServer {
 									
 							masterAddr.append("/workerstatus?");							
 							masterAddr.append("port=" + myPort);								
-							masterAddr.append("&job=" +         (currJob == null ? "N/A" : currJob));																							
-							masterAddr.append("&keysRead=" +    (keysRead == null ? "N/A" : keysRead));						
+							masterAddr.append("&job=" +         (currJob == null ?     "N/A" : currJob));																							
+							masterAddr.append("&keysRead=" +    (keysRead == null ?    "N/A" : keysRead));						
 							masterAddr.append("&keysWritten=" + (keysWritten == null ? "N/A" : keysRead));
-							masterAddr.append("&status=" +      (status == null ? "N/A" : status));
+							masterAddr.append("&status=" +      (status == null ?      "N/A" : status));
 							
 							try {								
 								URL masterURL = new URL(masterAddr.toString());									
 								HttpURLConnection conn = (HttpURLConnection)masterURL.openConnection();
 								conn.setRequestProperty("Content-Type", "text/html");
 								StringBuilder builder = new StringBuilder();								
-								log.info(builder.append("Worker check-in: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString());		
-							
+								log.info(builder.append("Worker check-in: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString());
 							}
 							
 							catch (ConnectException e) {
@@ -153,8 +153,9 @@ public class WorkerServer {
 				config.put("keysRead", "0");
 				config.put("keysWritten", "0");
 				config.put("databaseDir", tempStore);
-				
-				
+				config.put("workerIndex", workerIndex);
+				config.put("graphDataDir", "graphStore");
+								
 				File inDirTest  = (inputDirectory.equals("")) ? new File("./") : new File(inputDirectory);
 				File outDirTest = (inputDirectory.equals("")) ? new File("./") : new File(inputDirectory);
 				outDirTest.mkdirs();
@@ -208,15 +209,13 @@ public class WorkerServer {
 			    	}
 					else {
 						router.executeLocally(tuple, contexts.get(contexts.size() - 1));
-					}
-					
+					}					
 			    	return "OK";
 				}
 				catch (Exception e) {
 					e.printStackTrace();					
 					arg1.status(500);
 					return e.getMessage();
-
 				}
 
 			}        	
@@ -267,9 +266,13 @@ public class WorkerServer {
 	public static void shutdown() {		
 		synchronized(topologies) {
 			for (String topo: topologies)
-				cluster.killTopology(topo);
+				if (cluster != null) {
+					cluster.killTopology(topo);
+				}
 		}
-		cluster.shutdown();
+		if (cluster != null) {
+			cluster.shutdown();
+		}
 	}
 	
 	/**

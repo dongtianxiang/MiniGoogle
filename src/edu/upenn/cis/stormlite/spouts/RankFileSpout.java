@@ -15,7 +15,6 @@ import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Values;
-import edu.upenn.cis455.mapreduce.servers.WorkerServer;
 
 public abstract class RankFileSpout implements IRichSpout {
 	
@@ -25,7 +24,7 @@ public abstract class RankFileSpout implements IRichSpout {
 	public BufferedReader reader;
 	public Random r = new Random();
 	public SpoutOutputCollector collector;
-	public Fields schema = new Fields("src", "rank");	
+	public Fields schema = new Fields("key", "value");	
 	@SuppressWarnings("rawtypes")
 	public Map config;
 	public int inx = 0;

@@ -26,6 +26,10 @@ public class BoltData {
 	}
 	
 	
+	public String getID() {
+		return boltID;
+	}
+	
 	public void addValue(String key, String value) {
 		
 		if (!table.containsKey(key)) {

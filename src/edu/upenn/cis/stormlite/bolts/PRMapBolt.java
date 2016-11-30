@@ -21,11 +21,12 @@ public class PRMapBolt implements IRichBolt {
 	public static Logger log = Logger.getLogger(PRMapBolt.class);
 	public Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
-	public Fields schema = new Fields("url", "edge"); 
+	public Fields schema = new Fields("key", "value"); 
 	public Job mapJob;
 	public OutputCollector collector;
 	public Integer eosNeeded = 0;
-	public double d;
+	public double d;	
+	public String serverIndex = null;
 	
 	private DBInstance graphData;
 
@@ -49,10 +50,14 @@ public class PRMapBolt implements IRichBolt {
 		
 		if (!input.isEndOfStream()) {
 			
-			String srcId = input.getStringByField("src");
+			
+			String srcId = input.getStringByField("key");
+			
+			log.info("Map Bolt received: " + srcId);
+			
 			Node src = graphData.getNode(srcId);
-			Iterator<String> neighborIt = src.getNeighborsIterator();			
-			Double averageWeight = Double.parseDouble(input.getStringByField("rank")) / src.getNumberNeighbors();			
+			Iterator<String> neighborIt = src.getNeighborsIterator();
+			Double averageWeight = Double.parseDouble(input.getStringByField("value")) / src.getNumberNeighbors();			
 			while (neighborIt.hasNext()) {				
 				mapJob.map(neighborIt.next(), (new Double(averageWeight)).toString() , collector);
 			}			
@@ -73,9 +78,15 @@ public class PRMapBolt implements IRichBolt {
         this.config = stormConf;
         
         d = Double.parseDouble(config.get("decayFactor"));
-        String graphDataDir = stormConf.get("graphDataDir");
+        serverIndex = stormConf.get("workerIndex");
         
-        graphData = DBManager.getDBInstance(graphDataDir);
+        String graphDataDir = stormConf.get("graphDataDir");
+        String targetDirectory = graphDataDir;
+        if (serverIndex != null) {
+        	targetDirectory += "." + serverIndex;
+        }
+        
+        graphData = DBManager.getDBInstance(targetDirectory);
         
         log.info(this.config);
         log.info("********** Start of mapping phase ********");       

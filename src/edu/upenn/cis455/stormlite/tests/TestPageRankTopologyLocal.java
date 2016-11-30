@@ -1,9 +1,6 @@
 package edu.upenn.cis455.stormlite.tests;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -22,9 +19,7 @@ import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.spouts.RankFileSpout;
 import edu.upenn.cis.stormlite.spouts.RankSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
-import edu.upenn.cis455.database.DBInstance;
 import edu.upenn.cis455.database.DBManager;
-import edu.upenn.cis455.database.Node;
 
 public class TestPageRankTopologyLocal {
 	
@@ -56,8 +51,8 @@ public class TestPageRankTopologyLocal {
 		TopologyBuilder builder = new TopologyBuilder();
 		
 		builder.setSpout(RANKS_SPOUT,  spout,  1);
-		builder.setBolt(MAP_BOLT,     mapper,  2).fieldsGrouping(RANKS_SPOUT, new Fields("src"));
-		builder.setBolt(REDUCE_BOLT, reducer,  2).fieldsGrouping(MAP_BOLT,    new Fields("url"));
+		builder.setBolt(MAP_BOLT,     mapper,  2).fieldsGrouping(RANKS_SPOUT, new Fields("key"));
+		builder.setBolt(REDUCE_BOLT, reducer,  2).fieldsGrouping(MAP_BOLT,    new Fields("value"));
 		builder.setBolt(RESULT_BOLT,  result,  1).firstGrouping(REDUCE_BOLT);
 		
 		Configuration config  = new Configuration();

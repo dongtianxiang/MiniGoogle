@@ -20,14 +20,16 @@ public class PRReduceBolt implements IRichBolt {
 	public static Logger log = Logger.getLogger(PRReduceBolt.class);
 	public Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
-	public Fields schema = new Fields("pageUrl", "rank"); 
+	public Fields schema = new Fields("key", "value"); 
 	public Job reduceJob;
 	public OutputCollector collector;
 	public Integer eosNeeded = 0;
-	public DBInstance db;
+	public DBInstance graphDB;
+	public DBInstance tempDB;
 	public boolean sentEof = false;
 	public int count = 0;
 	public double d;
+	public String serverIndex;
 	
 	@Override
 	public String getExecutorId() {
@@ -41,7 +43,7 @@ public class PRReduceBolt implements IRichBolt {
 
 	@Override
 	public void cleanup() {
-		// DO NOTHING, LET JVM CLEAN THINGS UP
+
 	}
 
 	@Override
@@ -59,26 +61,25 @@ public class PRReduceBolt implements IRichBolt {
 			if (eosNeeded == 0) {				
 				log.info("*** Reducer has received all expected End of String marks! ***");	
 				log.info("***                Start of Reducing phase!                ***");
-				Map<String, List<String>> table = db.getTable(executorId);				
+				Map<String, List<String>> table = tempDB.getTable(executorId);				
 				Iterator<String> keyIt = table.keySet().iterator();	
-				while (keyIt.hasNext()) {		
+				while (keyIt.hasNext()) {
 					String key = keyIt.next();
 					table.get(key).add((new Double(1 - d)).toString());
 					reduceJob.reduce(key, table.get(key).iterator(), collector);
 				}
-				sentEof = true;
+				tempDB.clearTempData();
+				log.info("Database instance has been reset.");			
 			}
 			collector.emitEndOfStream();
     	}
     	else {
-    		String key = input.getStringByField("url");
-	        String value = input.getStringByField("edge");
-	        
-	        Double realVal = Double.parseDouble(value) * d;
-	        
+    		String key = input.getStringByField("key");
+	        String value = input.getStringByField("value");	        
+	        Double realVal = Double.parseDouble(value) * d;	        
 	        log.info("Reduce bolt received: " + key + " / " + value);  
-	        db.addValue(executorId, key, (new Double(realVal * d)).toString());
-	        db.synchronize();
+	        tempDB.addValue(executorId, key, (new Double(realVal * d)).toString());
+	        tempDB.synchronize();
     	}		
 	}
 
@@ -87,14 +88,25 @@ public class PRReduceBolt implements IRichBolt {
 		
 		
 		config = stormConf;
-		d = Double.parseDouble(config.get("decayFactor"));
+		d = Double.parseDouble(config.get("decayFactor"));		
+		serverIndex = stormConf.get("workerIndex");
 		
-		String databaseDir = config.get("databaseDir");
-		db = DBManager.getDBInstance(databaseDir);
+		String graphDataDir = config.get("graphDataDir");
+		String databaseDir  = config.get("databaseDir");
 		
+		if (serverIndex != null) {
+			graphDataDir += "." + serverIndex;
+			databaseDir  += "." + serverIndex;
+		}
+		
+		graphDB = DBManager.getDBInstance(graphDataDir);		
+		DBManager.createDBInstance(databaseDir);
+		tempDB  = DBManager.getDBInstance(databaseDir);
+			
         this.collector = collector;
-        if (!stormConf.containsKey("reduceClass"))
+        if (!stormConf.containsKey("reduceClass")) {
         	throw new RuntimeException("Mapper class is not specified as a config option");
+        }
         else {        	
         	String mapperClass = stormConf.get("reduceClass");        	
         	try {
