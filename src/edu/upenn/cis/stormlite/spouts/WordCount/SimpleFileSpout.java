@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts;
+package edu.upenn.cis.stormlite.spouts.WordCount;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -79,7 +79,7 @@ public abstract class SimpleFileSpout implements IRichSpout {
      * Initializes the instance of the spout (note that there can be multiple
      * objects instantiated)
      */
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;

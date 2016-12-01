@@ -1,23 +1,23 @@
-package edu.upenn.cis.stormlite.bolts;
+package edu.upenn.cis.stormlite.bolts.BuildGraph;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
+import edu.upenn.cis.stormlite.bolts.IRichBolt;
+import edu.upenn.cis.stormlite.bolts.OutputCollector;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
 import edu.upenn.cis.stormlite.infrastructure.Job;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Tuple;
-import edu.upenn.cis455.database.DBInstance;
-import edu.upenn.cis455.database.DBManager;
-import edu.upenn.cis455.database.Node;
+import edu.upenn.cis.stormlite.tuple.Values;
 
-public class PRMapBolt implements IRichBolt {
-	
+public class BuilderMapBolt implements IRichBolt {
+
 	public static Logger log = Logger.getLogger(PRMapBolt.class);
 	public Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
@@ -28,8 +28,6 @@ public class PRMapBolt implements IRichBolt {
 	public double d;	
 	public String serverIndex = null;
 	
-	private DBInstance graphData;
-
 	@Override
 	public String getExecutorId() {
 		return executorId;
@@ -42,7 +40,7 @@ public class PRMapBolt implements IRichBolt {
 
 	@Override
 	public void cleanup() {
-		// DO NOTHING
+		// do nothing
 	}
 
 	@Override
@@ -50,17 +48,11 @@ public class PRMapBolt implements IRichBolt {
 		
 		if (!input.isEndOfStream()) {
 			
-			
-			String srcId = input.getStringByField("key");
-			
-			log.info("Map Bolt received: " + srcId);
-			
-			Node src = graphData.getNode(srcId);
-			Iterator<String> neighborIt = src.getNeighborsIterator();
-			Double averageWeight = Double.parseDouble(input.getStringByField("value")) / src.getNumberNeighbors();			
-			while (neighborIt.hasNext()) {				
-				mapJob.map(neighborIt.next(), (new Double(averageWeight)).toString() , collector);
-			}			
+			String src = input.getStringByField("key");				
+			String[] links = input.getStringByField("value").split(", ");			
+			for (String link: links) {
+				collector.emit(new Values<Object>(src, link));
+			}
 		}
 		else {
     		eosNeeded--;    		
@@ -77,16 +69,7 @@ public class PRMapBolt implements IRichBolt {
         this.collector = collector;
         this.config = stormConf;
         
-        d = Double.parseDouble(config.get("decayFactor"));
         serverIndex = stormConf.get("workerIndex");
-        
-        String graphDataDir = stormConf.get("graphDataDir");
-        String targetDirectory = graphDataDir;
-        if (serverIndex != null) {
-        	targetDirectory += "." + serverIndex;
-        }
-        
-        graphData = DBManager.getDBInstance(targetDirectory);
         
         log.info(this.config);
         log.info("********** Start of mapping phase ********");       
@@ -114,7 +97,6 @@ public class PRMapBolt implements IRichBolt {
 		int numMappers = Integer.parseInt(stormConf.get("mapExecutors"));	
 		int numSpouts  = Integer.parseInt(stormConf.get("spoutExecutors"));		
 		int numWorkers = Integer.parseInt(stormConf.get("workers"));
-		
         eosNeeded = ((numWorkers - 1) * numMappers  + 1) * numSpouts;	
         log.info("Num EOS required for MapBolt: " + eosNeeded);
 	}
@@ -128,5 +110,4 @@ public class PRMapBolt implements IRichBolt {
 	public Fields getSchema() {
 		return schema;
 	}
-
 }

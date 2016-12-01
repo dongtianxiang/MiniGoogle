@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts;
+package edu.upenn.cis.stormlite.spouts.PageRank;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -13,6 +13,8 @@ import org.apache.log4j.Logger;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
+import edu.upenn.cis.stormlite.spouts.IRichSpout;
+import edu.upenn.cis.stormlite.spouts.SpoutOutputCollector;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Values;
 
@@ -30,20 +32,19 @@ public abstract class RankFileSpout implements IRichSpout {
 	public int inx = 0;
 	public boolean eofSent = false;	
 	public abstract String getFilename();
-	
+
 	public RankFileSpout() {
 		filename = getFilename();
 	}
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		
         this.collector = collector;
         config = conf;
         config.put("status", "IDLE");
-        
-        try {       	        	
+        try {       	
         	log.debug("Starting spout for " + filename);
         	log.debug(getExecutorId() + " opening file reader");        	
         	String rootDir = (String)conf.get("inputDir");        	

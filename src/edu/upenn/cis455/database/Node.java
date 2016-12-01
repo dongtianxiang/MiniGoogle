@@ -13,7 +13,8 @@ public class Node {
 	String id;
 	
 	private List<String> neighbors;
-	boolean converge;
+	private boolean converge;
+	private double  rank;
 	
 	public Node() {}
 	
@@ -21,12 +22,23 @@ public class Node {
 		this.id = id;
 		neighbors = new LinkedList<>();
 		converge = false;
+		rank = 1;
+	}
+	
+	public void resetRank() {
+		rank = 1;
+	}
+	
+	public void setRank(double newRank) {
+		rank = newRank;
+	}
+	
+	public double getRank() {
+		return rank;
 	}
 	
 	public boolean convergenceTest() {
-		
 		// TODO
-		 
 		return converge; 
 	}
 	

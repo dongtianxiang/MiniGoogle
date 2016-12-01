@@ -19,17 +19,17 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.PRMapBolt;
-import edu.upenn.cis.stormlite.bolts.PRReduceBolt;
-import edu.upenn.cis.stormlite.bolts.PRResultBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.RankFileSpout;
-import edu.upenn.cis.stormlite.spouts.RankSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankFileSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
-import edu.upenn.cis455.database.WorkerInfo;
+import edu.upenn.cis455.mapreduce.servers.WorkerInformation;
 
 public class MasterServlet extends HttpServlet {
 
@@ -42,7 +42,7 @@ public class MasterServlet extends HttpServlet {
   private static Integer availableWorkers = 0;
   
   // note that this it's statically initiated
-  static Map<String, WorkerInfo> workers;  
+  static Map<String, WorkerInformation> workers;  
   static Thread checkerThread;
   
   public static Configuration globalConf = null;
@@ -62,7 +62,7 @@ public class MasterServlet extends HttpServlet {
 				  
 						for (String key: workers.keySet()) {							
 							Long time = (new Date()).getTime();							
-							WorkerInfo info = workers.get(key);
+							WorkerInformation info = workers.get(key);
 							Long lastCheckIn = info.lastCheckIn;							
 							if (time > lastCheckIn + 10000) {
 								list.add(key);
@@ -133,7 +133,7 @@ public class MasterServlet extends HttpServlet {
 		  		  		  
 		  Date date = new Date();		  
 		  String remoteHost = request.getRemoteHost() + ":" + port;	
-		  WorkerInfo workerStatus = new WorkerInfo();
+		  WorkerInformation workerStatus = new WorkerInformation();
 		  
 		  try {			  
 			  
@@ -228,7 +228,7 @@ public class MasterServlet extends HttpServlet {
 			  for (String workerID: workers.keySet()) {			  
 				  
 				  out.println("<tr>");			  
-				  WorkerInfo info = workers.get(workerID);				  			  
+				  WorkerInformation info = workers.get(workerID);				  			  
 				  out.println("<th>");  out.println(info.IPAddress); out.println("</th>");
 				  out.println("<th>");  out.println(info.currentJob);  out.println("</th>");
 				  out.println("<th>");  out.println(info.status); out.println("</th>");		
@@ -348,7 +348,7 @@ public class MasterServlet extends HttpServlet {
 		  for(String workerIP: workers.keySet()) {
 			  
 			  try {
-				  WorkerInfo info = workers.get(workerIP);			  
+				  WorkerInformation info = workers.get(workerIP);			  
 				  System.out.println("shutting down " + info.IPAddress);			  
 				  String destAddr = "http://" + info.IPAddress;			  
 				  URL url = new URL(destAddr+ "/shutdown");

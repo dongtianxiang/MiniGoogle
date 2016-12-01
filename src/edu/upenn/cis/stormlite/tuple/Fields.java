@@ -31,7 +31,10 @@ public class Fields extends ArrayList<String> {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	public Fields() {}
+	public Fields() {
+		
+		
+	}
 
 	public Fields(String s) {
 		super();

@@ -22,7 +22,7 @@ import java.io.Serializable;
 import edu.upenn.cis.stormlite.routers.FieldBased;
 import edu.upenn.cis.stormlite.routers.First;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
-import edu.upenn.cis.stormlite.routers.RoundRobin;
+import edu.upenn.cis.stormlite.routers.DistributedRoundRobin;
 import edu.upenn.cis.stormlite.tuple.Fields;
 
 /**
@@ -156,7 +156,7 @@ public class BoltDeclarer implements Serializable {
 		if (router == null)
 				// Round-robin is straightforward
 			if (getType().equals(SHUFFLE)) {
-				router = new RoundRobin();
+				router = new DistributedRoundRobin();
 				
 				// If we are sharding by fields, look up
 				// the indices within the schema of the stream

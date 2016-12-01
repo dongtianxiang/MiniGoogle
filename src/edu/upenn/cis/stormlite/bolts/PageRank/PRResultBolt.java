@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts;
+package edu.upenn.cis.stormlite.bolts.PageRank;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
+import edu.upenn.cis.stormlite.bolts.IRichBolt;
+import edu.upenn.cis.stormlite.bolts.OutputCollector;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;

@@ -1,11 +1,15 @@
-package edu.upenn.cis.stormlite.bolts;
+package edu.upenn.cis.stormlite.bolts.BuildGraph;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import org.apache.log4j.Logger;
 
+import edu.upenn.cis.stormlite.bolts.IRichBolt;
+import edu.upenn.cis.stormlite.bolts.OutputCollector;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
 import edu.upenn.cis.stormlite.infrastructure.Job;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
@@ -14,8 +18,9 @@ import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Tuple;
 import edu.upenn.cis455.database.DBInstance;
 import edu.upenn.cis455.database.DBManager;
+import edu.upenn.cis455.database.Node;
 
-public class PRReduceBolt implements IRichBolt {
+public class BuilderStoreBolt implements IRichBolt {
 	
 	public static Logger log = Logger.getLogger(PRReduceBolt.class);
 	public Map<String, String> config;
@@ -55,34 +60,45 @@ public class PRReduceBolt implements IRichBolt {
 	        }
 		}
     	else if (input.isEndOfStream()) {
-						
+    		
 			log.info("EOS Received: " + (++count));			
 			eosNeeded--;
-			if (eosNeeded == 0) {				
+			if (eosNeeded == 0) {
 				log.info("*** Reducer has received all expected End of String marks! ***");	
 				log.info("***                Start of Reducing phase!                ***");
 				Map<String, List<String>> table = tempDB.getTable(executorId);				
 				Iterator<String> keyIt = table.keySet().iterator();	
 				while (keyIt.hasNext()) {
-					String key = keyIt.next();
-					table.get(key).add((new Double(1 - d)).toString());
-					reduceJob.reduce(key, table.get(key).iterator(), collector);
+					String key = keyIt.next();					
+					Node node = new Node(key);
+					Iterator<String> valueIt = table.get(key).iterator();
+					while (valueIt.hasNext()) {
+						node.addNeighbor(valueIt.next());
+					}
+					graphDB.addNode(node);
 				}
-				tempDB.clearTempData();
+				
+				Runnable runnable = new Runnable() {
+					@Override
+					public void run() {
+						tempDB.clearTempData();
+					}
+				};
+				
+				Thread thread = new Thread(runnable);
+				thread.start();				
 				log.info("Database instance has been reset.");			
 			}
-			collector.emitEndOfStream();
     	}
     	else {
     		String key = input.getStringByField("key");
 	        String value = input.getStringByField("value");       
-	        Double realVal = Double.parseDouble(value) * d;
 	        
 	        int written = Integer.parseInt(config.get("keysWritten"));
 	        config.put("keysWritten", (new Integer(written + 1)).toString());
 	        
 	        log.info("Reduce bolt received: " + key + " / " + value);  
-	        tempDB.addValue(executorId, key, (new Double(realVal * d)).toString());
+	        tempDB.addValue(executorId, key, value);
 	        tempDB.synchronize();
     	}		
 	}
@@ -92,17 +108,17 @@ public class PRReduceBolt implements IRichBolt {
 		
 		
 		config = stormConf;
-		d = Double.parseDouble(config.get("decayFactor"));		
 		serverIndex = stormConf.get("workerIndex");
 		
 		String graphDataDir = config.get("graphDataDir");
 		String databaseDir  = config.get("databaseDir");
 		
 		if (serverIndex != null) {
-			graphDataDir += "." + serverIndex;
+			graphDataDir += "/" + serverIndex;
 			databaseDir  += "/" + serverIndex;
 		}
 		
+		DBManager.createDBInstance(graphDataDir);
 		graphDB = DBManager.getDBInstance(graphDataDir);		
 		DBManager.createDBInstance(databaseDir);
 		tempDB  = DBManager.getDBInstance(databaseDir);
@@ -112,10 +128,10 @@ public class PRReduceBolt implements IRichBolt {
         	throw new RuntimeException("Mapper class is not specified as a config option");
         }
         else {        	
-        	String mapperClass = stormConf.get("reduceClass");        	
+        	String mapperClass = stormConf.get("reduceClass");
         	try {
 				reduceJob = (Job)Class.forName(mapperClass).newInstance();
-			} 
+			}
         	catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 				e.printStackTrace();
 				throw new RuntimeException("Unable to instantiate the class " + mapperClass);

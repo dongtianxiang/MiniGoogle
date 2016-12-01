@@ -9,15 +9,15 @@ import org.apache.log4j.PropertyConfigurator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.PRMapBolt;
-import edu.upenn.cis.stormlite.bolts.PRReduceBolt;
-import edu.upenn.cis.stormlite.bolts.PRResultBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.LocalCluster;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
-import edu.upenn.cis.stormlite.spouts.RankFileSpout;
-import edu.upenn.cis.stormlite.spouts.RankSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankFileSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.database.DBManager;
 
@@ -53,7 +53,7 @@ public class TestPageRankTopologyLocal {
 		builder.setSpout(RANKS_SPOUT,  spout,  1);
 		builder.setBolt(MAP_BOLT,     mapper,  2).fieldsGrouping(RANKS_SPOUT, new Fields("key"));
 		builder.setBolt(REDUCE_BOLT, reducer,  2).fieldsGrouping(MAP_BOLT,    new Fields("value"));
-		builder.setBolt(RESULT_BOLT,  result,  1).firstGrouping(REDUCE_BOLT);
+		builder.setBolt(RESULT_BOLT,  result,  1).shuffleGrouping(REDUCE_BOLT);
 		
 		Configuration config  = new Configuration();
 		LocalCluster  cluster = new LocalCluster();

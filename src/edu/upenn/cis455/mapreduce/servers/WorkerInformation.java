@@ -1,6 +1,6 @@
-package edu.upenn.cis455.database;
+package edu.upenn.cis455.mapreduce.servers;
 
-public class WorkerInfo {
+public class WorkerInformation {
 	
 	public String status;
 	public String job;

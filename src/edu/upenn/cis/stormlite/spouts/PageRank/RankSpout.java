@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts;
+package edu.upenn.cis.stormlite.spouts.PageRank;
 
 public class RankSpout extends RankFileSpout {
 	@Override

@@ -27,22 +27,22 @@ import edu.upenn.cis.stormlite.bolts.IRichBolt;
 /**
  * Does round-robin among the destination bolts
  */
-public class RoundRobin extends StreamRouter {
-	static Logger log = Logger.getLogger(RoundRobin.class);
+public class DistributedRoundRobin extends StreamRouter {
+	static Logger log = Logger.getLogger(DistributedRoundRobin.class);
 	
 	int inx = 0;
 	List<IRichBolt> children;
 	
-	public RoundRobin() {
+	public DistributedRoundRobin() {
 		children = new ArrayList<IRichBolt>();
 	}
 	
-	public RoundRobin(IRichBolt child) {
+	public DistributedRoundRobin(IRichBolt child) {
 		children = new ArrayList<IRichBolt>();
 		children.add(child);
 	}
 	
-	public RoundRobin(List<IRichBolt> children) {
+	public DistributedRoundRobin(List<IRichBolt> children) {
 		this.children = children;
 	}
 	

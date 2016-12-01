@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts;
+package edu.upenn.cis.stormlite.spouts.WordCount;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -13,6 +13,8 @@ import org.apache.log4j.Logger;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
+import edu.upenn.cis.stormlite.spouts.IRichSpout;
+import edu.upenn.cis.stormlite.spouts.SpoutOutputCollector;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Values;
 
