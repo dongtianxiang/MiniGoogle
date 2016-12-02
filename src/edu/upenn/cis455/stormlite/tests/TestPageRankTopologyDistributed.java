@@ -14,8 +14,7 @@ import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.PageRank.RankFileSpout;
-import edu.upenn.cis.stormlite.spouts.PageRank.RankSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servlets.MasterServlet;
 
@@ -33,11 +32,11 @@ public class TestPageRankTopologyDistributed {
 		int numSpouts = 1;
 		
 		String jobClass  = "edu.upenn.cis455.mapreduce.jobs.PageRankJob" ;
-		String inputDir  = "data1" ; 
+		String inputDir  = "urls" ; 
 		String outputDir = "result1";
 		String jobName   = "JOB1"; 
 				
-		RankFileSpout spout = new RankSpout();		
+		RankDataSpout spout = new RankDataSpout();		
 	    PRMapBolt mapBolt = new PRMapBolt();
 	    PRReduceBolt reduceBolt = new PRReduceBolt();
 	    PRResultBolt printer = new PRResultBolt();
@@ -45,9 +44,9 @@ public class TestPageRankTopologyDistributed {
 	    // build topology
 		TopologyBuilder builder = new TopologyBuilder();			    			    
         builder.setSpout(SPOUT, spout, 1);
-        builder.setBolt(MAP_BOLT, mapBolt, numMappers).fieldsGrouping(SPOUT, new Fields("value"));		        
+        builder.setBolt(MAP_BOLT, mapBolt, numMappers).shuffleGrouping(SPOUT);		        
         builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
-        builder.setBolt(RESULT_BOLT, printer, 1).shuffleGrouping(REDUCE_BOLT);		        
+        builder.setBolt(RESULT_BOLT, printer, 1).fieldsGrouping(REDUCE_BOLT, new Fields("key"));		        
         Topology topo = builder.createTopology();
         
         // create configuration object
@@ -60,7 +59,7 @@ public class TestPageRankTopologyDistributed {
         config.put("inputDir", inputDir);
         config.put("outputDir", outputDir);
         config.put("job", jobName);
-        config.put("workers", "2");       
+        config.put("workers", "2");
         config.put("decayFactor", "0.85");
         
         config.put("graphDataDir", "graphStore");

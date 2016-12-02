@@ -49,13 +49,10 @@ public class SpoutOutputCollector implements IOutputCollector  {
 	public void emit(List<Object> tuple) {
 		
 		try {
-			
-			router.execute(tuple, context);
-			
+			router.execute(tuple, context);			
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	public void emitEndOfStream() {

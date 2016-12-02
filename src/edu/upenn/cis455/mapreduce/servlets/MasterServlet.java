@@ -30,8 +30,7 @@ import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
 import edu.upenn.cis.stormlite.spouts.LocalDBBuilder.LinksFileSpout;
 import edu.upenn.cis.stormlite.spouts.LocalDBBuilder.LinksSpout;
-import edu.upenn.cis.stormlite.spouts.PageRank.RankFileSpout;
-import edu.upenn.cis.stormlite.spouts.PageRank.RankSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servers.WorkerInformation;
 
@@ -469,7 +468,7 @@ public class MasterServlet extends HttpServlet {
 	  	int numSpouts = 1;  
 	  	
 	  	String jobClass = "edu.upenn.cis455.mapreduce.jobs.PageRankJob";
-		RankFileSpout spout = new RankSpout();		
+		RankDataSpout spout = new RankDataSpout();		
 	    PRMapBolt mapBolt = new PRMapBolt();
 	    PRReduceBolt reduceBolt = new PRReduceBolt();
 	    PRResultBolt printer = new PRResultBolt();

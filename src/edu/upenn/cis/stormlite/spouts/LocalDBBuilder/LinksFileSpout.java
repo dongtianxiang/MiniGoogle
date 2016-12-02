@@ -13,13 +13,13 @@ import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.spouts.IRichSpout;
 import edu.upenn.cis.stormlite.spouts.SpoutOutputCollector;
-import edu.upenn.cis.stormlite.spouts.PageRank.RankFileSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Values;
 
 public abstract class LinksFileSpout implements IRichSpout {
 
-	public static Logger log = Logger.getLogger(RankFileSpout.class);
+	public static Logger log = Logger.getLogger(RankDataSpout.class);
 	public String executorId = UUID.randomUUID().toString();
 	public String filename;
 	public BufferedReader reader;

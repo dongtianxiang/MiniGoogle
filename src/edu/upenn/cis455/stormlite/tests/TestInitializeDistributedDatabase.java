@@ -30,10 +30,9 @@ public class TestInitializeDistributedDatabase {
 		int numReducers = 1;
 		int numSpouts   = 1;
 		
-		String jobClass  = "edu.upenn.cis455.mapreduce.jobs.PageRankJob" ;
 		String inputDir  = "data" ; 
-		String outputDir = "result";
-		String jobName   = "JOB1"; 
+		String outputDir = "urls";
+		String jobName   = "job1"; 
 				
 		LinksFileSpout spout     = new LinksSpout();		
 	    BuilderMapBolt mapBolt   = new BuilderMapBolt();
@@ -42,14 +41,12 @@ public class TestInitializeDistributedDatabase {
 	    // build topology
 		TopologyBuilder builder = new TopologyBuilder();			    			    
         builder.setSpout(SPOUT, spout, numSpouts);
-        builder.setBolt(MAP_BOLT, mapBolt, numMappers).fieldsGrouping(SPOUT, new Fields("key"));		        
+        builder.setBolt(MAP_BOLT, mapBolt, numMappers).shuffleGrouping(SPOUT);		        
         builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
         Topology topo = builder.createTopology();
         
         // create configuration object
         Configuration config = new Configuration();        
-        config.put("mapClass", jobClass);
-        config.put("reduceClass", jobClass);
         config.put("spoutExecutors",  (new Integer(numSpouts)).toString());
         config.put("mapExecutors",    (new Integer(numMappers)).toString());
         config.put("reduceExecutors", (new Integer(numReducers)).toString());

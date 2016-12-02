@@ -7,8 +7,6 @@
 	<property name="master-class" value="edu.upenn.cis455.mapreduce.MasterServer"/>
 	<property name="worker-class" value="edu.upenn.cis455.mapreduce.worker.WorkerServer"/>
 
-	<!-- property name="worker-class" value="test.edu.upenn.cis.stormlite.mapreduce.TestMapReduce"/ -->
-	
 	<path id="classpath">
 		<fileset dir="${web-inf.lib.dir}" includes="**/*.jar"/>
 		<fileset dir="target/master/WEB-INF/classes"/>
@@ -104,6 +102,7 @@
 
 	<target name="run" depends="build">
 		<parallel>
+			
 			<java classname="${master-class}" fork="true">
 				<classpath>
 					<path refid="classpath"/>

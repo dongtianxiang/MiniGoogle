@@ -97,18 +97,17 @@ public class WorkerServer {
 								StringBuilder builder = new StringBuilder();								
 								log.info(builder.append("Worker check-in: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString());
 							}
-							
 							catch (ConnectException e) {
 								log.info("WorkerServer cannot contact MasterServer");
-							}
-							
+							}							
 							// interval for background check
 							wait(10000);								
-						}
-						
-					} catch (InterruptedException e) {
+						}						
+					} 
+					catch (InterruptedException e) {
 						break;
-					} catch (IOException e) {
+					} 
+					catch (IOException e) {
 						e.printStackTrace();
 					}
 				}

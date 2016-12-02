@@ -1,5 +1,8 @@
 package edu.upenn.cis.stormlite.bolts.BuildGraph;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +12,6 @@ import org.apache.log4j.Logger;
 
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
 import edu.upenn.cis.stormlite.infrastructure.Job;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
@@ -22,7 +24,7 @@ import edu.upenn.cis455.database.Node;
 
 public class BuilderStoreBolt implements IRichBolt {
 	
-	public static Logger log = Logger.getLogger(PRReduceBolt.class);
+	public static Logger log = Logger.getLogger(BuilderStoreBolt.class);
 	public Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
 	public Fields schema = new Fields("key", "value"); 
@@ -35,6 +37,8 @@ public class BuilderStoreBolt implements IRichBolt {
 	public int count = 0;
 	public double d;
 	public String serverIndex;
+	public File outfile;
+	public PrintWriter outputWriter;
 	
 	@Override
 	public String getExecutorId() {
@@ -64,6 +68,7 @@ public class BuilderStoreBolt implements IRichBolt {
 			log.info("EOS Received: " + (++count));			
 			eosNeeded--;
 			if (eosNeeded == 0) {
+				
 				log.info("*** Reducer has received all expected End of String marks! ***");	
 				log.info("***                Start of Reducing phase!                ***");
 				Map<String, List<String>> table = tempDB.getTable(executorId);				
@@ -75,8 +80,12 @@ public class BuilderStoreBolt implements IRichBolt {
 					while (valueIt.hasNext()) {
 						node.addNeighbor(valueIt.next());
 					}
+					outputWriter.println(node.getID());
+					outputWriter.flush();
 					graphDB.addNode(node);
 				}
+				
+				outputWriter.close();
 				
 				Runnable runnable = new Runnable() {
 					@Override
@@ -92,11 +101,9 @@ public class BuilderStoreBolt implements IRichBolt {
     	}
     	else {
     		String key = input.getStringByField("key");
-	        String value = input.getStringByField("value");       
-	        
+	        String value = input.getStringByField("value");	        
 	        int written = Integer.parseInt(config.get("keysWritten"));
-	        config.put("keysWritten", (new Integer(written + 1)).toString());
-	        
+	        config.put("keysWritten", (new Integer(written + 1)).toString());        
 	        log.info("Reduce bolt received: " + key + " / " + value);  
 	        tempDB.addValue(executorId, key, value);
 	        tempDB.synchronize();
@@ -105,17 +112,32 @@ public class BuilderStoreBolt implements IRichBolt {
 
 	@Override
 	public void prepare(Map<String, String> stormConf, TopologyContext context, OutputCollector collector) {
-		
-		
+				
 		config = stormConf;
 		serverIndex = stormConf.get("workerIndex");
 		
 		String graphDataDir = config.get("graphDataDir");
 		String databaseDir  = config.get("databaseDir");
+		String outputFileDir = config.get("outputDir");
+		
 		
 		if (serverIndex != null) {
 			graphDataDir += "/" + serverIndex;
 			databaseDir  += "/" + serverIndex;
+			outputFileDir += "/" + serverIndex;
+		}
+		
+		File outfileDir = new File(outputFileDir);
+		outfileDir.mkdirs();
+		
+		String outputFileName = "urls.txt";
+		outfile = new File(outfileDir, outputFileName);
+		try {
+			outputWriter = new PrintWriter(outfile);
+		} 
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return;
 		}
 		
 		DBManager.createDBInstance(graphDataDir);
@@ -124,20 +146,6 @@ public class BuilderStoreBolt implements IRichBolt {
 		tempDB  = DBManager.getDBInstance(databaseDir);
 			
         this.collector = collector;
-        if (!stormConf.containsKey("reduceClass")) {
-        	throw new RuntimeException("Mapper class is not specified as a config option");
-        }
-        else {        	
-        	String mapperClass = stormConf.get("reduceClass");
-        	try {
-				reduceJob = (Job)Class.forName(mapperClass).newInstance();
-			}
-        	catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Unable to instantiate the class " + mapperClass);
-			}
-        }
-        
         if (!stormConf.containsKey("mapExecutors")) {
         	throw new RuntimeException("Reducer class doesn't know how many map bolt executors");
         }

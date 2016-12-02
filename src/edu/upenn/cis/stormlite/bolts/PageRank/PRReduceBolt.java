@@ -61,7 +61,7 @@ public class PRReduceBolt implements IRichBolt {
 			log.info("EOS Received: " + (++count));			
 			eosNeeded--;
 			if (eosNeeded == 0) {
-				log.info("*** Reducer has received all expected End of String marks! ***");	
+				log.info("*** Reducer has received all expected End of Stream marks! ***");	
 				log.info("***                Start of Reducing phase!                ***");
 				Map<String, List<String>> table = tempDB.getTable(executorId);				
 				Iterator<String> keyIt = table.keySet().iterator();	

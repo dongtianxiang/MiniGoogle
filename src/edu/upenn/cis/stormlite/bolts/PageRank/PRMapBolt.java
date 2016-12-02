@@ -1,6 +1,5 @@
 package edu.upenn.cis.stormlite.bolts.PageRank;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.log4j.Logger;
@@ -12,9 +11,6 @@ import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Tuple;
-import edu.upenn.cis455.database.DBInstance;
-import edu.upenn.cis455.database.DBManager;
-import edu.upenn.cis455.database.Node;
 
 public class PRMapBolt implements IRichBolt {
 	
@@ -27,8 +23,6 @@ public class PRMapBolt implements IRichBolt {
 	public Integer eosNeeded = 0;
 	public double d;	
 	public String serverIndex = null;
-	
-	private DBInstance graphData;
 
 	@Override
 	public String getExecutorId() {
@@ -49,14 +43,12 @@ public class PRMapBolt implements IRichBolt {
 	public void execute(Tuple input) {
 		
 		if (!input.isEndOfStream()) {
-		
-			String srcId = input.getStringByField("key");
-			Node src = graphData.getNode(srcId);
-			Iterator<String> neighborIt = src.getNeighborsIterator();
-			Double averageWeight = Double.parseDouble(input.getStringByField("value")) / src.getNumberNeighbors();			
-			while (neighborIt.hasNext()) {				
-				mapJob.map(neighborIt.next(), (new Double(averageWeight)).toString() , collector);
-			}			
+			
+			String[] destANDval = input.getStringByField("value").split(":");			
+			String dest = destANDval[0];
+			String val  = destANDval[1];	
+			Double valNum = Double.parseDouble(val) * d;
+			mapJob.map(dest, valNum.toString() , collector);
 		}
 		else {
     		eosNeeded--;    		
@@ -74,15 +66,6 @@ public class PRMapBolt implements IRichBolt {
         this.config = stormConf;
         
         d = Double.parseDouble(config.get("decayFactor"));
-        serverIndex = stormConf.get("workerIndex");
-        
-        String graphDataDir = stormConf.get("graphDataDir");
-        String targetDirectory = graphDataDir;
-        if (serverIndex != null) {
-        	targetDirectory += "." + serverIndex;
-        }
-        
-        graphData = DBManager.getDBInstance(targetDirectory);
         
         log.info(this.config);
         log.info("********** Start of mapping phase ********");       

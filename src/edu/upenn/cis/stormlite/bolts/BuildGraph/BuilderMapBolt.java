@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
 import edu.upenn.cis.stormlite.infrastructure.Job;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
@@ -18,7 +17,7 @@ import edu.upenn.cis.stormlite.tuple.Values;
 
 public class BuilderMapBolt implements IRichBolt {
 
-	public static Logger log = Logger.getLogger(PRMapBolt.class);
+	public static Logger log = Logger.getLogger(BuilderMapBolt.class);
 	public Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
 	public Fields schema = new Fields("key", "value"); 
@@ -69,26 +68,24 @@ public class BuilderMapBolt implements IRichBolt {
         this.collector = collector;
         this.config = stormConf;
         
-        serverIndex = stormConf.get("workerIndex");
-        
         log.info(this.config);
         log.info("********** Start of mapping phase ********");       
         stormConf.put("status", "Mapping");
         
-        if (!stormConf.containsKey("mapClass")) {
-        	throw new RuntimeException("Mapper class is not specified as a config option");
-        }
-        else {
-        	
-        	String mapperClass = stormConf.get("mapClass");        	
-        	try {        		
-				mapJob = (Job)Class.forName(mapperClass).newInstance();				
-			} 
-        	catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {				
-				e.printStackTrace();
-				throw new RuntimeException("Unable to instantiate the class " + mapperClass);
-			}
-        }
+//        if (!stormConf.containsKey("mapClass")) {
+//        	throw new RuntimeException("Mapper class is not specified as a config option");
+//        }
+//        else {
+//        	
+//        	String mapperClass = stormConf.get("mapClass");        	
+//        	try {        		
+//				mapJob = (Job)Class.forName(mapperClass).newInstance();				
+//			} 
+//        	catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {				
+//				e.printStackTrace();
+//				throw new RuntimeException("Unable to instantiate the class " + mapperClass);
+//			}
+//        }
         
         if (!stormConf.containsKey("spoutExecutors")) {
         	throw new RuntimeException("Mapper class doesn't know how many input spout executors");
