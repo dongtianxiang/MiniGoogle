@@ -8,7 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.upenn.cis.stormlite.bolts.BuildGraph.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.BuildGraph.BuilderStoreBolt;
+import edu.upenn.cis.stormlite.bolts.BuildGraph.SecondaryReduceBolt;
+import edu.upenn.cis.stormlite.bolts.BuildGraph.FirstaryReduceBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
@@ -23,12 +24,14 @@ public class TestInitializeDistributedDatabase {
 	private static final String SPOUT       = "LINK_SPOUT";
 	private static final String MAP_BOLT    = "MAP_BOLT";
 	private static final String REDUCE_BOLT = "REDUCE_BOLT";
+	private static final String FIXER_BOLT  = "FIXER";
 	
 	public static void main(String[] args) throws IOException {
 		
 		int numMappers  = 1;
 		int numReducers = 1;
 		int numSpouts   = 1;
+		int numFixers   = 1;
 		
 		String inputDir  = "data" ; 
 		String outputDir = "urls";
@@ -36,13 +39,16 @@ public class TestInitializeDistributedDatabase {
 				
 		LinksFileSpout spout     = new LinksSpout();		
 	    BuilderMapBolt mapBolt   = new BuilderMapBolt();
-	    BuilderStoreBolt reduceBolt = new BuilderStoreBolt();
+	    FirstaryReduceBolt reduceBolt = new FirstaryReduceBolt();
+	    SecondaryReduceBolt postBolt = new SecondaryReduceBolt();
 	    
 	    // build topology
 		TopologyBuilder builder = new TopologyBuilder();			    			    
         builder.setSpout(SPOUT, spout, numSpouts);
         builder.setBolt(MAP_BOLT, mapBolt, numMappers).shuffleGrouping(SPOUT);		        
         builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
+        builder.setBolt(FIXER_BOLT, postBolt, numFixers).fieldsGrouping(REDUCE_BOLT, new Fields("key"));
+        
         Topology topo = builder.createTopology();
         
         // create configuration object

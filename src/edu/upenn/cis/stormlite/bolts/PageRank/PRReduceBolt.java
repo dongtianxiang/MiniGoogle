@@ -26,7 +26,6 @@ public class PRReduceBolt implements IRichBolt {
 	public Job reduceJob;
 	public OutputCollector collector;
 	public Integer eosNeeded = 0;
-	public DBInstance graphDB;
 	public DBInstance tempDB;
 	public boolean sentEof = false;
 	public int count = 0;
@@ -60,7 +59,9 @@ public class PRReduceBolt implements IRichBolt {
     		
 			log.info("EOS Received: " + (++count));			
 			eosNeeded--;
+			
 			if (eosNeeded == 0) {
+				
 				log.info("*** Reducer has received all expected End of Stream marks! ***");	
 				log.info("***                Start of Reducing phase!                ***");
 				Map<String, List<String>> table = tempDB.getTable(executorId);				
@@ -73,6 +74,7 @@ public class PRReduceBolt implements IRichBolt {
 				tempDB.clearTempData();
 				log.info("Database instance has been reset.");			
 			}
+			
 			collector.emitEndOfStream();
     	}
     	else {
@@ -84,7 +86,7 @@ public class PRReduceBolt implements IRichBolt {
 	        config.put("keysWritten", (new Integer(written + 1)).toString());
 	        
 	        log.info("Reduce bolt received: " + key + " / " + value);  
-	        tempDB.addValue(executorId, key, (new Double(realVal * d)).toString());
+	        tempDB.addKeyValue(executorId, key, (new Double(realVal * d)).toString());
 	        tempDB.synchronize();
     	}		
 	}
@@ -97,15 +99,12 @@ public class PRReduceBolt implements IRichBolt {
 		d = Double.parseDouble(config.get("decayFactor"));		
 		serverIndex = stormConf.get("workerIndex");
 		
-		String graphDataDir = config.get("graphDataDir");
 		String databaseDir  = config.get("databaseDir");
 		
 		if (serverIndex != null) {
-			graphDataDir += "." + serverIndex;
 			databaseDir  += "/" + serverIndex;
 		}
-		
-		graphDB = DBManager.getDBInstance(graphDataDir);		
+			
 		DBManager.createDBInstance(databaseDir);
 		tempDB  = DBManager.getDBInstance(databaseDir);
 			

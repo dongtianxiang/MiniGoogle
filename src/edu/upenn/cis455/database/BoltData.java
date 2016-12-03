@@ -16,12 +16,15 @@ public class BoltData {
 	
 	Map<String, List<String>> table;
 	
+	List<String> buffer;
+	
 	public BoltData() {
 		
 	}
 	
 	public BoltData(String boltID) {	
 		table = new HashMap<>();
+		buffer = new LinkedList<>();
 		this.boltID = boltID;
 	}
 	
@@ -30,7 +33,7 @@ public class BoltData {
 		return boltID;
 	}
 	
-	public void addValue(String key, String value) {
+	public void addKeyValue(String key, String value) {
 		
 		if (!table.containsKey(key)) {
 			table.put(key, new LinkedList<>());

@@ -18,16 +18,17 @@ import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Tuple;
+import edu.upenn.cis.stormlite.tuple.Values;
 import edu.upenn.cis455.database.DBInstance;
 import edu.upenn.cis455.database.DBManager;
 import edu.upenn.cis455.database.Node;
 
-public class BuilderStoreBolt implements IRichBolt {
+public class FirstaryReduceBolt implements IRichBolt {
 	
-	public static Logger log = Logger.getLogger(BuilderStoreBolt.class);
+	public static Logger log = Logger.getLogger(FirstaryReduceBolt.class);
 	public Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
-	public Fields schema = new Fields("key", "value"); 
+	public Fields schema = new Fields("key"); 
 	public Job reduceJob;
 	public OutputCollector collector;
 	public Integer eosNeeded = 0;
@@ -70,43 +71,46 @@ public class BuilderStoreBolt implements IRichBolt {
 			if (eosNeeded == 0) {
 				
 				log.info("*** Reducer has received all expected End of String marks! ***");	
-				log.info("***                Start of Reducing phase!                ***");
+				log.info("***              Start Firstary Reducing phase!            ***");
+				
 				Map<String, List<String>> table = tempDB.getTable(executorId);				
 				Iterator<String> keyIt = table.keySet().iterator();	
 				while (keyIt.hasNext()) {
 					String key = keyIt.next();					
-					Node node = new Node(key);
+					Node node;
 					Iterator<String> valueIt = table.get(key).iterator();
+					
+			        if (!graphDB.hasNode(key)) {
+			        	
+			        	node  = new Node(key);
+			        	outputWriter.println(key);
+			        	outputWriter.flush();
+			        }
+			        else {
+			        	node = graphDB.getNode(key);
+			        }
+					
 					while (valueIt.hasNext()) {
-						node.addNeighbor(valueIt.next());
-					}
-					outputWriter.println(node.getID());
-					outputWriter.flush();
-					graphDB.addNode(node);
+						String nextVal = valueIt.next();
+						node.addNeighbor(nextVal);
+						collector.emit(new Values<Object>(nextVal));
+					}					
+		        	graphDB.addNode(node);
 				}
 				
 				outputWriter.close();
-				
-				Runnable runnable = new Runnable() {
-					@Override
-					public void run() {
-						tempDB.clearTempData();
-					}
-				};
-				
-				Thread thread = new Thread(runnable);
-				thread.start();				
-				log.info("Database instance has been reset.");			
+				tempDB.clearTempData();
+								
+				collector.emitEndOfStream();
+				log.info("***              Firstary Reduction completed!            ***");		
 			}
     	}
     	else {
     		String key = input.getStringByField("key");
 	        String value = input.getStringByField("value");	        
-	        int written = Integer.parseInt(config.get("keysWritten"));
-	        config.put("keysWritten", (new Integer(written + 1)).toString());        
-	        log.info("Reduce bolt received: " + key + " / " + value);  
-	        tempDB.addValue(executorId, key, value);
-	        tempDB.synchronize();
+	              
+	        log.info("Firstary reducer received: " + key + " / " + value);         
+	        tempDB.addKeyValue(executorId, key, value);
     	}		
 	}
 
@@ -116,21 +120,20 @@ public class BuilderStoreBolt implements IRichBolt {
 		config = stormConf;
 		serverIndex = stormConf.get("workerIndex");
 		
-		String graphDataDir = config.get("graphDataDir");
-		String databaseDir  = config.get("databaseDir");
-		String outputFileDir = config.get("outputDir");
-		
+		String graphDataDir  = config.get("graphDataDir");
+		String databaseDir   = config.get("databaseDir");
+		String outputFileDir = config.get("outputDir");	
 		
 		if (serverIndex != null) {
-			graphDataDir += "/" + serverIndex;
-			databaseDir  += "/" + serverIndex;
+			graphDataDir  += "/" + serverIndex;
+			databaseDir   += "/" + serverIndex + "-1";
 			outputFileDir += "/" + serverIndex;
 		}
-		
+				
 		File outfileDir = new File(outputFileDir);
 		outfileDir.mkdirs();
 		
-		String outputFileName = "urls.txt";
+		String outputFileName = "src.txt";
 		outfile = new File(outfileDir, outputFileName);
 		try {
 			outputWriter = new PrintWriter(outfile);
@@ -140,7 +143,6 @@ public class BuilderStoreBolt implements IRichBolt {
 			return;
 		}
 		
-		DBManager.createDBInstance(graphDataDir);
 		graphDB = DBManager.getDBInstance(graphDataDir);		
 		DBManager.createDBInstance(databaseDir);
 		tempDB  = DBManager.getDBInstance(databaseDir);
@@ -150,13 +152,16 @@ public class BuilderStoreBolt implements IRichBolt {
         	throw new RuntimeException("Reducer class doesn't know how many map bolt executors");
         }
 
-		int numMappers  = Integer.parseInt(stormConf.get("mapExecutors"));	
-		int numSpouts   = Integer.parseInt(stormConf.get("spoutExecutors"));	
-		int numReducers = Integer.parseInt(stormConf.get("reduceExecutors"));
+//		int numMappers  = Integer.parseInt(stormConf.get("mapExecutors"));	
+//		int numSpouts   = Integer.parseInt(stormConf.get("spoutExecutors"));	
+//		int numReducers = Integer.parseInt(stormConf.get("reduceExecutors"));
 		int numWorkers  = Integer.parseInt(stormConf.get("workers"));
+	
+//		int M = ((numWorkers - 1) * numMappers  + 1) * numSpouts;		
+//        eosNeeded = M * numReducers * (numWorkers - 1) * numMappers + M * numMappers;
 		
-		int M = ((numWorkers - 1) * numMappers  + 1) * numSpouts;		
-        eosNeeded = M * numReducers * (numWorkers - 1) * numMappers + M * numMappers;
+		eosNeeded = numWorkers;
+		
         log.info("Num EOS required for ReduceBolt: " + eosNeeded);
 	}
 

@@ -20,7 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.upenn.cis.stormlite.bolts.BuildGraph.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.BuildGraph.BuilderStoreBolt;
+import edu.upenn.cis.stormlite.bolts.BuildGraph.FirstaryReduceBolt;
 import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
 import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
 import edu.upenn.cis.stormlite.bolts.PageRank.PRResultBolt;
@@ -409,7 +409,7 @@ public class MasterServlet extends HttpServlet {
 	  
 		LinksFileSpout spout     = new LinksSpout();		
 	    BuilderMapBolt mapBolt   = new BuilderMapBolt();
-	    BuilderStoreBolt reduceBolt = new BuilderStoreBolt();
+	    FirstaryReduceBolt reduceBolt = new FirstaryReduceBolt();
 	    
 	    int numSpouts = 1;
 	    String jobClass = "edu.upenn.cis455.mapreduce.jobs.PageRankJob";

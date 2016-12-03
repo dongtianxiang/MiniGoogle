@@ -15,6 +15,9 @@ import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Tuple;
+import edu.upenn.cis455.database.DBInstance;
+import edu.upenn.cis455.database.DBManager;
+import edu.upenn.cis455.database.Node;
 
 public class PRResultBolt implements IRichBolt {
 	
@@ -29,6 +32,7 @@ public class PRResultBolt implements IRichBolt {
     public int eosReceived = 0;  
     public Map<String, String> config;    
     public String serverIndex;
+    public DBInstance graphData;
     
 	@Override
 	public String getExecutorId() {
@@ -54,6 +58,11 @@ public class PRResultBolt implements IRichBolt {
 			String val = input.getStringByField("value");			
 			String output = key + " -> " + val;	
 			log.info(output);
+			
+			Node newNode = new Node(key);
+			newNode.setRank(Double.parseDouble(val));
+			graphData.addNode(newNode);
+			
 			pw.println(output);
 			pw.flush();			
 		}
@@ -79,7 +88,17 @@ public class PRResultBolt implements IRichBolt {
         int N = M * numReducers * (numWorkers - 1) * numMappers + M * numMappers; 
         
         eosRequired = numWorkers * numReducers * N;
-        log.info("Num EOS required for Result Bolt: " + this.eosRequired);  
+        log.info("Num EOS required for Result Bolt: " + this.eosRequired); 
+        
+		String graphDataDir = stormConf.get("graphDataDir");
+		log.info("***************" + graphDataDir + "******************");
+		String serverIndex = stormConf.get("workerIndex");
+		if (serverIndex != null) {
+			graphDataDir += "/" + serverIndex;
+			log.info("***************" + graphDataDir + "******************");
+		}
+		
+		graphData = DBManager.getDBInstance(graphDataDir);
         
         config = stormConf;        
         serverIndex = stormConf.get("workerIndex");

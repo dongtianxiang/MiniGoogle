@@ -101,8 +101,7 @@ public class DBInstance {
 		}
 	}
 	
-	
-	public void addValue(String boltID, String key, String val) {
+	public void addKeyValue(String boltID, String key, String val) {
 		
 		PrimaryIndex<String, BoltData> index = store.getPrimaryIndex(String.class, BoltData.class);		
 		if (!index.contains(boltID)) {			
@@ -110,7 +109,7 @@ public class DBInstance {
 			index.put(data);
 		}
 		BoltData data = index.get(boltID);
-		data.addValue(key, val);
+		data.addKeyValue(key, val);
 		index.put(data);
 	}
 	

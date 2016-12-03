@@ -110,9 +110,11 @@ public class RankDataSpout implements IRichSpout {
 					int numNeighbors = nextNode.getNumberNeighbors();
 					double rank = nextNode.getRank();
 					double averageWeight = rank / numNeighbors;
+								
 					while (neighborIt.hasNext()) {
 						collector.emit(new Values<Object>(nextNode.getID(), neighborIt.next() + ":" + averageWeight));				
 					}
+					
 				} 
 				else if (!eofSent) {
 					
