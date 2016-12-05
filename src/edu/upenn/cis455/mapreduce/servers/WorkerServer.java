@@ -195,9 +195,9 @@ public class WorkerServer {
 					if (contexts.isEmpty()) {
 						log.error("No topology context -- were we initialized??");			
 					}
-			    	if (!tuple.isEndOfStream()) {
-			    		contexts.get(contexts.size() - 1).incSendOutputs(router.getKey(tuple.getValues()));	
-			    	}
+//			    	if (!tuple.isEndOfStream()) {
+//			    		contexts.get(contexts.size() - 1).incSendOutputs(router.getKey(tuple.getValues()));	
+//			    	}
 			    	if (tuple.isEndOfStream()) {
 						router.executeEndOfStreamLocally(contexts.get(contexts.size() - 1));
 			    	}

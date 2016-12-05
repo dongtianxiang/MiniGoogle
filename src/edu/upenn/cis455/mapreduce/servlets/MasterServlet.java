@@ -433,9 +433,7 @@ public class MasterServlet extends HttpServlet {
         config.put("job", jobName);       
         config.put("workers", "2");
         config.put("graphDataDir", "graphStore");
-        config.put("databaseDir" , "storage");
-        
-        
+        config.put("databaseDir" , "storage");       
         
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        

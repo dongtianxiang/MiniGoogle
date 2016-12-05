@@ -43,7 +43,7 @@ public class TopologyContext {
 	
 	int reduceOutputs = 0;
 	
-	Map<String, Integer> sendOutputs = new HashMap<>();
+//	Map<String, Integer> sendOutputs = new HashMap<>();
 	
 	/**
 	 * Mappings from stream IDs to routers
@@ -91,15 +91,15 @@ public class TopologyContext {
 		this.reduceOutputs++;
 	}
 	
-	public void incSendOutputs(String key) {
-		 if (!sendOutputs.containsKey(key))
-			 sendOutputs.put(key, new Integer(0));
-		 
-		 sendOutputs.put(key,  new Integer(sendOutputs.get(key) + 1));
-	}
-	
-	public Map<String, Integer> getSendOutputs() {
-		return sendOutputs;
-	}
+//	public void incSendOutputs(String key) {
+//		 if (!sendOutputs.containsKey(key))
+//			 sendOutputs.put(key, new Integer(0));
+//		 
+//		 sendOutputs.put(key,  new Integer(sendOutputs.get(key) + 1));
+//	}
+//	
+//	public Map<String, Integer> getSendOutputs() {
+//		return sendOutputs;
+//	}
 	
 }

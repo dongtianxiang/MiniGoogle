@@ -1,15 +1,13 @@
 package edu.upenn.cis.stormlite.bolts.BuildGraph;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import org.apache.log4j.Logger;
-
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
 import edu.upenn.cis.stormlite.infrastructure.Job;
@@ -28,7 +26,7 @@ public class FirstaryReduceBolt implements IRichBolt {
 	public static Logger log = Logger.getLogger(FirstaryReduceBolt.class);
 	public Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
-	public Fields schema = new Fields("key"); 
+	public Fields schema = new Fields("key", "value"); 
 	public Job reduceJob;
 	public OutputCollector collector;
 	public Integer eosNeeded = 0;
@@ -39,7 +37,7 @@ public class FirstaryReduceBolt implements IRichBolt {
 	public double d;
 	public String serverIndex;
 	public File outfile;
-	public PrintWriter outputWriter;
+	public FileWriter outputWriter;
 	
 	@Override
 	public String getExecutorId() {
@@ -75,30 +73,38 @@ public class FirstaryReduceBolt implements IRichBolt {
 				
 				Map<String, List<String>> table = tempDB.getTable(executorId);				
 				Iterator<String> keyIt = table.keySet().iterator();	
+				
 				while (keyIt.hasNext()) {
 					String key = keyIt.next();					
 					Node node;
-					Iterator<String> valueIt = table.get(key).iterator();
-					
-			        if (!graphDB.hasNode(key)) {
-			        	
-			        	node  = new Node(key);
-			        	outputWriter.println(key);
-			        	outputWriter.flush();
+					Iterator<String> valueIt = table.get(key).iterator();					
+			        if (!graphDB.hasNode(key)) {			        	
+			        	node  = new Node(key);		
+//			        	node.addNeighbor(node.getID());
+			        	try {
+							outputWriter.write(String.format("%s\n", key));
+				        	outputWriter.flush();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 			        }
 			        else {
 			        	node = graphDB.getNode(key);
-			        }
-					
+			        }					
 					while (valueIt.hasNext()) {
 						String nextVal = valueIt.next();
 						node.addNeighbor(nextVal);
-						collector.emit(new Values<Object>(nextVal));
-					}					
+						collector.emit(new Values<Object>(key, nextVal));
+					}
 		        	graphDB.addNode(node);
 				}
 				
-				outputWriter.close();
+				try {
+					outputWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
 				tempDB.clearTempData();
 								
 				collector.emitEndOfStream();
@@ -133,12 +139,13 @@ public class FirstaryReduceBolt implements IRichBolt {
 		File outfileDir = new File(outputFileDir);
 		outfileDir.mkdirs();
 		
-		String outputFileName = "src.txt";
+		String outputFileName = "names.txt";
 		outfile = new File(outfileDir, outputFileName);
+		
 		try {
-			outputWriter = new PrintWriter(outfile);
-		} 
-		catch (FileNotFoundException e) {
+			outputWriter = new FileWriter(outfile, false);
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}

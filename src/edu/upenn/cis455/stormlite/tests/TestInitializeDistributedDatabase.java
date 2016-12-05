@@ -8,8 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.upenn.cis.stormlite.bolts.BuildGraph.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.BuildGraph.SecondaryReduceBolt;
 import edu.upenn.cis.stormlite.bolts.BuildGraph.FirstaryReduceBolt;
+import edu.upenn.cis.stormlite.bolts.BuildGraph.SecondReducerBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
@@ -33,21 +33,21 @@ public class TestInitializeDistributedDatabase {
 		int numSpouts   = 1;
 		int numFixers   = 1;
 		
-		String inputDir  = "data" ; 
+		String inputDir  = "test_data" ; 
 		String outputDir = "urls";
 		String jobName   = "job1"; 
 				
 		LinksFileSpout spout     = new LinksSpout();		
 	    BuilderMapBolt mapBolt   = new BuilderMapBolt();
 	    FirstaryReduceBolt reduceBolt = new FirstaryReduceBolt();
-	    SecondaryReduceBolt postBolt = new SecondaryReduceBolt();
+	    SecondReducerBolt postBolt = new SecondReducerBolt();
 	    
 	    // build topology
 		TopologyBuilder builder = new TopologyBuilder();			    			    
         builder.setSpout(SPOUT, spout, numSpouts);
         builder.setBolt(MAP_BOLT, mapBolt, numMappers).shuffleGrouping(SPOUT);		        
         builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
-        builder.setBolt(FIXER_BOLT, postBolt, numFixers).fieldsGrouping(REDUCE_BOLT, new Fields("key"));
+        builder.setBolt(FIXER_BOLT, postBolt, numFixers).fieldsGrouping(REDUCE_BOLT, new Fields("value"));
         
         Topology topo = builder.createTopology();
         

@@ -4,8 +4,8 @@
 	<property name="build.target.dir" location="${basedir}${file.separator}target"/>
 	<property name="web-inf.dir" location="${build.target.dir}${file.separator}WEB-INF"/>
 	<property name="web-inf.lib.dir" location="${web-inf.dir}${file.separator}lib"/>
-	<property name="master-class" value="edu.upenn.cis455.mapreduce.MasterServer"/>
-	<property name="worker-class" value="edu.upenn.cis455.mapreduce.worker.WorkerServer"/>
+	<property name="master-class" value="edu.upenn.cis455.mapreduce.servers.MasterServer"/>
+	<property name="worker-class" value="edu.upenn.cis455.mapreduce.servers.WorkerServer"/>
 
 	<path id="classpath">
 		<fileset dir="${web-inf.lib.dir}" includes="**/*.jar"/>
@@ -56,7 +56,7 @@
 		</javac>
 	</target>
 
-	<target name="build" depends="war-master,war-worker,compile-jobs">
+	<target name="build" depends="compile-jobs">
 		<copy todir="${web-inf.lib.dir}" overwrite="true">
 			<fileset dir="${inputlib.dir}">
 				<include name="*.jar"/>
@@ -83,23 +83,6 @@
 			</manifest>
 		</jar>
 	</target>
-
-	<target name="war-master" depends="compile-master">
-		<jar destfile="master.war">
-			<fileset dir="target/master/" includes="WEB-INF/classes/**/*.class"/>
-			<fileset dir="target/master/" includes="WEB-INF/lib/*.jar"/>
-			<fileset dir="target/master/" includes="WEB-INF/*.xml"/>
-		</jar>
-	</target>
-
-	<target name="war-worker" depends="compile-worker">
-		<jar destfile="worker.war">
-			<fileset dir="target/worker/" includes="WEB-INF/classes/**/*.class"/>
-			<fileset dir="target/worker/" includes="WEB-INF/lib/*.jar"/>
-			<fileset dir="target/worker/" includes="WEB-INF/*.xml"/>
-		</jar>
-	</target>
-
 	<target name="run" depends="build">
 		<parallel>
 			
@@ -145,6 +128,11 @@
 		<delete dir="${web-inf.lib.dir}"/>
 		<delete file="master.war"/>
 		<delete file="worker.war"/>
+		<delete dir="graphStore"/>
+		<delete dir="urls"/>
+		<delete dir="storage"/>
+		<delete file="result1.0"/>
+		<delete file="result1.1"/>
 	</target>
 	
 </project>
