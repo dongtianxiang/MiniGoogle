@@ -97,104 +97,35 @@ public class TestIndexerLocal {
 							}
 							i++;
 						}
-					}
-					
-//					for (String w: lemmas){
-//						System.out.println("word:" + w);
-//						Matcher m = pan.matcher(w);
-//						Matcher m2 = pan2.matcher(w);
-//						if ( !m.matches() || m2.matches()) {
-////							System.out.println("punctuation & numbers only:" + w);
-//						} else {
-////							System.out.println("word:" + w);
-//							// take out hyphen
-//							if (w.contains("-")) {
-//								w = w.replace("-", " ").trim();
-//							}
-//							if (w.startsWith(".")) {
-//								w = w.substring(1);
-//							}
-//							if (w.endsWith(".")) {
-//								int index = w.lastIndexOf(".");
-//								w = w.substring(0, index);
-//							}
-//							Hit h;
-//							if (tables.containsKey(w)){
-//								h = tables.get(w);
-//								h.increaseFrequency();
-//							} else {
-//								h = new Hit(w);
-//							}
-//							h.setDocID(1);
-//							if (nodeName.matches("h[\\d]") ){
-//								h.setHead(true);
-//								h.addPosition(new Position(count, 2));
-//							} else if (nodeName.equalsIgnoreCase("title")) {
-//								h.setTitle(true);
-//								h.addPosition(new Position(count, 3));
-//							} else {
-//								h.addPosition(new Position(count, 1));
-//							}
-//							 maybe extract href as well
-//							tables.put(w, h);
-//							System.out.println("hit:" + h.getText());
-//						}
-//					}
-//					System.out.println();
-					
-//					List<String> neighbors = sen.nerTags();
-//					System.out.println("ners: ");
-//					for (String n: neighbors){
-//						System.out.println(n + ",");
-//					}
-//					
-					
-//					Annotation ann = new Annotation(text);
-//					pipeline.annotate(ann);
-//					List<CoreMap> sentences = ann.get(SentencesAnnotation.class);
-//					
-//					for(CoreMap sentence: sentences) {
-//						  // traversing the words in the current sentence
-//						  // a CoreLabel is a CoreMap with additional token-specific methods
-//						  for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
-//						    // this is the text of the token
-//						    String word = token.get(TextAnnotation.class);
-//						    System.out.println("word:" + word);
-//						    // this is the NER label of the token
-//						    String ne = token.get(NamedEntityTagAnnotation.class);
-//						    System.out.println("ne:" + ne);
-//						  }
-//					}
-//					count++;	
+					}	
 				}
 			}
-//			System.out.println(tables);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public static void parseUseCore(File doc) {
-		// configure nlp
-		Properties myPro = new Properties();
-		myPro.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse");
-		StanfordCoreNLP pipeline = new StanfordCoreNLP(myPro);
-		org.jsoup.nodes.Document d;
-		try {
-			d = Jsoup.parse(doc, "UTF-8", "");
-			d.select(":containsOwn(\u00a0)").remove();
-			Elements es = d.select("*");
-			for (Element e: es) {
-				String nodeName = e.nodeName(), text = e.ownText().trim();		
-				if (text != null && !text.isEmpty() && text.length() != 0 ){					
-					Sentence sen = new Sentence(text);					
-					Annotation ann = new Annotation(text);
-					pipeline.annotate(ann);
-					List<CoreMap> sentences = ann.get(SentencesAnnotation.class);
-					
-					for(CoreMap sentence: sentences) {
-						System.out.println(sentence.toString());
+//	public static void parseUseCore(File doc) {
+//		// configure nlp
+//		Properties myPro = new Properties();
+//		myPro.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse");
+//		StanfordCoreNLP pipeline = new StanfordCoreNLP(myPro);
+//		org.jsoup.nodes.Document d;
+//		try {
+//			d = Jsoup.parse(doc, "UTF-8", "");
+//			d.select(":containsOwn(\u00a0)").remove();
+//			Elements es = d.select("*");
+//			for (Element e: es) {
+//				String nodeName = e.nodeName(), text = e.ownText().trim();		
+//				if (text != null && !text.isEmpty() && text.length() != 0 ){					
+//					Sentence sen = new Sentence(text);					
+//					Annotation ann = new Annotation(text);
+//					pipeline.annotate(ann);
+//					List<CoreMap> sentences = ann.get(SentencesAnnotation.class);
+//					
+//					for(CoreMap sentence: sentences) {
+//						System.out.println(sentence.toString());
 						  // traversing the words in the current sentence
 						  // a CoreLabel is a CoreMap with additional token-specific methods
 //						  for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
@@ -205,15 +136,14 @@ public class TestIndexerLocal {
 //						    String ne = token.get(NamedEntityTagAnnotation.class);
 //						    System.out.println("ne:" + ne);
 //						  }
-					}	
-				}
-			}
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
+//					}	
+//				}
+//			}
+//			
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}		
+//	}
 		
 }
