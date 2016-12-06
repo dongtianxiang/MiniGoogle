@@ -1,5 +1,4 @@
 package edu.upenn.cis.stormlite.spouts.PageRank;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,9 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-
 import org.apache.log4j.Logger;
-
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
@@ -54,7 +51,6 @@ public class RankDataSpout implements IRichSpout {
         config.put("status", "IDLE");
         databaseDir = (String)conf.get("graphDataDir");       
         serverIndex = (String)conf.get("workerIndex");
-        
         String urlFileDir = (String)conf.get("inputDir");
         
         String targetDirectory = databaseDir;
@@ -64,7 +60,7 @@ public class RankDataSpout implements IRichSpout {
         }
 
 		nodesStore = DBManager.getDBInstance(targetDirectory);		
-		sourceUrlFile = new File(urlFileDir, "urls.txt");
+		sourceUrlFile = new File(urlFileDir, "names.txt");
 		
 		try  {
 			bufferedReader = new BufferedReader(new FileReader(sourceUrlFile));
@@ -102,19 +98,24 @@ public class RankDataSpout implements IRichSpout {
 		
 		if (bufferedReader != null && !eofSent) {
 			try {
-				String urlName = bufferedReader.readLine();			
+				
+				String urlName = bufferedReader.readLine();
 				if (urlName != null && urlName.length() > 0) {
 					
 					Node nextNode = nodesStore.getNode(urlName);					
 					Iterator<String> neighborIt = nextNode.getNeighborsIterator();
 					int numNeighbors = nextNode.getNumberNeighbors();
 					double rank = nextNode.getRank();
+
 					double averageWeight = rank / numNeighbors;
-								
 					while (neighborIt.hasNext()) {
-						collector.emit(new Values<Object>(nextNode.getID(), neighborIt.next() + ":" + averageWeight));				
-					}
-					
+						String thisID = nextNode.getID();
+						String neighborID = neighborIt.next();
+						
+						log.info(nextNode.getID() + " --------> " + neighborID);
+						
+						collector.emit(new Values<Object>(thisID, neighborID + ":" + averageWeight));				
+					}				
 				} 
 				else if (!eofSent) {
 					
