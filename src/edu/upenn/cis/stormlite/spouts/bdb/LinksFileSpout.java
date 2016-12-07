@@ -79,7 +79,7 @@ public abstract class LinksFileSpout implements IRichSpout {
 	
 	@Override
 	public synchronized void nextTuple() {
-		
+			
 		if (reader != null && !eofSent) {
 			try {
 				String line = reader.readLine();

@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts.PageRank;
+package edu.upenn.cis.stormlite.bolts.pagerank;
 
 import java.util.Iterator;
 import java.util.List;
@@ -20,7 +20,7 @@ import edu.upenn.cis455.database.DBManager;
 public class PRReduceBolt implements IRichBolt {
 	
 	public static Logger log = Logger.getLogger(PRReduceBolt.class);
-	public Map<String, String> config;
+	public static Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
 	public Fields schema = new Fields("key", "value"); 
 	public Job reduceJob;
@@ -50,45 +50,49 @@ public class PRReduceBolt implements IRichBolt {
 	@Override
 	public void execute(Tuple input) {
 		
-    	if (sentEof) {   		
-	        if (!input.isEndOfStream()) {
-	        	throw new RuntimeException("We received data after we thought the stream had ended!");
-	        }
-		}
-    	else if (input.isEndOfStream()) {
-    		
-			log.info("EOS Received: " + (++count));			
-			eosNeeded--;
-			
-			if (eosNeeded == 0) {
-				
-				log.info("*** Reducer has received all expected End of Stream marks! ***");	
-				log.info("***                Start of Reducing phase!                ***");
-				Map<String, List<String>> table = tempDB.getTable(executorId);				
-				Iterator<String> keyIt = table.keySet().iterator();	
-				while (keyIt.hasNext()) {
-					String key = keyIt.next();
-					table.get(key).add((new Double(1 - d)).toString());
-					reduceJob.reduce(key, table.get(key).iterator(), collector);
-				}
-				tempDB.clearTempData();
-				log.info("Database instance has been reset.");			
+		try {
+		
+	    	if (sentEof) {   		
+		        if (!input.isEndOfStream()) {
+		        	throw new RuntimeException("We received data after we thought the stream had ended!");
+		        }
 			}
-			
-			collector.emitEndOfStream();
-    	}
-    	else {
-    		String key = input.getStringByField("key");
-	        String value = input.getStringByField("value");       
-	        Double realVal = Double.parseDouble(value) * d;
-	        
-	        int written = Integer.parseInt(config.get("keysWritten"));
-	        config.put("keysWritten", (new Integer(written + 1)).toString());
-	        
-	        log.info("Reduce bolt received: " + key + " / " + value);  
-	        tempDB.addKeyValue(executorId, key, (new Double(realVal * d)).toString());
-	        tempDB.synchronize();
-    	}		
+	    	else if (input.isEndOfStream()) {
+	    		
+				log.info("EOS Received: " + (++count));			
+				eosNeeded--;
+				
+				if (eosNeeded == 0) {
+					
+						config.put("status", "REDUCING");
+						log.info("- start reducing -");
+						Map<String, List<String>> table = tempDB.getTable(executorId);				
+						Iterator<String> keyIt = table.keySet().iterator();	
+//						System.out.println(table);
+						while (keyIt.hasNext()) {
+							String key = keyIt.next();
+							table.get(key).add((new Double(1 - d)).toString());
+							reduceJob.reduce(key, table.get(key).iterator(), collector);
+						}
+						tempDB.clearTempData();
+						log.info("Database instance has been reset.");			
+					}
+					
+					collector.emitEndOfStream();
+	    		}
+		    	else {
+		    		String key = input.getStringByField("key");
+			        String value = input.getStringByField("value");       
+			        Double realVal = Double.parseDouble(value) * d;
+			        
+			        log.debug("Reduce bolt received: " + key + " / " + value);  
+			        tempDB.addKeyValue(executorId, key, (new Double(realVal * d)).toString());
+			        tempDB.synchronize();
+		    	}		
+	    	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override

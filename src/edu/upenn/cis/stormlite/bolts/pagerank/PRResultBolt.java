@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts.PageRank;
+package edu.upenn.cis.stormlite.bolts.pagerank;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,8 +29,8 @@ public class PRResultBolt implements IRichBolt {
     public File targetDirectory;
     public File targetFile;
     public PrintWriter pw;    
-    public int eosReceived = 0;  
-    public Map<String, String> config;    
+    public int eosReceived = 0;
+    public static Map<String, String> config;    
     public String serverIndex;
     public DBInstance graphData;
     
@@ -57,11 +57,10 @@ public class PRResultBolt implements IRichBolt {
 			String key = input.getStringByField("key");
 			String val = input.getStringByField("value");			
 			String output = key + " -> " + val;	
-			log.info(output);
 			
-			Node newNode = new Node(key);
-			newNode.setRank(Double.parseDouble(val));
-			graphData.addNode(newNode);
+			Node node = graphData.getNode(key);
+			node.setRank(Double.parseDouble(val));
+			graphData.addNode(node);
 			
 			pw.println(output);
 			pw.flush();			
@@ -69,8 +68,8 @@ public class PRResultBolt implements IRichBolt {
 		else {
 			eosReceived++;
 			if (eosRequired == eosReceived) {
-				log.info("******** Map-Reduce job completed! ********");
-				eosReceived = 0;
+				log.info("* Page Rank Iteration complete *");
+				config.put("status", "IDLE");
 				pw.close();			
 			}
 			log.debug("EOS Receved: " + eosReceived);
@@ -91,18 +90,14 @@ public class PRResultBolt implements IRichBolt {
         log.info("Num EOS required for Result Bolt: " + this.eosRequired); 
         
 		String graphDataDir = stormConf.get("graphDataDir");
-		log.info("***************" + graphDataDir + "******************");
 		String serverIndex = stormConf.get("workerIndex");
 		if (serverIndex != null) {
 			graphDataDir += "/" + serverIndex;
-			log.info("***************" + graphDataDir + "******************");
+//			log.info("***************" + graphDataDir + "******************");
 		}
-		
 		graphData = DBManager.getDBInstance(graphDataDir);
-        
         config = stormConf;        
-        serverIndex = stormConf.get("workerIndex");
-                
+        serverIndex = stormConf.get("workerIndex"); 
         String outputDir = stormConf.get("outputDir");
         String targetFileDirectory = outputDir;
         if (serverIndex != null) {

@@ -24,7 +24,7 @@ import edu.upenn.cis455.database.Node;
 public class FirstaryReduceBolt implements IRichBolt {
 	
 	public static Logger log = Logger.getLogger(FirstaryReduceBolt.class);
-	public Map<String, String> config;
+	public static Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
 	public Fields schema = new Fields("key", "value"); 
 	public Job reduceJob;
@@ -64,13 +64,11 @@ public class FirstaryReduceBolt implements IRichBolt {
 		}
     	else if (input.isEndOfStream()) {
     		
-			log.info("EOS Received: " + (++count));			
+//			log.debug("EOS Received: " + (++count));			
 			eosNeeded--;
 			if (eosNeeded == 0) {
 				
-				log.info("*** Reducer has received all expected End of String marks! ***");	
-				log.info("***              Start Firstary Reducing phase!            ***");
-				
+				config.put("status", "REDUCING");
 				Map<String, List<String>> table = tempDB.getTable(executorId);				
 				Iterator<String> keyIt = table.keySet().iterator();	
 				
@@ -80,7 +78,6 @@ public class FirstaryReduceBolt implements IRichBolt {
 					Iterator<String> valueIt = table.get(key).iterator();					
 			        if (!graphDB.hasNode(key)) {			        	
 			        	node  = new Node(key);		
-//			        	node.addNeighbor(node.getID());
 			        	try {
 							outputWriter.write(String.format("%s\n", key));
 				        	outputWriter.flush();
@@ -103,19 +100,15 @@ public class FirstaryReduceBolt implements IRichBolt {
 					outputWriter.close();
 				} catch (IOException e) {
 					e.printStackTrace();
-				}
-				
-				tempDB.clearTempData();
-								
+				}				
+				tempDB.clearTempData();								
 				collector.emitEndOfStream();
-				log.info("***              Firstary Reduction completed!            ***");		
 			}
     	}
     	else {
     		String key = input.getStringByField("key");
-	        String value = input.getStringByField("value");	        
-	              
-	        log.info("Firstary reducer received: " + key + " / " + value);         
+	        String value = input.getStringByField("value");	        	              
+//	        log.debug("Firstary reducer received: " + key + " / " + value);         
 	        tempDB.addKeyValue(executorId, key, value);
     	}		
 	}
@@ -162,13 +155,10 @@ public class FirstaryReduceBolt implements IRichBolt {
 //		int numMappers  = Integer.parseInt(stormConf.get("mapExecutors"));	
 //		int numSpouts   = Integer.parseInt(stormConf.get("spoutExecutors"));	
 //		int numReducers = Integer.parseInt(stormConf.get("reduceExecutors"));
-		int numWorkers  = Integer.parseInt(stormConf.get("workers"));
-	
+		int numWorkers  = Integer.parseInt(stormConf.get("workers"));	
 //		int M = ((numWorkers - 1) * numMappers  + 1) * numSpouts;		
-//        eosNeeded = M * numReducers * (numWorkers - 1) * numMappers + M * numMappers;
-		
-		eosNeeded = numWorkers;
-		
+//        eosNeeded = M * numReducers * (numWorkers - 1) * numMappers + M * numMappers;		
+		eosNeeded = numWorkers;	
         log.info("Num EOS required for ReduceBolt: " + eosNeeded);
 	}
 

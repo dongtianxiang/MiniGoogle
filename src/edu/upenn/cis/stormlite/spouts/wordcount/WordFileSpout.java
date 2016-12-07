@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts.WordCount;
+package edu.upenn.cis.stormlite.spouts.wordcount;
 
 public class WordFileSpout extends SimpleFileSpout {
 	@Override

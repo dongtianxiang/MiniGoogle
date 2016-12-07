@@ -18,7 +18,7 @@ import edu.upenn.cis.stormlite.tuple.Values;
 public class BuilderMapBolt implements IRichBolt {
 
 	public static Logger log = Logger.getLogger(BuilderMapBolt.class);
-	public Map<String, String> config;
+	public static Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
 	public Fields schema = new Fields("key", "value"); 
 	public Job mapJob;
@@ -66,11 +66,10 @@ public class BuilderMapBolt implements IRichBolt {
 	public void prepare(Map<String, String> stormConf, TopologyContext context, OutputCollector collector) {
 
         this.collector = collector;
-        this.config = stormConf;
+        config = stormConf;
         
-        log.info(this.config);
-        log.info("********** Start of mapping phase *********");       
-        stormConf.put("status", "Mapping");
+        log.info("* START MAPPING *");       
+        stormConf.put("status", "MAPPING");
         
         if (!stormConf.containsKey("spoutExecutors")) {
         	throw new RuntimeException("Mapper class doesn't know how many input spout executors");
@@ -80,11 +79,8 @@ public class BuilderMapBolt implements IRichBolt {
 //		int numSpouts  = Integer.parseInt(stormConf.get("spoutExecutors"));		
 		int numWorkers = Integer.parseInt(stormConf.get("workers"));
 //        eosNeeded = ((numWorkers - 1) * numMappers  + 1) * numSpouts;	
-		
 		eosNeeded = numWorkers;
-		
-		
-        log.info("Num EOS required for MapBolt: " + eosNeeded);
+        log.debug("Num EOS required for MapBolt: " + eosNeeded);
 	}
 
 	@Override

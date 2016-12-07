@@ -1,12 +1,10 @@
-package edu.upenn.cis.stormlite.spouts.PageRank;
-import java.io.BufferedReader;
+package edu.upenn.cis.stormlite.spouts.pagerank;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.UUID;
 import org.apache.log4j.Logger;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
@@ -34,10 +32,9 @@ public class RankDataSpout implements IRichSpout {
 	private DBInstance nodesStore;
 	private String databaseDir;
 	private File sourceUrlFile;
-	private BufferedReader bufferedReader;
-
+	private Scanner scanner;
 	public String serverIndex = null;
-	
+
 	public RankDataSpout() {
 		
 	}
@@ -58,12 +55,15 @@ public class RankDataSpout implements IRichSpout {
         	targetDirectory += "/" + serverIndex;
         	urlFileDir += "/" + serverIndex;
         }
-
 		nodesStore = DBManager.getDBInstance(targetDirectory);		
 		sourceUrlFile = new File(urlFileDir, "names.txt");
 		
 		try  {
-			bufferedReader = new BufferedReader(new FileReader(sourceUrlFile));
+			scanner = new Scanner(sourceUrlFile);
+			if (!scanner.hasNext()) {
+				throw new IllegalStateException();
+			}
+			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -72,51 +72,37 @@ public class RankDataSpout implements IRichSpout {
 	
 	@Override
 	public void close() {
-		
-		if (bufferedReader != null) {
+		if (scanner != null) {
 			if (eofSent) {
-				try {
-					bufferedReader.close();
-					bufferedReader = null;
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				scanner.close();
+				scanner = null;
+				System.out.println("File reader instance has been closed");
 			}
 		}
-		else {
-			try {
-				throw new IllegalStateException();
-			} catch (IllegalStateException e) {
-				e.printStackTrace();
-			}
-		}
-
 	}
 	
 	@Override
 	public synchronized void nextTuple() {
 		
-		if (bufferedReader != null && !eofSent) {
+		if (scanner != null && !eofSent) {
 			try {
 				
-				String urlName = bufferedReader.readLine();
+				String urlName = null;
+				if (scanner.hasNext()) urlName = scanner.nextLine();
+				
 				if (urlName != null && urlName.length() > 0) {
 					
 					Node nextNode = nodesStore.getNode(urlName);					
-					Iterator<String> neighborIt = nextNode.getNeighborsIterator();
+					Iterator<String> neighborIt = nextNode.getNeighborsIterator();				
 					int numNeighbors = nextNode.getNumberNeighbors();
 					double rank = nextNode.getRank();
-
 					double averageWeight = rank / numNeighbors;
 					while (neighborIt.hasNext()) {
 						String thisID = nextNode.getID();
 						String neighborID = neighborIt.next();
-						
-						log.info(nextNode.getID() + " --------> " + neighborID);
-						
 						collector.emit(new Values<Object>(thisID, neighborID + ":" + averageWeight));				
-					}				
-				} 
+					}
+				}
 				else if (!eofSent) {
 					
 					log.info("Finished reading data at " + databaseDir + " and emitting EOS");

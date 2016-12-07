@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts.PageRank;
+package edu.upenn.cis.stormlite.bolts.pagerank;
 
 import java.util.Map;
 import java.util.UUID;
@@ -15,7 +15,7 @@ import edu.upenn.cis.stormlite.tuple.Tuple;
 public class PRMapBolt implements IRichBolt {
 	
 	public static Logger log = Logger.getLogger(PRMapBolt.class);
-	public Map<String, String> config;
+	public static Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
 	public Fields schema = new Fields("key", "value"); 
 	public Job mapJob;
@@ -53,7 +53,7 @@ public class PRMapBolt implements IRichBolt {
 		else {
     		eosNeeded--;    		
     		if (eosNeeded == 0) {
-    			log.info("Mapping phase completed");	    			
+//    			log.info("Mapping phase completed");	    			
     		}
     		collector.emitEndOfStream();
 		}
@@ -63,13 +63,9 @@ public class PRMapBolt implements IRichBolt {
 	public void prepare(Map<String, String> stormConf, TopologyContext context, OutputCollector collector) {
 
         this.collector = collector;
-        this.config = stormConf;
-        
+        config = stormConf;
         d = Double.parseDouble(config.get("decayFactor"));
-        
-        log.info(this.config);
-        log.info("********** Start of mapping phase ********");       
-        stormConf.put("status", "Mapping");
+        config.put("status", "MAPPING");
         
         if (!stormConf.containsKey("mapClass")) {
         	throw new RuntimeException("Mapper class is not specified as a config option");

@@ -7,14 +7,14 @@ import java.util.Arrays;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRResultBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRMapBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRReduceBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.PageRank.RankDataSpout;
+import edu.upenn.cis.stormlite.spouts.pagerank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servlets.MasterServlet;
 
@@ -25,7 +25,7 @@ public class TestPageRankTopologyDistributed {
 	private static final String REDUCE_BOLT = "REDUCE_BOLT";
 	private static final String RESULT_BOLT  = "RES_BOLT";
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		
 		int numMappers  = 1;
 		int numReducers = 1;
@@ -53,18 +53,17 @@ public class TestPageRankTopologyDistributed {
         Configuration config = new Configuration();        
         config.put("mapClass", jobClass);
         config.put("reduceClass", jobClass);
-        config.put("spoutExecutors",  (new Integer(numSpouts)).toString());
-        config.put("mapExecutors",    (new Integer(numMappers)).toString());
+        config.put("spoutExecutors",    (new Integer(numSpouts)).toString());
+        config.put("mapExecutors",     (new Integer(numMappers)).toString());
         config.put("reduceExecutors", (new Integer(numReducers)).toString());
         config.put("inputDir", inputDir);
         config.put("outputDir", outputDir);
         config.put("job", jobName);
         config.put("workers", "2");
         config.put("decayFactor", "0.85");
-        
+        config.put("status", "IDLE");
         config.put("graphDataDir", "graphStore");
         config.put("databaseDir" , "storage");
-        config.put("serverDataDir", "");
         
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        
@@ -91,6 +90,8 @@ public class TestPageRankTopologyDistributed {
 			e.printStackTrace();
 		}
 		
+		Thread.sleep(5000);
+		System.exit(0);
 	}
 	
 }
