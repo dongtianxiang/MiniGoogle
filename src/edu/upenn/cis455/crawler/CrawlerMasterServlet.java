@@ -382,8 +382,8 @@ public class CrawlerMasterServlet extends HttpServlet {
         ObjectMapper mapper = new ObjectMapper();	        
         mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);        
         
-//        String[] workersList = new String[]{"172.31.60.134:8000", "172.31.52.13:8001"};   
-        String[] workersList = new String[]{"127.0.0.1:8000", "127.0.0.1:8001"};    
+        String[] workersList = new String[]{"172.31.60.134:8000", "172.31.52.13:8001"};   
+//        String[] workersList = new String[]{"127.0.0.1:8000", "127.0.0.1:8001"};    
         config.put("workerList", Arrays.toString(workersList));		        
         
 		try {
