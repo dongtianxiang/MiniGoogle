@@ -58,12 +58,9 @@ public class FieldBased extends StreamRouter {
 		if (fieldsToHash.isEmpty())
 			throw new IllegalArgumentException("Field-based grouping without a shard attribute");
 		
-//		for (Integer i: fieldsToHash){
-//			hash ^= tuple.get(i).hashCode();
-//		}
-		
-		// only hash for first element in tuple. "KEY" hashing only
-		hash ^= tuple.get(0).hashCode();
+		for (Integer i: fieldsToHash){
+			hash ^= tuple.get(i).hashCode();
+		}
 		
 		hash = hash % getBolts().size();
 		if (hash < 0)

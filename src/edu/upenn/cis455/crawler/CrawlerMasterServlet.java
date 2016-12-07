@@ -352,7 +352,6 @@ public class CrawlerMasterServlet extends HttpServlet {
   public static void distributeWorker(int numSpouts, int numMappers, int numReducers, String inputDir, String outputDir, String jobName) throws IOException {
 		String URL_SPOUT = "URL_SPOUT";
 		String CRAWLER_BOLT = "CRAWLER_BOLT";
-//		String DOWNLOAD_BOLT = "DOWNLOAD_BOLT";
 		String FILTER_BOLT = "FILTER_BOLT";
 		String RECORD_BOLT = "RECORD_BOLT";
 		  
@@ -368,8 +367,7 @@ public class CrawlerMasterServlet extends HttpServlet {
 		builder.setSpout(URL_SPOUT, spout, 2);
 		  
 		builder.setBolt(CRAWLER_BOLT, boltA, 10).fieldsGrouping(URL_SPOUT, new Fields("url"));    
-//		builder.setBolt(DOWNLOAD_BOLT, boltB, 4).fieldsGrouping(CRAWLER_BOLT, new Fields("url", "document", "type"));
-		builder.setBolt(FILTER_BOLT, boltD, 15).fieldsGrouping(CRAWLER_BOLT, new Fields("url", "URLStream"));
+		builder.setBolt(FILTER_BOLT, boltD, 15).fieldsGrouping(CRAWLER_BOLT, new Fields("url"));
 		builder.setBolt(RECORD_BOLT, boltE, 150).fieldsGrouping(FILTER_BOLT, new Fields("extractedLink"));
 		
 		Topology topo = builder.createTopology();	  
@@ -384,7 +382,8 @@ public class CrawlerMasterServlet extends HttpServlet {
         ObjectMapper mapper = new ObjectMapper();	        
         mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);        
         
-        String[] workersList = new String[]{"172.31.60.134:8000", "172.31.52.13:8001"};          
+//        String[] workersList = new String[]{"172.31.60.134:8000", "172.31.52.13:8001"};   
+        String[] workersList = new String[]{"127.0.0.1:8000", "127.0.0.1:8001"};    
         config.put("workerList", Arrays.toString(workersList));		        
         
 		try {

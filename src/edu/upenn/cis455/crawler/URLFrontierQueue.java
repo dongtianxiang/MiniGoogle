@@ -75,10 +75,8 @@ public class URLFrontierQueue {
 //		if(visitedURLs.containsKey(url)){
 			
 			long crawled_LastModified = db.getVisitedTime(url);	
-//			long crawled_LastModified = visitedURLs.get(url);
 			if(currentLastModified > crawled_LastModified){
 				db.putVisitedURL(url, currentLastModified);
-//				visitedURLs.put(url, currentLastModified);
 				return true;
 			}
 			else{
