@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts.LocalDBBuilder;
+package edu.upenn.cis.stormlite.spouts.bdb;
 
 public class LinksSpout extends LinksFileSpout {
 

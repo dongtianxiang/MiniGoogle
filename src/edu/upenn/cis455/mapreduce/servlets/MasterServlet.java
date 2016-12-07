@@ -16,42 +16,47 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.BuildGraph.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.BuildGraph.FirstaryReduceBolt;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRResultBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.SecondReducerBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRMapBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRReduceBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.LocalDBBuilder.LinksFileSpout;
-import edu.upenn.cis.stormlite.spouts.LocalDBBuilder.LinksSpout;
-import edu.upenn.cis.stormlite.spouts.PageRank.RankDataSpout;
+import edu.upenn.cis.stormlite.spouts.bdb.LinksFileSpout;
+import edu.upenn.cis.stormlite.spouts.bdb.LinksSpout;
+import edu.upenn.cis.stormlite.spouts.pagerank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servers.WorkerInformation;
 
 public class MasterServlet extends HttpServlet {
 
   static final long serialVersionUID = 455555001;
-  private static final String SPOUT  = "LINK_SPOUT";
-  private static final String MAP_BOLT = "MAP_BOLT";
-  private static final String REDUCE_BOLT = "REDUCE_BOLT";
-  private static final String RESULT_BOLT  = "RES_BOLT";
+//  private static final String SPOUT  = "LINK_SPOUT";
+//  private static final String MAP_BOLT = "MAP_BOLT";
+//  private static final String REDUCE_BOLT = "REDUCE_BOLT";
+//  private static final String RESULT_BOLT  = "RES_BOLT";
   private static final Integer totalWorkers = 2;
   private static Integer availableWorkers = 0;
   
   // note that this it's statically initiated
   static Map<String, WorkerInformation> workers;  
   static Thread checkerThread;
+  public static Logger log = Logger.getLogger(MasterServlet.class);
   
   public static Configuration globalConf = null;
   public static int count = 0;
  
   static {
+	  
 	  
 	  workers = new TreeMap<>();
 	  Runnable r = new Runnable() {
@@ -62,7 +67,6 @@ public class MasterServlet extends HttpServlet {
 			  while (true) {
 				  
 				  List<String> list = new LinkedList<>();
-				  
 						for (String key: workers.keySet()) {							
 							Long time = (new Date()).getTime();							
 							WorkerInformation info = workers.get(key);
@@ -70,13 +74,11 @@ public class MasterServlet extends HttpServlet {
 							if (time > lastCheckIn + 10000) {
 								list.add(key);
 							}
-							
 						}
 						for (String key: list) {
 							workers.remove(key);
 						}
 						
-						// TODO: add back after experiment is completed
 //						if (availableWorkers == totalWorkers) {
 //							  Runnable r = new Runnable() {  
 //								  @Override
@@ -138,7 +140,7 @@ public class MasterServlet extends HttpServlet {
 		  String remoteHost = request.getRemoteHost() + ":" + port;	
 		  WorkerInformation workerStatus = new WorkerInformation();
 		  
-		  try {			  
+		  try {
 			  
 			  workerStatus.currentJob = job;
 			  workerStatus.keysRead = keysRead;
@@ -148,14 +150,12 @@ public class MasterServlet extends HttpServlet {
 			  workerStatus.lastCheckIn = date.getTime();
 			  
 			 synchronized(availableWorkers) {
-				 if (status.equals("idle") && availableWorkers < totalWorkers) {
+				 if (status.equals("IDLE") && availableWorkers < totalWorkers) {
 					 availableWorkers += 1;
 				 }
 			 }
-			 
-//			 System.out.println(availableWorkers);
-			  
-			  synchronized(workers) {
+			 			  
+			 synchronized(workers) {
 				  workers.put(remoteHost, workerStatus);
 			  }
 	
@@ -165,17 +165,15 @@ public class MasterServlet extends HttpServlet {
 			  return;
 		  }		  
   
-		  System.out.println("Port:" + port);
-		  System.out.println("Status: " + status);
-		  System.out.println("Job: " + job);
-		  System.out.println("KeysRead: " + keysRead);
-		  System.out.println("keysWritten: " + keysWritten);		  
-		  System.out.println("----------------------------------");
+		  String report = String.format("%s\t%s\t%s", port, status, job);
+		  log.debug(" -- " + report + " -- ");
 		  
-		  if (port        == null || 
-			  status      == null || 
-			  job         == null || 
-			  keysRead    == null || 
+//		  System.out.println("KeysRead: " + keysRead);
+//		  System.out.println("keysWritten: " + keysWritten);		  
+//		  System.out.println("----------------------------------");
+		  
+		  if (port        == null || status      == null || 
+			  job         == null || keysRead    == null || 
 			  keysWritten == null ) {
 			  
 			  response.setStatus(400);
@@ -184,8 +182,7 @@ public class MasterServlet extends HttpServlet {
 			  out.println("<html>");
 			  out.println("<h1>");
 			  out.println("400 BAD REQUEST");
-			  out.println("</h1>");
-		      out.println("</html>");   
+			  out.println("</h1>");		      out.println("</html>");   
 		      
 			  return;
 		  }
@@ -309,8 +306,7 @@ public class MasterServlet extends HttpServlet {
 			if (outputDir == null) {
 				outputDir = "";
 			}
-			
-			String jobName = request.getParameter("jobName");
+		
 			Integer numMappers = null, numReducers = null;
 			
 			try {	
@@ -326,7 +322,7 @@ public class MasterServlet extends HttpServlet {
 				// invalid input
 			}
 			else {
-				distributePRJob(numMappers, numReducers, inputDir, outputDir, jobName);
+//				distributePRJob(numMappers, numReducers, inputDir, outputDir, jobName);
 			}
 			
 			response.sendRedirect("status");
@@ -404,124 +400,6 @@ public class MasterServlet extends HttpServlet {
 		
 		return conn;
   }
-  
-  public static void distributeBuildDistributedDB(int numMappers, int numReducers, String inputDir, String outputDir, String jobName) throws IOException {
-	  
-		LinksFileSpout spout     = new LinksSpout();		
-	    BuilderMapBolt mapBolt   = new BuilderMapBolt();
-	    FirstaryReduceBolt reduceBolt = new FirstaryReduceBolt();
-	    
-	    int numSpouts = 1;
-	    String jobClass = "edu.upenn.cis455.mapreduce.jobs.PageRankJob";
-	    
-	    // build topology
-		TopologyBuilder builder = new TopologyBuilder();			    			    
-        builder.setSpout(SPOUT, spout, numSpouts);
-        builder.setBolt(MAP_BOLT, mapBolt, numMappers).fieldsGrouping(SPOUT, new Fields("key"));		        
-        builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
-        Topology topo = builder.createTopology();
-        
-        // create configuration object
-        Configuration config = new Configuration();        
-        config.put("mapClass", jobClass);
-        config.put("reduceClass", jobClass);
-        config.put("spoutExecutors",  (new Integer(numSpouts)).toString());
-        config.put("mapExecutors",    (new Integer(numMappers)).toString());
-        config.put("reduceExecutors", (new Integer(numReducers)).toString());
-        config.put("inputDir", inputDir);
-        config.put("outputDir", outputDir);
-        config.put("job", jobName);       
-        config.put("workers", "2");
-        config.put("graphDataDir", "graphStore");
-        config.put("databaseDir" , "storage");       
-        
-        WorkerJob job = new WorkerJob(topo, config);
-        ObjectMapper mapper = new ObjectMapper();	        
-        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);        
-        String[] workersList = new String[]{"127.0.0.1:8000", "127.0.0.1:8001"};          
-        config.put("workerList", Arrays.toString(workersList));		        
-        
-		try {
-			int j = 0;
-			for (String dest: workersList) {
-		        config.put("workerIndex", String.valueOf(j++));
-				if (MasterServlet.sendJob(dest, "POST", config, "definejob", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(job)).getResponseCode() != HttpURLConnection.HTTP_OK) {					
-					throw new RuntimeException("Job definition request failed");
-				}
-			}
-			for (String dest: workersList) {
-				if (MasterServlet.sendJob(dest, "POST", config, "runjob", "").getResponseCode() != HttpURLConnection.HTTP_OK) {						
-					throw new RuntimeException("Job execution request failed");
-				}
-			}
-		}
-		catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-  }
-  
-  
-  public static void distributePRJob(int numMappers, int numReducers, String inputDir, String outputDir, String jobName) throws IOException {
-	  
-	  	int numSpouts = 1;  
-	  	
-	  	String jobClass = "edu.upenn.cis455.mapreduce.jobs.PageRankJob";
-		RankDataSpout spout = new RankDataSpout();		
-	    PRMapBolt mapBolt = new PRMapBolt();
-	    PRReduceBolt reduceBolt = new PRReduceBolt();
-	    PRResultBolt printer = new PRResultBolt();
-	    
-	    // build topology
-		TopologyBuilder builder = new TopologyBuilder();			    			    
-        builder.setSpout(SPOUT, spout, 1);
-        builder.setBolt(MAP_BOLT, mapBolt, numMappers).fieldsGrouping(SPOUT, new Fields("value"));		        
-        builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
-        builder.setBolt(RESULT_BOLT, printer, 1).shuffleGrouping(REDUCE_BOLT);		        
-        Topology topo = builder.createTopology();
-        
-        // create configuration object
-        Configuration config = new Configuration();        
-        config.put("mapClass", jobClass);
-        config.put("reduceClass", jobClass);
-        config.put("spoutExecutors",  (new Integer(numSpouts)).toString());
-        config.put("mapExecutors",    (new Integer(numMappers)).toString());
-        config.put("reduceExecutors", (new Integer(numReducers)).toString());
-        config.put("inputDir", inputDir);
-        config.put("outputDir", outputDir);
-        config.put("job", jobName);
-        config.put("workers", "2");       
-        config.put("decayFactor", "0.85");
-        
-        config.put("graphDataDir", "graphStore");
-        config.put("databaseDir" , "storage");
-        config.put("serverDataDir", "");
-        
-        WorkerJob job = new WorkerJob(topo, config);
-        ObjectMapper mapper = new ObjectMapper();	        
-        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-        
-        String[] workersList = new String[]{"127.0.0.1:8000", "127.0.0.1:8001"};       
-        config.put("workerList", Arrays.toString(workersList));		        
-        
-		try {
-			int j = 0;
-			for (String dest: workersList) {
-		        config.put("workerIndex", String.valueOf(j++));
-				if (MasterServlet.sendJob(dest, "POST", config, "definejob", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(job)).getResponseCode() != HttpURLConnection.HTTP_OK) {					
-					throw new RuntimeException("Job definition request failed");
-				}
-			}
-			for (String dest: workersList) {
-				if (MasterServlet.sendJob(dest, "POST", config, "runjob", "").getResponseCode() != HttpURLConnection.HTTP_OK) {						
-					throw new RuntimeException("Job execution request failed");
-				}
-			}
-		}
-		catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-	}
-  
   
   public void doPost(HttpServletRequest request, HttpServletResponse response)  {
 	 

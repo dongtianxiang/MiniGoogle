@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts.LocalDBBuilder;
+package edu.upenn.cis.stormlite.spouts.bdb;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -79,7 +79,7 @@ public abstract class LinksFileSpout implements IRichSpout {
 	
 	@Override
 	public synchronized void nextTuple() {
-		
+			
 		if (reader != null && !eofSent) {
 			try {
 				String line = reader.readLine();

@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts.BuildGraph;
+package edu.upenn.cis.stormlite.bolts.bdb;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -24,17 +24,18 @@ import edu.upenn.cis455.database.Node;
 public class SecondReducerBolt implements IRichBolt {
 	
 	public static Logger log = Logger.getLogger(SecondReducerBolt.class);
-	public Map<String, String> config;
+	public static Map<String, String> config;
+	
     public String executorId = UUID.randomUUID().toString();
 	public Fields schema = new Fields("key");
 	public DBInstance graphDB;
 	public DBInstance tempDB;
 	public OutputCollector collector;
-	public boolean sentEof = false;
+	public boolean sentEOS = false;
 	public String serverIndex;
 	public File outfile;
 	public FileWriter outputWriter;
-	public int eosNeeded;
+	public int eosREQUIRED;
 	
 	@Override
 	public String getExecutorId() {
@@ -48,54 +49,52 @@ public class SecondReducerBolt implements IRichBolt {
 
 	@Override
 	public void cleanup() {
-
+		
 	}
 
 	@Override
 	public void execute(Tuple input) {
 		
-    	if (sentEof) {   		
+    	if (sentEOS) {   		
 	        if (!input.isEndOfStream()) {
 	        	throw new RuntimeException("We received data after we thought the stream had ended!");
 	        }
 		}
     	else if (input.isEndOfStream()) {
     		
-	        eosNeeded--;
-	        if (eosNeeded == 0) {        	
+	        eosREQUIRED -= 1;
+	        if (eosREQUIRED == 0) {
 	        	Map<String, List<String>> table = tempDB.getTable(executorId);		        	
 	        	Iterator<String> iter = table.keySet().iterator();
-	        	
 	        	while (iter.hasNext()) {
-	        		
 	        		String dest = iter.next();	        		
 	        		if (!graphDB.hasNode(dest)) {        			
-		        		Node node = new Node(dest);		        		
+		        		Node node = new Node(dest); 		
 		        		List<String> ancestors = table.get(dest);	
 		        		node.addNeighbor(node.getID());
 		        		for (String ancestor: ancestors) {
 		        			node.addNeighbor(ancestor);
 		        		}		        
-		        		graphDB.addNode(node);	
 		        		try {
 							outputWriter.write(String.format("%s\n", node.getID()));
 							outputWriter.flush();
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-		        		
+		        		graphDB.addNode(node);	
 	        		}
-	        		
 	        	}
-		        log.info("************** Secondary reducer job completed! ******************");
+	        	tempDB.clearTempData();
+	        	config.put("status", "IDLE");
+	        	
+//		        log.info("************** Secondary reducer job completed! ******************");
 	        }
 	        
     	}
-    	else {
-    		
+    	else {   		
     		String key = input.getStringByField("value");
     		String value = input.getStringByField("key");
-	        log.info("Secondary reducer received: " + key); 	        
+//	        log.info("Secondary reducer received: " + key); 	        
 	        tempDB.addKeyValue(executorId, key, value);
     	}
 	}
@@ -143,11 +142,8 @@ public class SecondReducerBolt implements IRichBolt {
 		
 		graphDB = DBManager.getDBInstance(graphDataDir);		
 		DBManager.createDBInstance(databaseDir);
-		tempDB  = DBManager.getDBInstance(databaseDir);
-		
-		eosNeeded = Integer.parseInt(numWorkers);
-		log.info("Number of EOS needed for secondary reducers");
-			
+		tempDB  = DBManager.getDBInstance(databaseDir);		
+		eosREQUIRED = Integer.parseInt(numWorkers);			
         this.collector = collector;
 
 	}

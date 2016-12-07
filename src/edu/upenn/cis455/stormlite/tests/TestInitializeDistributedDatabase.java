@@ -7,15 +7,15 @@ import java.util.Arrays;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.BuildGraph.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.BuildGraph.FirstaryReduceBolt;
-import edu.upenn.cis.stormlite.bolts.BuildGraph.SecondReducerBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.SecondReducerBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.LocalDBBuilder.LinksFileSpout;
-import edu.upenn.cis.stormlite.spouts.LocalDBBuilder.LinksSpout;
+import edu.upenn.cis.stormlite.spouts.bdb.LinksFileSpout;
+import edu.upenn.cis.stormlite.spouts.bdb.LinksSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servlets.MasterServlet;
 
@@ -26,7 +26,7 @@ public class TestInitializeDistributedDatabase {
 	private static final String REDUCE_BOLT = "REDUCE_BOLT";
 	private static final String FIXER_BOLT  = "FIXER";
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		
 		int numMappers  = 1;
 		int numReducers = 1;
@@ -62,6 +62,7 @@ public class TestInitializeDistributedDatabase {
         config.put("workers", "2");
         config.put("graphDataDir", "graphStore");
         config.put("databaseDir" , "storage");
+        config.put("status", "IDLE");
         
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        
@@ -86,5 +87,8 @@ public class TestInitializeDistributedDatabase {
 		catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
+		
+		Thread.sleep(5000);
+		System.exit(0);
 	}
 }

@@ -40,7 +40,9 @@ import spark.Spark;
 public class WorkerServer {
 	
 	static Logger log = Logger.getLogger(WorkerServer.class);	
-	public static DistributedCluster cluster;
+//	public static DistributedCluster cluster;
+	
+	public DistributedCluster cluster;
 	
     List<TopologyContext> contexts = new ArrayList<>();
 	static List<String> topologies = new ArrayList<>();
@@ -77,31 +79,32 @@ public class WorkerServer {
 							if (!masterAddr.toString().startsWith("http://")) {
 								masterAddr = new StringBuilder("http://" + masterAddr.toString());
 							}
-							
 							String currJob     = currJobConfig.get("job");
 							String keysRead    = currJobConfig.get("keysRead");
 							String keysWritten = currJobConfig.get("keyWritten");
-							String status      = currJobConfig.get("status");
-									
+							String status      = currJobConfig.get("status");						
+							if (status == null) status = "IDLE";							
+							if (status.equals("IDLE") && cluster != null && cluster.running()) {
+								cluster.shutdown();
+							}							
 							masterAddr.append("/workerstatus?");							
 							masterAddr.append("port=" + myPort);								
 							masterAddr.append("&job=" +         (currJob == null ?     "N/A" : currJob));																							
 							masterAddr.append("&keysRead=" +    (keysRead == null ?    "N/A" : keysRead));						
 							masterAddr.append("&keysWritten=" + (keysWritten == null ? "N/A" : keysRead));
-							masterAddr.append("&status=" +      (status == null ?      "N/A" : status));
-							
+							masterAddr.append("&status=" +      (status == null ?      "N/A" : status));							
 							try {								
 								URL masterURL = new URL(masterAddr.toString());									
 								HttpURLConnection conn = (HttpURLConnection)masterURL.openConnection();
 								conn.setRequestProperty("Content-Type", "text/html");
 								StringBuilder builder = new StringBuilder();								
-								log.info(builder.append("Worker check-in: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString());
+								log.debug(builder.append("Worker Status Report: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString());
 							}
 							catch (ConnectException e) {
 								log.info("WorkerServer cannot contact MasterServer");
 							}							
 							// interval for background check
-							wait(10000);								
+							wait(5000);								
 						}						
 					} 
 					catch (InterruptedException e) {
@@ -127,6 +130,14 @@ public class WorkerServer {
 			@Override
 			public Object handle(Request arg0, Response arg1) {
 				
+				try {
+					synchronized(this) {
+						wait(1000);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
 				cluster = new DistributedCluster();
 				WorkerJob workerJob = null;
 				try {
@@ -144,7 +155,7 @@ public class WorkerServer {
 				String inputDirectory  = config.get("inputDir");	
 				tempStore = config.get("databaseDir");
 				
-				config.put("keysRead", "0");
+				config.put("keysRead",    "0");
 				config.put("keysWritten", "0");
 				config.put("databaseDir", tempStore);
 				config.put("workerIndex", workerIndex);
@@ -195,9 +206,6 @@ public class WorkerServer {
 					if (contexts.isEmpty()) {
 						log.error("No topology context -- were we initialized??");			
 					}
-//			    	if (!tuple.isEndOfStream()) {
-//			    		contexts.get(contexts.size() - 1).incSendOutputs(router.getKey(tuple.getValues()));	
-//			    	}
 			    	if (tuple.isEndOfStream()) {
 						router.executeEndOfStreamLocally(contexts.get(contexts.size() - 1));
 			    	}
@@ -251,13 +259,13 @@ public class WorkerServer {
 		}
 	}
 	
-	public static void shutdown(String addr) {
+	public void shutdown(String addr) {
 		shutdown();
 		checkers.get(addr).interrupt();
 		checkers.remove(addr);		
 	}
 
-	public static void shutdown() {		
+	public void shutdown() {		
 		synchronized(topologies) {
 			for (String topo: topologies)
 				if (cluster != null) {

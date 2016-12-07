@@ -49,7 +49,7 @@ import edu.upenn.cis.stormlite.tasks.SpoutTask;
 public class DistributedCluster implements Runnable {
 	
 	static Logger log = Logger.getLogger(DistributedCluster.class);	
-	static AtomicBoolean quit = new AtomicBoolean(false);
+	static AtomicBoolean quit;
 	
 	String theTopology;
 	Map<String, List<IRichBolt>> boltStreams = new HashMap<>();
@@ -64,18 +64,21 @@ public class DistributedCluster implements Runnable {
 	// between EOS propagation and tuple propagation!	
 	Queue<Runnable> taskQueue = new ConcurrentLinkedQueue<Runnable>();
 	
+	
+	public DistributedCluster() {
+		
+		log.info("New DistributedCluster instance created");
+	}
+	
 	public TopologyContext submitTopology(String name, Configuration config, Topology topo) throws ClassNotFoundException {
 		
 		theTopology = name;		
-		context = new TopologyContext(topo, taskQueue);			
-		boltStreams.clear();
-		spoutStreams.clear();
-		streams.clear();		
+		context = new TopologyContext(topo, taskQueue);				
 		createSpoutInstances(topo, config);		
 		createBoltInstances(topo, config);		
 		createRoutes(topo, config);
+		quit = new AtomicBoolean(false);
 		scheduleSpouts();
-		
 		return context;
 	}
 	
@@ -85,6 +88,7 @@ public class DistributedCluster implements Runnable {
 		
 	}
 	
+	@Override
 	public void run() {
 		while (!quit.get()) {
 			Runnable task = taskQueue.poll();
@@ -116,12 +120,16 @@ public class DistributedCluster implements Runnable {
 			SpoutOutputCollector collector = new SpoutOutputCollector(context);
 			spoutStreams.put(key, new ArrayList<IRichSpout>());
 			
+			
+			
 			for (int i = 0; i < spout.getRight(); i++) {			
 				try {					
-					IRichSpout newSpout = (IRichSpout)Class.forName(spout.getLeft()).newInstance();					
+					IRichSpout newSpout = (IRichSpout)Class.forName(spout.getLeft()).newInstance();									
 					newSpout.open(config, context, collector);
+										
 					spoutStreams.get(key).add(newSpout);
-					log.debug("Created a spout executor " + key + "/" + newSpout.getExecutorId() + " of type " + spout.getLeft());
+					log.info("Created a spout executor " + key + "/" + newSpout.getExecutorId() + " of type " + spout.getLeft());
+				
 				} catch (InstantiationException e) {
 					e.printStackTrace();
 				} catch (IllegalAccessException e) {
@@ -129,6 +137,10 @@ public class DistributedCluster implements Runnable {
 				}
 			}
 		}
+	}
+	
+	public boolean running() {
+		return !quit.get();
 	}
 
 
@@ -244,11 +256,6 @@ public class DistributedCluster implements Runnable {
 			while (!quit.get())
 				Thread.yield();
 		}
-//		log.debug(context.getMapOutputs() + " local map outputs and " + 
-//				context.getReduceOutputs() + " local reduce outputs.");
-		
-//		for (String key: context.getSendOutputs().keySet())
-//			log.info("Sent " + context.getSendOutputs().get(key) + " to " + key);
 	}
 
 	/**
@@ -256,6 +263,7 @@ public class DistributedCluster implements Runnable {
 	 */
 	public void shutdown() {
 		
+		quit.set(true);
 		closeSpoutInstances();
 		closeBoltInstances();
 		log.info("Shutting down distributed cluster.");
