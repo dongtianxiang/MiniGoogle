@@ -12,7 +12,7 @@ public class CrawlerMasterServer {
 		
 		public static Server server;
 		static String resourceBase = "./resources";
-		private int port = 80;
+		private int port = 8080;
 
 		public CrawlerMasterServer() {
 			server = new Server(port);

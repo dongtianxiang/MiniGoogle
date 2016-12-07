@@ -131,9 +131,9 @@
 			<classpath>
 				<path refid="classpath"/>
 			</classpath>
-			<arg value="[172.31.60.134:80,172.31.52.13:80]"/>
+			<arg value="[172.31.60.134:8000,172.31.52.13:8001]"/>
 			<arg value="0"/>
-			<arg value="http://172.31.53.127:80"/>
+			<arg value="http://172.31.53.127:8080"/>
 			<arg value="./dtianx0"/>
 		</java>
 	</target>
@@ -143,9 +143,9 @@
 			<classpath>
 				<path refid="classpath"/>
 			</classpath>
-			<arg value="[172.31.60.134:80,172.31.52.13:80]"/>
+			<arg value="[172.31.60.134:8000,172.31.52.13:8001]"/>
 			<arg value="1"/>
-			<arg value="http://172.31.53.127:80"/>
+			<arg value="http://172.31.53.127:8080"/>
 			<arg value="./dtianx1"/>
 		</java>
 	</target>
