@@ -53,7 +53,7 @@ public class LocalCluster implements Runnable {
 	public ObjectMapper mapper = new ObjectMapper();
 	
 	//creating a pool of 6 threads  
-	public ExecutorService executor = Executors.newFixedThreadPool(6);
+	public ExecutorService executor = Executors.newFixedThreadPool(6);  // The number of fixed threads can be modified
 	
 	public Queue<Runnable> taskQueue = new ConcurrentLinkedQueue<Runnable>();
 	public Map<String, List<IRichBolt>> boltStreams = new HashMap<>();

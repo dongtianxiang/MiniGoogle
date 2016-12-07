@@ -1,4 +1,4 @@
-package edu.upenn.cis455.mapreduce.servlets;
+package edu.upenn.cis455.crawler;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,93 +16,55 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.SecondReducerBolt;
-import edu.upenn.cis.stormlite.bolts.pagerank.PRMapBolt;
-import edu.upenn.cis.stormlite.bolts.pagerank.PRReduceBolt;
-import edu.upenn.cis.stormlite.bolts.pagerank.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.bdb.LinksFileSpout;
-import edu.upenn.cis.stormlite.spouts.bdb.LinksSpout;
-import edu.upenn.cis.stormlite.spouts.pagerank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
-import edu.upenn.cis455.mapreduce.servers.WorkerInformation;
+import edu.upenn.cis455.crawler.bolts.CrawlerBolt;
+import edu.upenn.cis455.crawler.bolts.DownloadBolt;
+import edu.upenn.cis455.crawler.bolts.FilterBolt;
+import edu.upenn.cis455.crawler.bolts.RecordBolt;
+import edu.upenn.cis455.crawler.bolts.URLSpout;
 
-public class MasterServlet extends HttpServlet {
+public class CrawlerMasterServlet extends HttpServlet {
 
   static final long serialVersionUID = 455555001;
-//  private static final String SPOUT  = "LINK_SPOUT";
-//  private static final String MAP_BOLT = "MAP_BOLT";
-//  private static final String REDUCE_BOLT = "REDUCE_BOLT";
-//  private static final String RESULT_BOLT  = "RES_BOLT";
-  private static final Integer totalWorkers = 2;
-  private static Integer availableWorkers = 0;
+  private static final String SPOUT  = "URL_SPOUT";
+  private static final String MAP_BOLT = "MAP_BOLT";
+  private static final String REDUCE_BOLT = "REDUCE_BOLT";
+  private static final String RESULT_BOLT  = "RES_BOLT";
   
   // note that this it's statically initiated
-  static Map<String, WorkerInformation> workers;  
+  static Map<String, CrawlerWorkerInformation> workers;  
   static Thread checkerThread;
-  public static Logger log = Logger.getLogger(MasterServlet.class);
   
   public static Configuration globalConf = null;
+  
   public static int count = 0;
  
   static {
-	  
-	  
 	  workers = new TreeMap<>();
 	  Runnable r = new Runnable() {
-		  
 		  @Override
 		  public void run() {
-			  
 			  while (true) {
-				  
 				  List<String> list = new LinkedList<>();
 						for (String key: workers.keySet()) {							
 							Long time = (new Date()).getTime();							
-							WorkerInformation info = workers.get(key);
+							CrawlerWorkerInformation info = workers.get(key);
 							Long lastCheckIn = info.lastCheckIn;							
 							if (time > lastCheckIn + 10000) {
 								list.add(key);
 							}
+							
 						}
 						for (String key: list) {
 							workers.remove(key);
 						}
-						
-//						if (availableWorkers == totalWorkers) {
-//							  Runnable r = new Runnable() {  
-//								  @Override
-//								  public void run() {
-//									  try {
-//										  synchronized(this) {
-//											  wait(2000);
-//										  }											  
-//										  try {
-//											distributeJob("edu.upenn.cis455.mapreduce.job.WordCount", 1, 1, "data2", "out2", "JOB1");
-//											
-//										  } catch (IOException e) {
-//											e.printStackTrace();
-//										}										 									  
-//									  } catch (InterruptedException e) {
-//										  e.printStackTrace();
-//									  }
-//								  }
-//							  };
-//							  
-//							  Thread t = new Thread(r);
-//							  t.start();
-//						  }
-						
 						
 				  synchronized(this) {					  					  
 						try {
@@ -131,31 +93,21 @@ public class MasterServlet extends HttpServlet {
 	  if (URI.startsWith("/workerstatus")) {
 	
 		  String port = request.getParameter("port");
-		  String status = request.getParameter("status");
-		  String job = request.getParameter("job");
 		  String keysRead = request.getParameter("keysRead");
 		  String keysWritten = request.getParameter("keysWritten");
 		  		  		  
 		  Date date = new Date();		  
 		  String remoteHost = request.getRemoteHost() + ":" + port;	
-		  WorkerInformation workerStatus = new WorkerInformation();
+		  CrawlerWorkerInformation workerStatus = new CrawlerWorkerInformation();
 		  
-		  try {
+		  try {			  
 			  
-			  workerStatus.currentJob = job;
 			  workerStatus.keysRead = keysRead;
 			  workerStatus.keysWritten = keysWritten;			  
 			  workerStatus.IPAddress = remoteHost;
-			  workerStatus.status = status;
 			  workerStatus.lastCheckIn = date.getTime();
 			  
-			 synchronized(availableWorkers) {
-				 if (status.equals("IDLE") && availableWorkers < totalWorkers) {
-					 availableWorkers += 1;
-				 }
-			 }
-			 			  
-			 synchronized(workers) {
+			  synchronized(workers) {
 				  workers.put(remoteHost, workerStatus);
 			  }
 	
@@ -165,15 +117,13 @@ public class MasterServlet extends HttpServlet {
 			  return;
 		  }		  
   
-		  String report = String.format("%s\t%s\t%s", port, status, job);
-		  log.debug(" -- " + report + " -- ");
+		  System.out.println("Port:" + port);
+		  System.out.println("VisitedURLs: " + keysRead);
+		  System.out.println("Crawled Pages: " + keysWritten);		  
+		  System.out.println("----------------------------------");
 		  
-//		  System.out.println("KeysRead: " + keysRead);
-//		  System.out.println("keysWritten: " + keysWritten);		  
-//		  System.out.println("----------------------------------");
-		  
-		  if (port        == null || status      == null || 
-			  job         == null || keysRead    == null || 
+		  if (port        == null || 
+			  keysRead    == null || 
 			  keysWritten == null ) {
 			  
 			  response.setStatus(400);
@@ -182,7 +132,8 @@ public class MasterServlet extends HttpServlet {
 			  out.println("<html>");
 			  out.println("<h1>");
 			  out.println("400 BAD REQUEST");
-			  out.println("</h1>");		      out.println("</html>");   
+			  out.println("</h1>");
+		      out.println("</html>");   
 		      
 			  return;
 		  }
@@ -193,8 +144,6 @@ public class MasterServlet extends HttpServlet {
 		  out.println("<body>");
 		  
 		  out.println("Port:" + port);
-		  out.println("Status: " + status);
-		  out.println("Job: " + job);
 		  out.println("KeysRead: " + keysRead);
 		  out.println("keysWritten: " + keysWritten);
 		  
@@ -215,15 +164,15 @@ public class MasterServlet extends HttpServlet {
 			  out.println("<th>");  out.println(" IP "); out.println("</th>");
 			  out.println("<th>");  out.println(" Job ");  out.println("</th>");
 			  out.println("<th>");  out.println(" Status "); out.println("</th>");
-			  out.println("<th>");  out.println(" Keys Read "); out.println("</th>");
-			  out.println("<th>");  out.println(" Keys Written "); out.println("</th>");			  
+			  out.println("<th>");  out.println(" Visited URLs "); out.println("</th>");
+			  out.println("<th>");  out.println(" Pages Crawled "); out.println("</th>");			  
 			  out.println("<th>");  out.println(" Job Class "); out.println("</th>");			  
 		      out.println("</tr>");		
 		      
 			  for (String workerID: workers.keySet()) {			  
 				  
 				  out.println("<tr>");			  
-				  WorkerInformation info = workers.get(workerID);				  			  
+				  CrawlerWorkerInformation info = workers.get(workerID);				  			  
 				  out.println("<th>");  out.println(info.IPAddress); out.println("</th>");
 				  out.println("<th>");  out.println(info.currentJob);  out.println("</th>");
 				  out.println("<th>");  out.println(info.status); out.println("</th>");
@@ -292,21 +241,20 @@ public class MasterServlet extends HttpServlet {
   
 	  }
 	  else if (URI.startsWith("/create")) {
+			String inputDir = "";
+			String outputDir = "";
+			String jobClass = "";
 		  
-			String jobClass = request.getParameter("className");
-			String inputDir = request.getParameter("inputDir");
-			
 			// forward restoration
 			if (inputDir == null) {			
 				inputDir = "";
 			}
 			
-			String outputDir = request.getParameter("outputDir");
-			
 			if (outputDir == null) {
 				outputDir = "";
 			}
-		
+			
+			String jobName = request.getParameter("jobName");
 			Integer numMappers = null, numReducers = null;
 			
 			try {	
@@ -322,7 +270,7 @@ public class MasterServlet extends HttpServlet {
 				// invalid input
 			}
 			else {
-//				distributePRJob(numMappers, numReducers, inputDir, outputDir, jobName);
+				distributeWorker(2, numMappers, numReducers, inputDir, outputDir, jobName);
 			}
 			
 			response.sendRedirect("status");
@@ -334,7 +282,7 @@ public class MasterServlet extends HttpServlet {
 		  for(String workerIP: workers.keySet()) {
 			  
 			  try {
-				  WorkerInformation info = workers.get(workerIP);			  
+				  CrawlerWorkerInformation info = workers.get(workerIP);			  
 				  System.out.println("shutting down " + info.IPAddress);			  
 				  String destAddr = "http://" + info.IPAddress;			  
 				  URL url = new URL(destAddr+ "/shutdown");
@@ -401,9 +349,68 @@ public class MasterServlet extends HttpServlet {
 		return conn;
   }
   
+  public static void distributeWorker(int numSpouts, int numMappers, int numReducers, String inputDir, String outputDir, String jobName) throws IOException {
+		String URL_SPOUT = "URL_SPOUT";
+		String CRAWLER_BOLT = "CRAWLER_BOLT";
+//		String DOWNLOAD_BOLT = "DOWNLOAD_BOLT";
+		String FILTER_BOLT = "FILTER_BOLT";
+		String RECORD_BOLT = "RECORD_BOLT";
+		  
+		URLSpout spout = new URLSpout();
+		CrawlerBolt boltA = new CrawlerBolt();
+		DownloadBolt boltB = new DownloadBolt();
+		FilterBolt boltD = new FilterBolt();
+		RecordBolt boltE = new RecordBolt();
+		    
+		// build topology
+		TopologyBuilder builder = new TopologyBuilder();
+		
+		builder.setSpout(URL_SPOUT, spout, 2);
+		  
+		builder.setBolt(CRAWLER_BOLT, boltA, 10).fieldsGrouping(URL_SPOUT, new Fields("url"));    
+//		builder.setBolt(DOWNLOAD_BOLT, boltB, 4).fieldsGrouping(CRAWLER_BOLT, new Fields("url", "document", "type"));
+		builder.setBolt(FILTER_BOLT, boltD, 15).fieldsGrouping(CRAWLER_BOLT, new Fields("url", "URLStream"));
+		builder.setBolt(RECORD_BOLT, boltE, 150).fieldsGrouping(FILTER_BOLT, new Fields("extractedLink"));
+		
+		Topology topo = builder.createTopology();	  
+        
+        // create configuration object
+        Configuration config = new Configuration();        
+        config.put("job", jobName);       
+        config.put("seedURL", "https://www.facebook.com/");
+        config.put("maxFileSize", "20");
+        
+        WorkerJob job = new WorkerJob(topo, config);
+        ObjectMapper mapper = new ObjectMapper();	        
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);        
+        
+        String[] workersList = new String[]{"172.31.60.134:8000", "172.31.52.13:8001"};          
+        config.put("workerList", Arrays.toString(workersList));		        
+        
+		try {
+			int j = 0;
+			for (String dest: workersList) {
+		        config.put("workerIndex", String.valueOf(j++));
+				if (CrawlerMasterServlet.sendJob(dest, "POST", config, "definejob", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(job)).getResponseCode() != HttpURLConnection.HTTP_OK) {					
+					throw new RuntimeException("Job definition request failed");
+				}
+			}
+			for (String dest: workersList) {
+				if (CrawlerMasterServlet.sendJob(dest, "POST", config, "runjob", "").getResponseCode() != HttpURLConnection.HTTP_OK) {						
+					throw new RuntimeException("Job execution request failed");
+				}
+			}
+		}
+		catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+  }
+  
+  
   public void doPost(HttpServletRequest request, HttpServletResponse response)  {
 	 
   }
   
 }
   
+

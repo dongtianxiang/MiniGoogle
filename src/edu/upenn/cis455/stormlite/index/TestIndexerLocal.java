@@ -5,9 +5,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//import org.jsoup.Jsoup;
-//import org.jsoup.nodes.Element;
-//import org.jsoup.select.Elements;
+import org.jsoup.*;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 //import edu.stanford.nlp.*;
 //import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 //import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
@@ -43,21 +45,26 @@ public class TestIndexerLocal {
 	 * @param doc
 	 */
 	public static void parse(File doc){
-//		try {
-//			org.jsoup.nodes.Document d = Jsoup.parse(doc, "UTF-8", "");
-//			d.select(":containsOwn(\u00a0)").remove();
-//			Elements es = d.select("*");
-//			// regex filter to get only legal words
-//			Pattern pan = Pattern.compile("[a-zA-Z0-9.@-]+");
-//			Pattern pan2 = Pattern.compile("[a-zA-Z]+");
-//						
-//			for (Element e: es) {
-//				String nodeName = e.nodeName(), text = e.ownText().trim();
-//				System.out.println(e.nodeName() + ": " + e.ownText());			
-//				if (text != null && !text.isEmpty() && text.length() != 0 ){					
-//					Document tagContent = new Document(text);
-//					List<Sentence> sentences = tagContent.sentences();
-//					for (Sentence s: sentences) {
+		try {
+			org.jsoup.nodes.Document d = Jsoup.parse(doc, "UTF-8", "");
+			d.select(":containsOwn(\u00a0)").remove();
+			Elements es = d.select("*");
+			// regex filter to get only legal words
+			Pattern pan = Pattern.compile("[a-zA-Z0-9.@-]+");
+			Pattern pan2 = Pattern.compile("[a-zA-Z]+");
+					
+			for (Element e: es) {
+				String nodeName = e.nodeName(), text = e.ownText().trim();
+				System.out.println(e.nodeName() + ": " + e.ownText());			
+
+				if (text != null && !text.isEmpty() && text.length() != 0 ){					
+					Document tagContent = new Document(text);
+					
+					/* Package needs downloading, comment for later use */
+					/*
+					List<Sentence> sentences = tagContent.sentences();
+					for (Sentence s: sentences) {
+>>>>>>> de1e15c3f5c2ec863a96c02fa38ae66bbfc9b00c
 //						System.out.println("sentence:" + s);
 //						List<String> words = s.lemmas();
 //						int i = 1;
@@ -65,6 +72,7 @@ public class TestIndexerLocal {
 //						for (String w: words) {
 //							w = w.trim();	// trim
 //							System.out.println("before:" + w);
+<<<<<<< HEAD
 //							m = pan.matcher(w);
 //							m2 = pan2.matcher(w);
 //							if (m.matches()) {
@@ -103,6 +111,46 @@ public class TestIndexerLocal {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
+=======
+							m = pan.matcher(w);
+							m2 = pan2.matcher(w);
+							if (m.matches()) {
+								if (m2.find()){
+									if (!w.equalsIgnoreCase("-rsb-")&&!w.equalsIgnoreCase("-lsb-")
+											&&!w.equalsIgnoreCase("-lrb-")&&!w.equalsIgnoreCase("-rrb-")
+											&&!w.equalsIgnoreCase("-lcb-")&&!w.equalsIgnoreCase("-rcb-")){
+										w = w.toLowerCase();
+										Hit h;
+										if (tables.containsKey(w)){
+											h = tables.get(w);
+											h.increaseFrequency();
+										} else {
+											h = new Hit(w);
+										}
+										h.setDocID(1);
+										if (nodeName.equalsIgnoreCase("title")) {
+											h.setTitle(true);
+											h.addPosition(new Position(i, 3));
+										} else {
+											h.addPosition(new Position(i, 1));
+										}
+										// not consider meta
+										tables.put(w, h);
+										System.out.println("hit:" + h.getText());
+										
+									}
+								}
+							}
+							i++;
+						}
+					}	
+					*/
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 //	public static void parseUseCore(File doc) {

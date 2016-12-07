@@ -58,8 +58,8 @@ public class DistributedCluster implements Runnable {
 	TopologyContext context;
 	ObjectMapper mapper = new ObjectMapper();
 	
-	// TODO: we'll do a single threaded pool to avoid races
-	ExecutorService executor = Executors.newFixedThreadPool(1);
+	// TODO: We are assigning 200 threads in thread pool for bolts runing simultaneously
+	ExecutorService executor = Executors.newFixedThreadPool(200);
 	
 	// between EOS propagation and tuple propagation!	
 	Queue<Runnable> taskQueue = new ConcurrentLinkedQueue<Runnable>();
