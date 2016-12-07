@@ -5,10 +5,20 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jsoup.Jsoup;
-
+import org.jsoup.*;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+//import edu.stanford.nlp.*;
+//import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
+//import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+//import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
+//import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+//import edu.stanford.nlp.ling.CoreLabel;
+//import edu.stanford.nlp.pipeline.Annotation;
+//import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+//import edu.stanford.nlp.simple.*;
+//import edu.stanford.nlp.util.CoreMap;
 import edu.upenn.cis455.database.Hit;
 import edu.upenn.cis455.database.Position;
 
@@ -47,6 +57,9 @@ public class TestIndexerLocal {
 //				System.out.println(e.nodeName() + ": " + e.ownText());			
 				if (text != null && !text.isEmpty() && text.length() != 0 ){					
 					Document tagContent = new Document(text);
+					
+					/* Package needs downloading, comment for later use */
+					/*
 					List<Sentence> sentences = tagContent.sentences();
 					for (Sentence s: sentences) {
 //						System.out.println("sentence:" + s);
@@ -88,6 +101,7 @@ public class TestIndexerLocal {
 							i++;
 						}
 					}	
+					*/
 				}
 			}
 		} catch (IOException e) {

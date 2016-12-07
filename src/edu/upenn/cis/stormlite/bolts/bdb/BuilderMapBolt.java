@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts.BuildGraph;
+package edu.upenn.cis.stormlite.bolts.bdb;
 
 import java.util.Map;
 import java.util.UUID;

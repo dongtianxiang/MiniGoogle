@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts.LocalDBBuilder;
+package edu.upenn.cis.stormlite.spouts.bdb;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
