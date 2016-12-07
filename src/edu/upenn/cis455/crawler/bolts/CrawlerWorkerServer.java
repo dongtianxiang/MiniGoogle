@@ -1,11 +1,15 @@
-package edu.upenn.cis455.mapreduce.servers;
+package edu.upenn.cis455.crawler.bolts;
 
 import static spark.Spark.setPort;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -28,6 +32,8 @@ import edu.upenn.cis.stormlite.infrastructure.WorkerHelper;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Tuple;
+import edu.upenn.cis455.crawler.XPathCrawler;
+import edu.upenn.cis455.crawler.storage.DBWrapper;
 import edu.upenn.cis455.database.DBInstance;
 import spark.Request;
 import spark.Response;
@@ -37,26 +43,27 @@ import spark.Spark;
 /**
  * Simple listener for worker creation 
  */
-public class WorkerServer {
+public class CrawlerWorkerServer {
 	
-	static Logger log = Logger.getLogger(WorkerServer.class);	
+	static Logger log = Logger.getLogger(CrawlerWorkerServer.class);	
 	public static DistributedCluster cluster;
 	
     List<TopologyContext> contexts = new ArrayList<>();
 	static List<String> topologies = new ArrayList<>();
 	
-	public static DBInstance mapReduceTempStore;
+	private DBWrapper db;
 	
 	public int myPortNumber;
 	public String myAddress;
 	public Thread checker;
 	public Configuration currJobConfig;
-	public String tempStore;
+	public String dbPath;
 	public String workerIndex;
+	public XPathCrawler crawler;
 	
 	public static Map<String, Thread> checkers = new HashMap<>();
 	
-	public WorkerServer(int myPort, Map<String, String> config, String myAddr) 
+	public CrawlerWorkerServer(int myPort, Map<String, String> config, String myAddr) 
 			throws MalformedURLException, FileNotFoundException {
 			
 		log.info("Creating server listener at socket " + myPort);
@@ -65,11 +72,13 @@ public class WorkerServer {
 		myPortNumber = myPort;
 		setPort(myPort);
 		myAddress = myAddr;
+		dbPath = config.get("databaseDir");
+        db = DBWrapper.getInstance(dbPath);
 		
 		Runnable messenger = new Runnable(){
 			@Override
 			public void run() {
-				while (true) {				
+				while (true) {		
 					StringBuilder masterAddr = new StringBuilder(config.get("master"));	
 					try {
 						synchronized(this) {
@@ -78,17 +87,14 @@ public class WorkerServer {
 								masterAddr = new StringBuilder("http://" + masterAddr.toString());
 							}
 							
-							String currJob     = currJobConfig.get("job");
-							String keysRead    = currJobConfig.get("keysRead");
-							String keysWritten = currJobConfig.get("keyWritten");
-							String status      = currJobConfig.get("status");
-									
+							String keysRead    = db.getVisitedSize() + "";
+							String keysWritten = crawler == null ? "0" : crawler.urlQueue.getExecutedSize() + "";
+							log.info("VisitedURL Size: " + keysRead);
+							
 							masterAddr.append("/workerstatus?");							
-							masterAddr.append("port=" + myPort);								
-							masterAddr.append("&job=" +         (currJob == null ?     "N/A" : currJob));																							
+							masterAddr.append("port=" + myPort);																														
 							masterAddr.append("&keysRead=" +    (keysRead == null ?    "N/A" : keysRead));						
-							masterAddr.append("&keysWritten=" + (keysWritten == null ? "N/A" : keysRead));
-							masterAddr.append("&status=" +      (status == null ?      "N/A" : status));
+							masterAddr.append("&keysWritten=" + (keysWritten == null ? "N/A" : keysWritten));
 							
 							try {								
 								URL masterURL = new URL(masterAddr.toString());									
@@ -98,7 +104,7 @@ public class WorkerServer {
 								log.info(builder.append("Worker check-in: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString());
 							}
 							catch (ConnectException e) {
-								log.info("WorkerServer cannot contact MasterServer");
+								log.info("CrawlerWorkerServer cannot contact MasterServer");
 							}							
 							// interval for background check
 							wait(10000);								
@@ -111,7 +117,7 @@ public class WorkerServer {
 						e.printStackTrace();
 					}
 				}
-				log.info("WorkerServer has stopped.");
+				log.info("CrawlerWorkerServer has stopped.");
 			}
 		};
 		
@@ -140,23 +146,20 @@ public class WorkerServer {
 				Configuration config = workerJob.getConfig();
 				currJobConfig = config;
 				
-				// other information about job should be already in configuration object
-				String inputDirectory  = config.get("inputDir");	
-				tempStore = config.get("databaseDir");
 				
-				config.put("keysRead", "0");
-				config.put("keysWritten", "0");
-				config.put("databaseDir", tempStore);
-				config.put("workerIndex", workerIndex);
-				config.put("graphDataDir", "graphStore");
-								
-				File inDirTest  = (inputDirectory.equals("")) ? new File("./") : new File(inputDirectory);
-				File outDirTest = (inputDirectory.equals("")) ? new File("./") : new File(inputDirectory);
-				outDirTest.mkdirs();
+				String seedURL = config.get("seedURL");
+				String filepath = dbPath;
+				int maxSize = Integer.parseInt(config.get("maxFileSize"));
 				
-				if (!inDirTest.isDirectory() || !outDirTest.isDirectory()) {
-					log.info("Invalid user inputs. Job initialization failed.");
-				}
+				crawler = new XPathCrawler(seedURL, filepath, maxSize);
+				
+				if(workerIndex.equals("0")) seedURL = "https://www.facebook.com/";
+				if(workerIndex.equals("1")) seedURL = "http://www.cnn.com/";
+				
+				if(db.getFrontierQueueSize() == 0)
+		        	crawler.urlQueue.pushURL(seedURL);
+		        
+				
 	        	try {		        		
 	        		log.info("Processing job definition request" + config.get("job") + " on machine " + config.get("workerIndex"));		        				        		
 					synchronized (topologies) {
@@ -169,7 +172,6 @@ public class WorkerServer {
 				}
 	            return "Job launched";
 			}
-        	
         });
         
         Spark.post(new Route("/runjob") {
@@ -207,7 +209,11 @@ public class WorkerServer {
 			    	return "OK";
 				}
 				catch (Exception e) {
-					e.printStackTrace();					
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					e.printStackTrace(pw);
+					log.error(sw.toString()); // stack trace as a string
+					
 					arg1.status(500);
 					return e.getMessage();
 				}
@@ -218,8 +224,14 @@ public class WorkerServer {
         Spark.get(new Route("/shutdown") {
 
 			@Override
-			public Object handle(Request arg0, Response arg1) {				
+			public Object handle(Request arg0, Response arg1) {	
 				shutdown(myAddr);
+				
+				if(crawler != null) {
+					crawler.urlQueue.updateFrontierQueuePeriodically(0);  // push all URLs in nextQueue into Database
+					crawler.close();
+				}
+				
 				System.exit(0);
 				return "OK";
 			}
@@ -238,12 +250,13 @@ public class WorkerServer {
 		else {
 			
 			String[] addresses = WorkerHelper.getWorkers(config);
-			String myAddress = addresses[Integer.valueOf(config.get("workerIndex"))];						
+			String myAddress = addresses[Integer.valueOf(config.get("workerIndex"))];				
+			
 			log.info("Initializing worker " + myAddress);			
 			URL url;		
 			try {				
 				url = new URL(myAddress);
-				new WorkerServer(url.getPort(), config, myAddress);		
+				new CrawlerWorkerServer(url.getPort(), config, myAddress);		
 				
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
@@ -270,7 +283,7 @@ public class WorkerServer {
 	}
 	
 	/**
-	 * Helper class for invoking WorkerServer Node from ANT script
+	 * Helper class for invoking CrawlerWorkerServer Node from ANT script
 	 * @param args
 	 * arg0: List of workers represented as a single string [IP_1, IP_2, ..., IP_N]
 	 * arg1: Index of current server among the workers list
@@ -286,17 +299,30 @@ public class WorkerServer {
     	props.load(new FileInputStream("./resources/log4j.properties"));
     	PropertyConfigurator.configure(props);
 		
+    	/* Setting KEY for AWS S3 */
+		FileReader f = null;
+		try {
+			f = new FileReader(new File("./conf/config.properties"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		BufferedReader bf = new BufferedReader(f);
+		System.setProperty("KEY", bf.readLine());
+		System.setProperty("ID", bf.readLine());
+    	
+    	
 		if (args == null || args.length != 4) {
 			System.err.println("Incorrect run-time arguments...");
 			return;
 		}
 		
 		Configuration conf = new Configuration();
-		conf.put("workerList",  args[0]);  // For testing, List like config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
-		conf.put("workerIndex", args[1]);  // For testing, number of 0, 1
-		conf.put("master",      args[2]);  // For testing, "127.0.0.1:8080"
-		conf.put("databaseDir", args[3]);  // For testing, local db path
+		conf.put("workerList",  args[0]); // For testing, List like config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
+		conf.put("workerIndex", args[1]); // For testing, number of 0, 1
+		conf.put("master",      args[2]); // For testing, "127.0.0.1:8080"
+		conf.put("databaseDir", args[3]); // For testing, local db path
 		
-		WorkerServer.createWorker(conf);		
+	    
+		CrawlerWorkerServer.createWorker(conf);		
 	}
 }

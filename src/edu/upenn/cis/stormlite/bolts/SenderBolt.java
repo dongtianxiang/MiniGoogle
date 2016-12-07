@@ -2,6 +2,8 @@ package edu.upenn.cis.stormlite.bolts;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -83,7 +85,11 @@ public class SenderBolt implements IRichBolt {
     		try {
 				send(input);
 			} catch (IOException e) {
-				e.printStackTrace();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				e.printStackTrace(pw);
+				log.error(input.toString());
+				log.error(sw.toString()); // stack trace as a string
 			}
     }
     
@@ -96,23 +102,34 @@ public class SenderBolt implements IRichBolt {
      */
     private synchronized void send(Tuple tuple) throws IOException {
     	
-    	
     	isEndOfStream = tuple.isEndOfStream();   	
 		log.debug("----> Sender is routing " + tuple.toString() + " to " + address + "/" + stream + " <----");
 		
-		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-		conn.setRequestProperty("Content-Type", "application/json");
-		String jsonForTuple = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tuple);
-		
-		conn.setDoOutput(true);
-		conn.setRequestMethod("POST");
-		OutputStream out = conn.getOutputStream();
-		out.write(jsonForTuple.getBytes());
-		out.flush();
-		conn.getResponseCode();
-		conn.getResponseMessage();
-		out.close();		
-		conn.disconnect();
+		HttpURLConnection conn = null;
+		try{
+			conn = (HttpURLConnection)url.openConnection();
+			conn.setRequestProperty("Content-Type", "application/json");
+			String jsonForTuple = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tuple);
+			
+			conn.setDoOutput(true);
+			conn.setRequestMethod("POST");
+			OutputStream out = conn.getOutputStream();
+			out.write(jsonForTuple.getBytes());
+			out.flush();
+			conn.getResponseCode();
+			conn.getResponseMessage();
+			out.close();		
+		} catch(Exception e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			log.error(tuple.toString());
+			log.error(sw.toString()); // stack trace as a string
+		} finally { 
+			if(conn != null) {
+				conn.disconnect();
+			}
+		}
     }
 
     /**

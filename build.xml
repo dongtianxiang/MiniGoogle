@@ -6,6 +6,8 @@
 	<property name="web-inf.lib.dir" location="${web-inf.dir}${file.separator}lib"/>
 	<property name="master-class" value="edu.upenn.cis455.mapreduce.servers.MasterServer"/>
 	<property name="worker-class" value="edu.upenn.cis455.mapreduce.servers.WorkerServer"/>
+	<property name="crawler-master-class" value="edu.upenn.cis455.crawler.CrawlerMasterServer"/>
+	<property name="crawler-worker-class" value="edu.upenn.cis455.crawler.bolts.CrawlerWorkerServer"/>
 
 	<path id="classpath">
 		<fileset dir="${web-inf.lib.dir}" includes="**/*.jar"/>
@@ -83,6 +85,7 @@
 			</manifest>
 		</jar>
 	</target>
+	
 	<target name="run" depends="build">
 		<parallel>
 			
@@ -113,6 +116,38 @@
 			</java>
 			
 		</parallel>
+	</target>
+	
+	<target name="crawlermaster" depends="build">
+		<java classname="${crawler-master-class}" fork="true">
+			<classpath>
+				<path refid="classpath"/>
+			</classpath>
+		</java>
+	</target>
+	
+	<target name="crawlerworker0" depends="build">
+		<java classname="${crawler-worker-class}" fork="true">
+			<classpath>
+				<path refid="classpath"/>
+			</classpath>
+			<arg value="[172.31.60.134:80,172.31.52.13:80]"/>
+			<arg value="0"/>
+			<arg value="http://172.31.53.127:80"/>
+			<arg value="./dtianx0"/>
+		</java>
+	</target>
+	
+	<target name="crawlerworker1" depends="build">
+		<java classname="${crawler-worker-class}" fork="true">
+			<classpath>
+				<path refid="classpath"/>
+			</classpath>
+			<arg value="[172.31.60.134:80,172.31.52.13:80]"/>
+			<arg value="1"/>
+			<arg value="http://172.31.53.127:80"/>
+			<arg value="./dtianx1"/>
+		</java>
 	</target>
 	
 	<target name="pack" description="Create an archive for submission">
