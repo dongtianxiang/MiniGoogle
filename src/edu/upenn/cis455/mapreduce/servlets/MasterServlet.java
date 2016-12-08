@@ -24,16 +24,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
 import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
 import edu.upenn.cis.stormlite.bolts.bdb.SecondReducerBolt;
-import edu.upenn.cis.stormlite.bolts.pagerank.PRMapBolt;
-import edu.upenn.cis.stormlite.bolts.pagerank.PRReduceBolt;
-import edu.upenn.cis.stormlite.bolts.pagerank.PRResultBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
 import edu.upenn.cis.stormlite.spouts.bdb.LinksFileSpout;
 import edu.upenn.cis.stormlite.spouts.bdb.LinksSpout;
-import edu.upenn.cis.stormlite.spouts.pagerank.RankDataSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servers.WorkerInformation;
 
@@ -166,7 +166,7 @@ public class MasterServlet extends HttpServlet {
 		  }		  
   
 		  String report = String.format("%s\t%s\t%s", port, status, job);
-		  log.debug(" -- " + report + " -- ");
+		  log.info(" -- " + report + " -- ");
 		  
 //		  System.out.println("KeysRead: " + keysRead);
 //		  System.out.println("keysWritten: " + keysWritten);		  

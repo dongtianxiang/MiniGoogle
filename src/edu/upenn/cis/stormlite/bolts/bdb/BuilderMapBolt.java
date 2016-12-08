@@ -1,5 +1,6 @@
 package edu.upenn.cis.stormlite.bolts.bdb;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,7 +49,10 @@ public class BuilderMapBolt implements IRichBolt {
 		if (!input.isEndOfStream()) {
 			
 			String src = input.getStringByField("key");				
-			String[] links = input.getStringByField("value").split(", ");			
+			String[] links = input.getStringByField("value").split(", ");	
+			
+//			log.info("Server " + serverIndex + " has received " + src + " -> " + Arrays.toString(links));
+			
 			for (String link: links) {
 				collector.emit(new Values<Object>(src, link));
 			}
@@ -70,6 +74,8 @@ public class BuilderMapBolt implements IRichBolt {
         
         log.info("* START MAPPING *");       
         stormConf.put("status", "MAPPING");
+        
+        serverIndex = config.get("workerIndex");
         
         if (!stormConf.containsKey("spoutExecutors")) {
         	throw new RuntimeException("Mapper class doesn't know how many input spout executors");

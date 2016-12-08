@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts.pagerank;
+package edu.upenn.cis.stormlite.bolts.PageRank;
 
 import java.io.File;
 import java.io.FileNotFoundException;

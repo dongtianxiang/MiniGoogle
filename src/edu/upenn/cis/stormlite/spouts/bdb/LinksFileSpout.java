@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
@@ -30,6 +31,7 @@ public abstract class LinksFileSpout implements IRichSpout {
 	public int inx = 0;
 	public boolean eofSent = false;	
 	public abstract String getFilename();
+	public String serverIndex;
 
 	public LinksFileSpout() {
 		filename = getFilename();
@@ -53,11 +55,15 @@ public abstract class LinksFileSpout implements IRichSpout {
         	if (rootDir.length() != 0) {
         		rootDir += "/";
         	}
+        	
+        	
         	StringBuilder targetPathBuilder = new StringBuilder(rootDir + filename);
         	// If we have a worker index, read appropriate file among xyz.txt.0, xyz.txt.1, etc.
-        	if (conf.containsKey("workerIndex"))
+        	if (conf.containsKey("workerIndex")) {
         		// reader = new BufferedReader(new FileReader(filename + "." + conf.get("workerIndex")));
         		targetPathBuilder.append('.').append(conf.get("workerIndex"));
+        		serverIndex = (String)conf.get("workerIndex");
+        	}
         	reader = new BufferedReader(new FileReader(targetPathBuilder.toString()));
 		
         } catch (FileNotFoundException e) {
@@ -89,6 +95,9 @@ public abstract class LinksFileSpout implements IRichSpout {
 					String[] parts = line.split(" -> ");
 					String src  = parts[0];
 					String links = parts[1];
+					
+//					log.info("Server " + serverIndex + " LinksFileSpout emitting: " + Arrays.toString(parts));
+
 					collector.emit(new Values<Object>(src, links));
 				} 
 				else if (!eofSent) {

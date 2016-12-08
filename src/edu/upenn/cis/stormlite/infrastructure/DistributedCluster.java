@@ -49,7 +49,7 @@ import edu.upenn.cis.stormlite.tasks.SpoutTask;
 public class DistributedCluster implements Runnable {
 	
 	static Logger log = Logger.getLogger(DistributedCluster.class);	
-	static AtomicBoolean quit;
+	static AtomicBoolean quit = new AtomicBoolean(false);
 	
 	String theTopology;
 	Map<String, List<IRichBolt>> boltStreams = new HashMap<>();
@@ -59,14 +59,15 @@ public class DistributedCluster implements Runnable {
 	ObjectMapper mapper = new ObjectMapper();
 	
 	// TODO: We are assigning 200 threads in thread pool for bolts runing simultaneously
-	ExecutorService executor = Executors.newFixedThreadPool(200);
+	ExecutorService executor;
 	
 	// between EOS propagation and tuple propagation!	
 	Queue<Runnable> taskQueue = new ConcurrentLinkedQueue<Runnable>();
 	
 	
-	public DistributedCluster() {
+	public DistributedCluster(int numThreads) {
 		
+		executor = Executors.newFixedThreadPool(numThreads);		
 		log.info("New DistributedCluster instance created");
 	}
 	

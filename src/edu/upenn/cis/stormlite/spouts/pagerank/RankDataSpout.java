@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts.pagerank;
+package edu.upenn.cis.stormlite.spouts.PageRank;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Iterator;

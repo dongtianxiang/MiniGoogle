@@ -7,14 +7,14 @@ import java.util.Arrays;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.pagerank.PRMapBolt;
-import edu.upenn.cis.stormlite.bolts.pagerank.PRReduceBolt;
-import edu.upenn.cis.stormlite.bolts.pagerank.PRResultBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
+import edu.upenn.cis.stormlite.bolts.PageRank.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.pagerank.RankDataSpout;
+import edu.upenn.cis.stormlite.spouts.PageRank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servlets.MasterServlet;
 
@@ -64,6 +64,7 @@ public class TestPageRankTopologyDistributed {
         config.put("status", "IDLE");
         config.put("graphDataDir", "graphStore");
         config.put("databaseDir" , "storage");
+        config.put("numThreads", "2");
         
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        

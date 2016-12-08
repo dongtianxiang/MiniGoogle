@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts.pagerank;
+package edu.upenn.cis.stormlite.bolts.PageRank;
 
 import java.util.Iterator;
 import java.util.List;
@@ -50,30 +50,27 @@ public class PRReduceBolt implements IRichBolt {
 	@Override
 	public void execute(Tuple input) {
 		
-		try {
-		
+		try {		
 	    	if (sentEof) {   		
 		        if (!input.isEndOfStream()) {
 		        	throw new RuntimeException("We received data after we thought the stream had ended!");
 		        }
 			}
-	    	else if (input.isEndOfStream()) {
-	    		
+	    	else if (input.isEndOfStream()) {	
 				log.info("EOS Received: " + (++count));			
 				eosNeeded--;
-				
-				if (eosNeeded == 0) {
-					
+				if (eosNeeded == 0) {					
 						config.put("status", "REDUCING");
 						log.info("- start reducing -");
 						Map<String, List<String>> table = tempDB.getTable(executorId);				
 						Iterator<String> keyIt = table.keySet().iterator();	
-//						System.out.println(table);
+
 						while (keyIt.hasNext()) {
 							String key = keyIt.next();
 							table.get(key).add((new Double(1 - d)).toString());
 							reduceJob.reduce(key, table.get(key).iterator(), collector);
 						}
+						
 						tempDB.clearTempData();
 						log.info("Database instance has been reset.");			
 					}
@@ -101,8 +98,7 @@ public class PRReduceBolt implements IRichBolt {
 		
 		config = stormConf;
 		d = Double.parseDouble(config.get("decayFactor"));		
-		serverIndex = stormConf.get("workerIndex");
-		
+		serverIndex = stormConf.get("workerIndex");		
 		String databaseDir  = config.get("databaseDir");
 		
 		if (serverIndex != null) {
