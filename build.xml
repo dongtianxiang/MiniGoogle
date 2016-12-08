@@ -120,6 +120,7 @@
 	
 	<target name="crawlermaster" depends="build">
 		<java classname="${crawler-master-class}" fork="true">
+			<jvmarg value="-Xmx4096m"/>
 			<classpath>
 				<path refid="classpath"/>
 			</classpath>
@@ -128,6 +129,7 @@
 	
 	<target name="crawlerworker0" depends="build">
 		<java classname="${crawler-worker-class}" fork="true">
+			<jvmarg value="-Xmx4096m"/>
 			<classpath>
 				<path refid="classpath"/>
 			</classpath>
@@ -140,6 +142,7 @@
 	
 	<target name="crawlerworker1" depends="build">
 		<java classname="${crawler-worker-class}" fork="true">
+			<jvmarg value="-Xmx4096m"/>
 			<classpath>
 				<path refid="classpath"/>
 			</classpath>
