@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.spouts.WordCount;
+package edu.upenn.cis.stormlite.spouts.wordcount;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

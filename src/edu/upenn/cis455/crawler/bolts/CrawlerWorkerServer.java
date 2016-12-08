@@ -156,8 +156,8 @@ public class CrawlerWorkerServer {
 				
 				crawler = new XPathCrawler(seedURL, filepath, maxSize);
 				
-				if(workerIndex.equals("0")) seedURL = "https://www.lendingtree.com/";
-				if(workerIndex.equals("1")) seedURL = "http://blogs.bls.gov/";
+				if(workerIndex.equals("0")) seedURL = "https://www.facebook.com/";
+				if(workerIndex.equals("1")) seedURL = "http://www.upenn.edu/";
 				
 				if(db.getFrontierQueueSize() == 0)
 		        	crawler.urlQueue.pushURL(seedURL);

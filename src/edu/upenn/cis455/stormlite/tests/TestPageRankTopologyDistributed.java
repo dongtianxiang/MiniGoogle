@@ -7,14 +7,14 @@ import java.util.Arrays;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.upenn.cis.stormlite.bolts.PageRank.PRMapBolt;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRReduceBolt;
-import edu.upenn.cis.stormlite.bolts.PageRank.PRResultBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRMapBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRReduceBolt;
+import edu.upenn.cis.stormlite.bolts.pagerank.PRResultBolt;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.spouts.PageRank.RankDataSpout;
+import edu.upenn.cis.stormlite.spouts.pagerank.RankDataSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servlets.MasterServlet;
 

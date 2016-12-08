@@ -1,4 +1,4 @@
-package edu.upenn.cis.stormlite.bolts.PageRank;
+package edu.upenn.cis.stormlite.bolts.pagerank;
 
 import java.util.Iterator;
 import java.util.List;
