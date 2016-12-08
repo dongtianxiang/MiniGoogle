@@ -65,16 +65,12 @@ public class URLSpout implements IRichSpout{
 				String curURL = urlQueue.popURL();
 				
 				if(!RobotCache.checkDelay(curURL)) {
-					//urlQueue.pushURL(curURL);
+					urlQueue.pushURL(curURL);
 				} else {				
-					RobotCache.setCurrentTime(curURL);  
-					if(!urlQueue.filter(curURL)) {     // HEAD REQUEST set the last visited time
-						return;
-					}
 					this.collector.emit(new Values<Object>(curURL));
 					
 					long end = System.currentTimeMillis(); 
-					log.info(curURL + "----> passed filter and is spouted -> spout time: " + (end-start) + " ms" );
+					log.debug(curURL + "----> is spouted -> spout time: " + (end-start) + " ms" );
 				}
 			}
 			Thread.yield();

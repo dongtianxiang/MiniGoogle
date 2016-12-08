@@ -79,15 +79,21 @@ public class CrawlerBolt implements IRichBolt{
 	@Override
 	public void execute(Tuple input) {
 		long start = System.currentTimeMillis();
-		
 		String curURL = input.getStringByField("url");
-		if(!RobotCache.checkDelay(curURL)) {
-			log.info(curURL + "  --> delay check failed in CrawlerBolt, not emitting this URL");
-			return;
-		}
-		
 		Connection conn = null;
+		
 		try {
+			RobotCache.setCurrentTime(curURL);  
+			if(!urlQueue.filter(curURL)) {     // HEAD REQUEST set the last visited time
+				log.info(curURL + "  --> not passing filter, not crawling this URL");
+				return;
+			}
+			
+			if(!RobotCache.checkDelay(curURL)) {
+				log.info(curURL + "  --> delay check failed in CrawlerBolt, not crawling this URL");
+				return;
+			}
+			
 			conn = Jsoup.connect(curURL);
 			conn.userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36");
 			Response rep = conn.header("User-Agent", "cis455crawler").execute();
