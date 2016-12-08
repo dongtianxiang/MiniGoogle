@@ -354,27 +354,31 @@ public class DBWrapper {
 	
 	public static void main(String[] args) throws IOException{
 		DBWrapper db = DBWrapper.getInstance("./dtianx0");
-//		System.out.println(System.getenv().get("AWS_KEY"));
-//		Map<String, String> env = System.getenv();
-//        for (String envName : env.keySet()) {
-//            System.out.format("%s=%s%n",
-//                              envName,
-//                              env.get(envName));
-//        }
-//        Properties prop = new Properties();
-//        String propFileName = "config.properties";
-//		InputStream inputStream = DBWrapper.class.getClassLoader().getResourceAsStream(propFileName);
-//		if (inputStream != null) {
-//			prop.load(inputStream);
-//		} else {
-//			throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
-//		}
-//		System.out.println(prop.getProperty("KEY"));
 
 		System.out.println(db.getFrontierQueueSize());
 		System.out.println(db.getVisitedSize());
 		List<String> res = db.visitedURLList();
-		for(String url : res) System.out.println(url);
+		for(String url : res) {
+//			System.out.println(url);
+			//System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
+		}
+		System.out.println();
+		System.out.println();
+		System.out.println("************************");
+		System.out.println();
+		System.out.println();
+		db.close();
+		DBWrapper db1 = DBWrapper.getInstance("./dtianx1");
+		List<String> res1 = db1.visitedURLList();
+		for(String url : res1) {
+//			System.out.println(url);
+			//System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
+		}
+		
+		for(String url : res) {
+			System.out.print(url);
+			System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
+		}
 		
 //		System.out.println(RobotCache.isValid("https://www.facebook.com"));
 //		System.out.println(System.setProperty("AWS_ID", "aaa"));

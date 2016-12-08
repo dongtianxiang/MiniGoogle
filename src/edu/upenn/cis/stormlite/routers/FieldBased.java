@@ -62,8 +62,6 @@ public class FieldBased extends StreamRouter {
 			hash ^= tuple.get(i).hashCode();
 		}
 		
-		// only hash for first element in tuple. "KEY" hashing only
-	
 		hash = hash % getBolts().size();
 		if (hash < 0)
 			hash = hash + getBolts().size();
