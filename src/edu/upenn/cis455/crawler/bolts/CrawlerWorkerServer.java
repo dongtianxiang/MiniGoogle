@@ -87,7 +87,7 @@ public class CrawlerWorkerServer {
 								masterAddr = new StringBuilder("http://" + masterAddr.toString());
 							}
 							
-							String keysRead    = db.getVisitedSize() + "";
+							String keysRead    = db.getOutLinksSize() + "";
 							String keysWritten = crawler == null ? "0" : crawler.urlQueue.getExecutedSize() + "";
 							log.info("VisitedURL Size: " + keysRead);
 							
@@ -113,8 +113,11 @@ public class CrawlerWorkerServer {
 					catch (InterruptedException e) {
 						break;
 					} 
-					catch (IOException e) {
-						e.printStackTrace();
+					catch (Exception e) {
+						StringWriter sw = new StringWriter();
+						PrintWriter pw = new PrintWriter(sw);
+						e.printStackTrace(pw);
+						log.error(sw.toString()); // stack trace as a string
 					}
 				}
 				log.info("CrawlerWorkerServer has stopped.");
@@ -153,8 +156,8 @@ public class CrawlerWorkerServer {
 				
 				crawler = new XPathCrawler(seedURL, filepath, maxSize);
 				
-				if(workerIndex.equals("0")) seedURL = "https://www.facebook.com/";
-				if(workerIndex.equals("1")) seedURL = "http://www.cnn.com/";
+				if(workerIndex.equals("0")) seedURL = "https://www.lendingtree.com/";
+				if(workerIndex.equals("1")) seedURL = "http://blogs.bls.gov/";
 				
 				if(db.getFrontierQueueSize() == 0)
 		        	crawler.urlQueue.pushURL(seedURL);

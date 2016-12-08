@@ -71,9 +71,7 @@ public class URLFrontierQueue {
 			return false;
 		}
 		long currentLastModified = client.getLast_modified();
-		if(db.visitedURLcontains(url)){
-//		if(visitedURLs.containsKey(url)){
-			
+		if(db.visitedURLcontains(url)){		
 			long crawled_LastModified = db.getVisitedTime(url);	
 			if(currentLastModified > crawled_LastModified){
 				db.putVisitedURL(url, currentLastModified);
@@ -83,8 +81,10 @@ public class URLFrontierQueue {
 				log.debug(url + ": Not Modified");
 				return false;
 			}
+		} else {
+			db.putVisitedURL(url, currentLastModified);
+			return true;
 		}
-		return true;
 	}
 	
 	public boolean isEmpty(){

@@ -364,7 +364,7 @@ public class CrawlerMasterServlet extends HttpServlet {
 		// build topology
 		TopologyBuilder builder = new TopologyBuilder();
 		
-		builder.setSpout(URL_SPOUT, spout, 2);
+		builder.setSpout(URL_SPOUT, spout, 10);
 		  
 		builder.setBolt(CRAWLER_BOLT, boltA, 10).fieldsGrouping(URL_SPOUT, new Fields("url"));    
 		builder.setBolt(FILTER_BOLT, boltD, 15).fieldsGrouping(CRAWLER_BOLT, new Fields("url"));

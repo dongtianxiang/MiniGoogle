@@ -60,18 +60,17 @@ public class RecordBolt implements IRichBolt{
 		long start = System.currentTimeMillis();
 		String link = input.getStringByField("extractedLink");
 		long step1 = System.currentTimeMillis();
-		if(RobotCache.isValid(link)) {
+		if(RobotCache.isValid(link)) {     // Check the robots.txt allowing list
 			long step2 = System.currentTimeMillis();
-			RobotCache.setCurrentTime(link);  
-			long step3 = System.currentTimeMillis();
-			if(!urlQueue.filter(link)) return; // HEAD REQUEST set the last visited time
+//			RobotCache.setCurrentTime(link);  
+//			long step3 = System.currentTimeMillis();
+//			if(!urlQueue.filter(link)) return; // HEAD REQUEST set the last visited time
 			long step4 = System.currentTimeMillis();
 			urlQueue.pushURL(link);
 			long step5 = System.currentTimeMillis();
 			//urlQueue.putIntoVisitedURL(link, RobotCache.getLastVisited(link));
 			log.info(link + " --> pushed into queue" + " step1: " + (step1-start) + "ms "
-					+ "step2: " + (step2-step1) + "ms " + "step3: " + (step3-step2) + "ms " + 
-					"step4: " + (step4-step3) + "ms " + "step5: " + (step5-step4) + "ms");
+					+ "step2: " + (step2-step1) + "ms " + "step5: " + (step5-step4) + "ms");
 		} else {
 			log.debug(link + " --> Not Valid on this Host");
 		}

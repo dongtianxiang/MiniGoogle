@@ -59,18 +59,31 @@ public class URLSpout implements IRichSpout{
 
 	@Override
 	public void nextTuple() {
-		if(!urlQueue.isEmpty()) {
-			String curURL = urlQueue.popURL();
-			
-			if(!RobotCache.checkDelay(curURL)) {
-				urlQueue.pushURL(curURL);
-				//log.info("Delay Required");
-			} else {
-				//log.info("URL Emitted");
-				this.collector.emit(new Values<Object>(curURL));
+		try {
+			long start = System.currentTimeMillis(); 
+			if(!urlQueue.isEmpty()) {
+				String curURL = urlQueue.popURL();
+				
+				if(!RobotCache.checkDelay(curURL)) {
+					//urlQueue.pushURL(curURL);
+				} else {				
+					RobotCache.setCurrentTime(curURL);  
+					if(!urlQueue.filter(curURL)) {     // HEAD REQUEST set the last visited time
+						return;
+					}
+					this.collector.emit(new Values<Object>(curURL));
+					
+					long end = System.currentTimeMillis(); 
+					log.info(curURL + "----> passed filter and is spouted -> spout time: " + (end-start) + " ms" );
+				}
 			}
-		}
-		Thread.yield();
+			Thread.yield();
+		} catch (Exception e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			log.error(sw.toString()); // stack trace as a string
+		} 
 	}
 
 	@Override

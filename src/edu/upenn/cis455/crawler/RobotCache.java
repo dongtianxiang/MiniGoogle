@@ -56,6 +56,8 @@ public class RobotCache {
 	public static void setCurrentTime(String url) {
 		URLInfo urlinfo = new URLInfo(url);
 		String hostname = urlinfo.getHostName();
+		if(hostname == null) return;
+		
 		if(!db.RobotMapContains(hostname)) {
 			addRobot(url);
 		}

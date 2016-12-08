@@ -81,6 +81,11 @@ public class CrawlerBolt implements IRichBolt{
 		long start = System.currentTimeMillis();
 		
 		String curURL = input.getStringByField("url");
+		if(!RobotCache.checkDelay(curURL)) {
+			log.info(curURL + "  --> delay check failed in CrawlerBolt, not emitting this URL");
+			return;
+		}
+		
 		Connection conn = null;
 		try {
 			conn = Jsoup.connect(curURL);
@@ -130,7 +135,7 @@ public class CrawlerBolt implements IRichBolt{
 			
 			
 			
-		} catch (IOException e) {
+		} catch (Exception e) {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);

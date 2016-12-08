@@ -31,7 +31,7 @@ public class RobotMap {
 	long lastVisited = 0;
 	long visitedSize = 0;
 	
-	final int MAX_VISITED_SIZE_ON_HOST = 3000;
+	final int MAX_VISITED_SIZE_ON_HOST = 5000;
 	
 	public RobotMap() {}
 	
@@ -46,6 +46,10 @@ public class RobotMap {
 
 	public void setHostName(String hostName) {
 		this.hostName = hostName;
+	}
+	
+	public long getVisitedSize(){
+		return this.visitedSize;
 	}
 	
 	public void init(String url){
@@ -154,6 +158,8 @@ public class RobotMap {
 			return false;
 		}
 		
+		visitedSize++;
+		
 		for(String allowpath:allowList){
 			if(allowpath.endsWith("/")){
 				//allowpath = allowpath.substring(0, allowpath.length() - 1);
@@ -187,7 +193,6 @@ public class RobotMap {
 	public void setLastVisited(){
 		Calendar cal = Calendar.getInstance();
     	lastVisited = cal.getTime().getTime();	
-		visitedSize++;
 	}
 	
 	/**

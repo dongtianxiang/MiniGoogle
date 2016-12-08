@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.sleepycat.je.DatabaseException;
@@ -28,6 +29,7 @@ import com.sleepycat.persist.PrimaryIndex;
 import com.sleepycat.persist.StoreConfig;
 
 import edu.upenn.cis455.crawler.*;
+import edu.upenn.cis455.crawler.info.URLInfo;
 /**
  * Basic class to connect Berkeley DB, including add and get User, Page, etc. from Database.
  * @author cis555
@@ -191,6 +193,24 @@ public class DBWrapper {
 		}
 	}
 	
+	public long getOutLinksSize(){
+		synchronized(outLinksIndex) {
+			return outLinksIndex.count();
+		}
+	}
+	
+	public List<String> outLinksList() {
+		synchronized(outLinksIndex) {
+			List<String> res = new ArrayList<String>();
+			EntityCursor<OutLinks> entities = this.outLinksIndex.entities();
+			for(OutLinks url : entities) {
+				res.add(url.getUrl());
+			}
+			entities.close();
+			return res;
+		}
+	}
+	
 	/* Related Method for VisitedURLs */
 	
 	public VisitedURL getVisitedURL(String url) {
@@ -211,8 +231,6 @@ public class DBWrapper {
 		if(v == null) return Calendar.getInstance().getTimeInMillis();
 		return v.getLastVisited();
 	}
-	
-
 
 	public void putVisitedURL(String url, Long lastVisited) {
 		VisitedURL v = getVisitedURL(url);
@@ -324,11 +342,18 @@ public class DBWrapper {
 	}
 	
 	public boolean getRobotIsURLValid(String hostname, String url) {
-		return getRobotMap(hostname).isURLValid(url);
+		RobotMap robot = getRobotMap(hostname);
+		boolean res = robot.isURLValid(url);     // update max visited on Host
+		putRobotMap(robot);
+		return res;
 	}
 	
 	public long getRobotLastVisited(String hostname){
 		return getRobotMap(hostname).getLastVisited();
+	}
+	
+	public long getRobotVisitedSize(String hostname){
+		return getRobotMap(hostname).getVisitedSize();
 	}
 	
 	public void setRobotLastVisited(String hostname){
@@ -344,6 +369,7 @@ public class DBWrapper {
 	}
 	
 	public boolean RobotMapContains(String hostName) {
+		if(hostName == null) return false;
 		synchronized(RobotMapIndex) {
 			return RobotMapIndex.contains(hostName);
 		}
@@ -354,12 +380,15 @@ public class DBWrapper {
 	
 	public static void main(String[] args) throws IOException{
 		DBWrapper db = DBWrapper.getInstance("./dtianx0");
-
+//		String URL = "https://www.google.com/";
+//		String keyName = DigestUtils.sha1Hex(URL); 
+//		System.out.println(keyName);
+		
 		System.out.println(db.getFrontierQueueSize());
-		System.out.println(db.getVisitedSize());
-		List<String> res = db.visitedURLList();
+		System.out.println(db.getOutLinksSize());
+		List<String> res = db.outLinksList();
 		for(String url : res) {
-//			System.out.println(url);
+			System.out.println(url);
 			//System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
 		}
 		System.out.println();
@@ -368,19 +397,21 @@ public class DBWrapper {
 		System.out.println();
 		System.out.println();
 		db.close();
+		
 		DBWrapper db1 = DBWrapper.getInstance("./dtianx1");
-		List<String> res1 = db1.visitedURLList();
+		List<String> res1 = db1.outLinksList();
+		
 		for(String url : res1) {
-//			System.out.println(url);
-			//System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
+			System.out.println(url);
+			if(res.contains(url)) System.err.println(url + " contained in both");
 		}
 		
-		for(String url : res) {
-			System.out.print(url);
-			System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
-		}
+		RobotCache.isValid("https://www.lendingtree.com/");
+		URLInfo i = new URLInfo("https://www.lendingtree.com/");
+		System.out.println(i.getHostName());
+		System.out.println(db1.getRobotVisitedSize("www.lendingtree.com"));
 		
-//		System.out.println(RobotCache.isValid("https://www.facebook.com"));
+		System.out.println(RobotCache.isValid("https://www.lendingtree.com/"));
 //		System.out.println(System.setProperty("AWS_ID", "aaa"));
 //		System.out.println(System.getProperty("AWS_ID"));
 		
