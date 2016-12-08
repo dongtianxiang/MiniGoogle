@@ -85,7 +85,7 @@ public class CrawlerBolt implements IRichBolt{
 		try {
 			RobotCache.setCurrentTime(curURL);  
 			if(!urlQueue.filter(curURL)) {     // HEAD REQUEST set the last visited time
-				log.info(curURL + "  --> not passing filter, not crawling this URL");
+				log.debug(curURL + "  --> not passing filter, not crawling this URL");
 				return;
 			}
 			
@@ -119,7 +119,9 @@ public class CrawlerBolt implements IRichBolt{
 			/* The Downloader itself updated the last visited time */
 			PageDownloader.download(url, doc, type);
 			
-			urlQueue.putIntoVisitedURL(url, RobotCache.getLastVisited(url));
+			long downloadTime = System.currentTimeMillis();
+			
+//			urlQueue.putIntoVisitedURL(url, RobotCache.getLastVisited(url));  // VisitedURL last modified time updating not necessary here.
 			int executedSize = urlQueue.addExecutedSize();
 			log.info("----> " + url + ": Downloading");
 			log.info("size: " + doc.toString().length());
@@ -131,13 +133,13 @@ public class CrawlerBolt implements IRichBolt{
 				linklist.add(link.attr("abs:href"));
 			}
 			
-			long downloadTime = System.currentTimeMillis();
+			long parsingTime = System.currentTimeMillis();
 			
 			collector.emit(new Values<Object>(url, linklist));
 			
 			long end = System.currentTimeMillis();
-			log.info(url + " downloaded ---> working Time: " + (downloadTime - start) + " ms " 
-					+ "emit time: " + (end - downloadTime) + " ms");
+			log.info(url + " downloaded ---> Downloading Time: " + (downloadTime - start) + " ms " 
+					+ "Parsing time: " + (parsingTime - downloadTime) + " ms " + "emit time: " + (end - downloadTime) + " ms");
 			
 			
 			

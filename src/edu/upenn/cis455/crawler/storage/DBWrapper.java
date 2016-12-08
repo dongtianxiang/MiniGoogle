@@ -326,7 +326,6 @@ public class DBWrapper {
 		synchronized(RobotMapIndex) {
 			RobotMapIndex.put(RobotMap);
 		}
-		sync();
 	}
 	
 	public void putRobotMap(String hostname, String url) {
@@ -344,7 +343,7 @@ public class DBWrapper {
 	public boolean getRobotIsURLValid(String hostname, String url) {
 		RobotMap robot = getRobotMap(hostname);
 		boolean res = robot.isURLValid(url);     // update max visited on Host
-		putRobotMap(robot);
+		if(res) putRobotMap(robot);
 		return res;
 	}
 	
