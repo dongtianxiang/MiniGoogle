@@ -64,6 +64,7 @@ public class TestPageRankTopologyDistributed {
         config.put("status", "IDLE");
         config.put("graphDataDir", "graphStore");
         config.put("databaseDir" , "storage");
+        config.put("numThreads", "2");
         
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        

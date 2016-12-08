@@ -52,8 +52,8 @@ public class BoltTask implements Runnable {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			log.error(tuple.getObjectByField("url").toString());
-			log.error(sw.toString()); // stack trace as a string
+//			log.error(tuple.getObjectByField("url").toString());
+//			log.error(sw.toString()); // stack trace as a string
 		}
 	}
 

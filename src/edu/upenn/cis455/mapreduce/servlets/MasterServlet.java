@@ -166,7 +166,7 @@ public class MasterServlet extends HttpServlet {
 		  }		  
   
 		  String report = String.format("%s\t%s\t%s", port, status, job);
-		  log.debug(" -- " + report + " -- ");
+		  log.info(" -- " + report + " -- ");
 		  
 //		  System.out.println("KeysRead: " + keysRead);
 //		  System.out.println("keysWritten: " + keysWritten);		  

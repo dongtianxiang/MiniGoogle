@@ -7,7 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.log4j.Logger;
+
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
 import edu.upenn.cis.stormlite.infrastructure.Job;
@@ -30,14 +33,15 @@ public class FirstaryReduceBolt implements IRichBolt {
 	public Job reduceJob;
 	public OutputCollector collector;
 	public Integer eosNeeded = 0;
-	public DBInstance graphDB;
-	public DBInstance tempDB;
+	public static DBInstance graphDB;
+	public static DBInstance tempDB;
 	public boolean sentEof = false;
 	public int count = 0;
 	public double d;
 	public String serverIndex;
 	public File outfile;
 	public FileWriter outputWriter;
+	public static AtomicBoolean eosSent;
 	
 	@Override
 	public String getExecutorId() {
@@ -68,8 +72,17 @@ public class FirstaryReduceBolt implements IRichBolt {
 			eosNeeded--;
 			if (eosNeeded == 0) {
 				
-				config.put("status", "REDUCING");
-				Map<String, List<String>> table = tempDB.getTable(executorId);				
+				eosSent.set(true);
+				
+				log.info("start first-level reduction");				
+				config.put("status", "REDUCING");				
+				Map<String, List<String>> table;
+				
+				synchronized(tempDB) {
+					table = tempDB.getTable(executorId);	
+				}
+				
+				log.info("Server# " + serverIndex + " " + table);				
 				Iterator<String> keyIt = table.keySet().iterator();	
 				
 				while (keyIt.hasNext()) {
@@ -100,16 +113,30 @@ public class FirstaryReduceBolt implements IRichBolt {
 					outputWriter.close();
 				} catch (IOException e) {
 					e.printStackTrace();
-				}				
-				tempDB.clearTempData();								
+				}			
+				synchronized(tempDB) {
+					tempDB.clearTempData();	
+				}
+				
+				
+				
 				collector.emitEndOfStream();
 			}
     	}
     	else {
+    		
+    		if (eosSent.get()) {
+    			
+    			throw new IllegalStateException("We received data after we think the stream has ended!");
+    		}
+    		
+    		
     		String key = input.getStringByField("key");
 	        String value = input.getStringByField("value");	        	              
-//	        log.debug("Firstary reducer received: " + key + " / " + value);         
-	        tempDB.addKeyValue(executorId, key, value);
+	        log.info("Server# " + serverIndex + " Firstary reducer received: " + key + " / " + value);
+	        synchronized(tempDB) {
+	        	tempDB.addKeyValue(executorId, key, value);
+	        }
     	}		
 	}
 
@@ -118,6 +145,8 @@ public class FirstaryReduceBolt implements IRichBolt {
 				
 		config = stormConf;
 		serverIndex = stormConf.get("workerIndex");
+		
+		eosSent = new AtomicBoolean(false);
 		
 		String graphDataDir  = config.get("graphDataDir");
 		String databaseDir   = config.get("databaseDir");

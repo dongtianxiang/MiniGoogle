@@ -86,7 +86,7 @@ public class WorkerServer {
 							if (status == null) status = "IDLE";							
 							if (status.equals("IDLE") && cluster != null && cluster.running()) {
 								cluster.shutdown();
-							}							
+							}						
 							masterAddr.append("/workerstatus?");							
 							masterAddr.append("port=" + myPort);								
 							masterAddr.append("&job=" +         (currJob == null ?     "N/A" : currJob));																							
@@ -138,7 +138,6 @@ public class WorkerServer {
 					e.printStackTrace();
 				}
 				
-				cluster = new DistributedCluster();
 				WorkerJob workerJob = null;
 				try {
 					workerJob = om.readValue(arg0.body(), WorkerJob.class);
@@ -154,6 +153,10 @@ public class WorkerServer {
 				// other information about job should be already in configuration object
 				String inputDirectory  = config.get("inputDir");	
 				tempStore = config.get("databaseDir");
+				
+				int numThreads = Integer.parseInt(config.get("numThreads"));
+				
+				cluster = new DistributedCluster(numThreads);
 				
 				config.put("keysRead",    "0");
 				config.put("keysWritten", "0");

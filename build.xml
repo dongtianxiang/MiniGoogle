@@ -72,7 +72,7 @@
 			<manifest>
 				<attribute name="Main-Class" value="${master-class}"/>
 			</manifest>
-		</jar>
+		</jar >
 		<jar destfile="${web-inf.lib.dir}${file.separator}worker.jar" update="true">
 			
 			<fileset dir="${web-inf.lib.dir}" includes="**/*.jar" excludes="**/worker.jar, **/master.jar"/>
