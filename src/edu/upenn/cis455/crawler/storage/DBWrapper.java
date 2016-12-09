@@ -408,6 +408,7 @@ public class DBWrapper {
 		RobotCache.isValid("https://www.lendingtree.com/");
 		URLInfo i = new URLInfo("https://www.lendingtree.com/");
 		System.out.println(i.getHostName());
+		RobotCache.setCurrentTime("https://www.lendingtree.com/");
 		System.out.println(db1.getRobotVisitedSize("www.lendingtree.com"));
 		
 		System.out.println(RobotCache.isValid("https://www.lendingtree.com/"));

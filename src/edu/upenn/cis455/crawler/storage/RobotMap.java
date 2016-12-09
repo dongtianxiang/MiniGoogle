@@ -158,8 +158,6 @@ public class RobotMap {
 			return false;
 		}
 		
-		visitedSize++;
-		
 		for(String allowpath:allowList){
 			if(allowpath.endsWith("/")){
 				//allowpath = allowpath.substring(0, allowpath.length() - 1);
@@ -193,6 +191,7 @@ public class RobotMap {
 	public void setLastVisited(){
 		Calendar cal = Calendar.getInstance();
     	lastVisited = cal.getTime().getTime();	
+		visitedSize++;
 	}
 	
 	/**
