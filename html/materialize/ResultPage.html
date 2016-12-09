@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Search Engine Home Page</title>
+  <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+  <style>
+    #header_wrapper {
+      background-color: #4D4D4D;
+      color: white;
+      border: 1px solid #d0d0d0;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .search_header {
+      height: 50px;
+      padding-left: 9px;
+      padding-right: 3.5em;
+      position: relative;
+      display: block;
+    }
+
+    input{
+      margin-top: 10px;
+      margin-bottom: 10px;
+      float: left;
+      /*font-size: 1.3em;*/
+      margin-top: 2vh;
+      margin-bottom: 2vh;
+      padding: 10px;
+    }
+
+    input#search_form_input{
+      color: black;
+      padding: 0.8vh;
+      min-width: 80%;
+      margin-right: 0.8vh;
+    }
+
+    #searchresults {
+      background-color: #fffff0;
+    }
+
+    #searchresults .row{
+      margin-top: 0.5em;
+      padding: 0.5em;
+    }
+
+    #searchresults .content{
+      border-bottom: 1px solid #d0d0d0;
+    }
+
+    #searchresults p{
+      font-size: 1.2em;
+    }
+
+    #footer_wrapper {
+      background-color: #4D4D4D;
+      color: white;
+      border: 1px solid #d0d0d0;
+    }
+
+    #footer_wrapper a{
+      padding: 0.5em;
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+  <div class="container-fluid" id="header_wrapper">
+    <div class="row" id="header">
+      <div class="col-md-1">search engine</div>
+      <div class="col-md-7">
+        <form id="searchform" class="search_header" name="x" action="results" method="GET">
+          <!-- <a href="" class="search">Try Me</a> -->
+          <input type="text" name="searchquery" id="search_form_input" class="search" value="%%REPLACE QUERY HERE%%" />
+          <input id="seach_button" class = "btn" type="submit" value="Search!" />
+        </form>
+      </div>      
+    </div>
+  </div>
+
+  <div class="container-fluid" id="searchresults">
+    <div class="row" id="result0">
+      <div class="col-md-1 space"></div>
+      <div class="col-md-6 content">
+        We found %%%RESULT COUNT%%% pages found in %%%SEARCH TIME%%% seconds
+      </div>      
+    </div>
+      %%REPLACE RESULTS HERE%%
+  </div>
+
+  <div class="container-fluid" id="footer_wrapper">
+    <div class="row" id="footer">
+      <div class="col-md-1">Page navigator</div>
+      <div class="col-md-7">
+        %%REPLACE PAGE DIR%%
+      </div>      
+    </div>
+  </div>
+
+
+
+</body>
+</html>

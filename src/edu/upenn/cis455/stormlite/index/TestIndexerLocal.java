@@ -9,42 +9,57 @@ import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.jsoup.Jsoup;
 
-//import edu.stanford.nlp.*;
-//import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
-//import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-//import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-//import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
-//import edu.stanford.nlp.ling.CoreLabel;
-//import edu.stanford.nlp.pipeline.Annotation;
-//import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-//import edu.stanford.nlp.simple.*;
-//import edu.stanford.nlp.util.CoreMap;
-import edu.upenn.cis455.database.Hit;
-import edu.upenn.cis455.database.Position;
+import java.io.*;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import edu.stanford.nlp.simple.*;
+
 
 public class TestIndexerLocal {
 	// Entry-point for indexer
-	private static Hashtable<String, Hit> tables = new Hashtable<>();
+	private static Hashtable<String, Integer> stops = new Hashtable<>();
 	
-	public static void main(String[] args) {		
+	
+	public static void main(String[] args) {
+		// prepare stoplist
+		File stop = new File("./stopwords.txt");
+		Scanner sc;
+		try {
+			sc = new Scanner(stop);
+			while (sc.hasNext()) {
+				String w = sc.nextLine();
+				stops.put(w, 1);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
 		File doc = new File(args[0]);
+		
 		if (!doc.exists()) {
 			System.out.println("File not exist.");
 			System.exit(-1);
 		}
-		parse(doc);
-//		parseUseCore(doc);
+		parse(doc, "google.com");
 	}
 	
 	/**
 	 * Use Standford CoreNLP simple API to tokenize and lemmatize words
-	 * Store HITs of english words only in a hashtable (just for now)
+	 * Store HITs of English words only in a hashtable (just for now)
 	 * Legal HITs format: english words, english words with numbers(eg,iphone7) 
 	 * Replace hyphen("-") with space, store both words with hyphen and no hyphen, eg san fransico = san-fransico
 	 * @param doc
 	 */
-	public static void parse(File doc){
+	public static void parse(File doc, String url){
+		int legalWords = 0;
+		int allWords = 0;
 		try {
 			org.jsoup.nodes.Document d = Jsoup.parse(doc, "UTF-8", "");
 			d.select(":containsOwn(\u00a0)").remove();
@@ -52,66 +67,20 @@ public class TestIndexerLocal {
 			// regex filter to get only legal words
 			Pattern pan = Pattern.compile("[a-zA-Z0-9.@-]+");
 			Pattern pan2 = Pattern.compile("[a-zA-Z]+");
-					
+						
 			for (Element e: es) {
 				String nodeName = e.nodeName(), text = e.ownText().trim();
-				System.out.println(e.nodeName() + ": " + e.ownText());			
-
+//				System.out.println(e.nodeName() + ": " + e.ownText());			
 				if (text != null && !text.isEmpty() && text.length() != 0 ){					
-					Document tagContent = new Document(text);
-					
-					/* Package needs downloading, comment for later use */
-					/*
-					List<Sentence> sentences = tagContent.sentences();
-					for (Sentence s: sentences) {
->>>>>>> de1e15c3f5c2ec863a96c02fa38ae66bbfc9b00c
+					edu.stanford.nlp.simple.Document tagContent = new edu.stanford.nlp.simple.Document(text);
+					List<edu.stanford.nlp.simple.Sentence> sentences = tagContent.sentences();
+					for (edu.stanford.nlp.simple.Sentence s: sentences) {
 //						System.out.println("sentence:" + s);
-//						List<String> words = s.lemmas();
-//						int i = 1;
-//						Matcher m, m2;
-//						for (String w: words) {
-//							w = w.trim();	// trim
-//							System.out.println("before:" + w);
-<<<<<<< HEAD
-//							m = pan.matcher(w);
-//							m2 = pan2.matcher(w);
-//							if (m.matches()) {
-//								if (m2.find()){
-//									if (!w.equalsIgnoreCase("-rsb-")&&!w.equalsIgnoreCase("-lsb-")
-//											&&!w.equalsIgnoreCase("-lrb-")&&!w.equalsIgnoreCase("-rrb-")
-//											&&!w.equalsIgnoreCase("-lcb-")&&!w.equalsIgnoreCase("-rcb-")){
-//										w = w.toLowerCase();
-//										Hit h;
-//										if (tables.containsKey(w)){
-//											h = tables.get(w);
-//											h.increaseFrequency();
-//										} else {
-//											h = new Hit(w);
-//										}
-//										h.setDocID(1);
-//										if (nodeName.equalsIgnoreCase("title")) {
-//											h.setTitle(true);
-//											h.addPosition(new Position(i, 3));
-//										} else {
-//											h.addPosition(new Position(i, 1));
-//										}
-//										// not consider meta
-//										tables.put(w, h);
-//										System.out.println("hit:" + h.getText());
-//										
-//									}
-//								}
-//							}
-//							i++;
-//						}
-//					}	
-//				}
-//			}
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-=======
+						List<String> words = s.lemmas();
+						Matcher m, m2;
+						for (String w: words) {
+							allWords++;
+							w = w.trim();	// trim
 							m = pan.matcher(w);
 							m2 = pan2.matcher(w);
 							if (m.matches()) {
@@ -120,77 +89,30 @@ public class TestIndexerLocal {
 											&&!w.equalsIgnoreCase("-lrb-")&&!w.equalsIgnoreCase("-rrb-")
 											&&!w.equalsIgnoreCase("-lcb-")&&!w.equalsIgnoreCase("-rcb-")){
 										w = w.toLowerCase();
-										Hit h;
-										if (tables.containsKey(w)){
-											h = tables.get(w);
-											h.increaseFrequency();
+										String weight = "1";
+										String value;
+										if ( !stops.containsKey(w)) {
+											// all legal words must be indexed with weight
+											legalWords++;
+											if (nodeName.equalsIgnoreCase("title")) {
+												weight = "2";
+											} 
+											value = url + ":" + nodeName + ":" + weight;
 										} else {
-											h = new Hit(w);
+											weight = "0";
+											value = url;
 										}
-										h.setDocID(1);
-										if (nodeName.equalsIgnoreCase("title")) {
-											h.setTitle(true);
-											h.addPosition(new Position(i, 3));
-										} else {
-											h.addPosition(new Position(i, 1));
-										}
-										// not consider meta
-										tables.put(w, h);
-										System.out.println("hit:" + h.getText());
-										
+										System.out.println("key: " + w + " value: " + value);
 									}
 								}
 							}
-							i++;
 						}
 					}	
-					*/
-				}
+				}				
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
-//	public static void parseUseCore(File doc) {
-//		// configure nlp
-//		Properties myPro = new Properties();
-//		myPro.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse");
-//		StanfordCoreNLP pipeline = new StanfordCoreNLP(myPro);
-//		org.jsoup.nodes.Document d;
-//		try {
-//			d = Jsoup.parse(doc, "UTF-8", "");
-//			d.select(":containsOwn(\u00a0)").remove();
-//			Elements es = d.select("*");
-//			for (Element e: es) {
-//				String nodeName = e.nodeName(), text = e.ownText().trim();		
-//				if (text != null && !text.isEmpty() && text.length() != 0 ){					
-//					Sentence sen = new Sentence(text);					
-//					Annotation ann = new Annotation(text);
-//					pipeline.annotate(ann);
-//					List<CoreMap> sentences = ann.get(SentencesAnnotation.class);
-//					
-//					for(CoreMap sentence: sentences) {
-//						System.out.println(sentence.toString());
-						  // traversing the words in the current sentence
-						  // a CoreLabel is a CoreMap with additional token-specific methods
-//						  for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
-//						    // this is the text of the token
-//						    String word = token.get(TextAnnotation.class);
-//						    System.out.println("word:" + word);
-//						    // this is the NER label of the token
-//						    String ne = token.get(NamedEntityTagAnnotation.class);
-//						    System.out.println("ne:" + ne);
-//						  }
-//					}	
-//				}
-//			}
-//			
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}		
-//	}
-		
 }
