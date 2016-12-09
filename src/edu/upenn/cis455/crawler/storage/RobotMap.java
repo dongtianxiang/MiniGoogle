@@ -31,7 +31,7 @@ public class RobotMap {
 	long lastVisited = 0;
 	long visitedSize = 0;
 	
-	final int MAX_VISITED_SIZE_ON_HOST = 5000;
+	final int MAX_VISITED_SIZE_ON_HOST = 100;
 	
 	public RobotMap() {}
 	
