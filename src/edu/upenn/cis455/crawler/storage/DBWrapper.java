@@ -343,7 +343,7 @@ public class DBWrapper {
 	public boolean getRobotIsURLValid(String hostname, String url) {
 		RobotMap robot = getRobotMap(hostname);
 		boolean res = robot.isURLValid(url);     // update max visited on Host
-		if(res) putRobotMap(robot);
+		//if(res) putRobotMap(robot);
 		return res;
 	}
 	
