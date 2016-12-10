@@ -1,14 +1,11 @@
 package edu.upenn.cis455.crawler.bolts;
 
-//import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.LinkedList;
-//import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
-
 import org.apache.log4j.Logger;
 import org.jsoup.Connection;
 import org.jsoup.Connection.Response;
@@ -16,7 +13,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import edu.upenn.cis.stormlite.infrastructure.*;
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
@@ -102,16 +98,13 @@ public class CrawlerBolt implements IRichBolt{
 			
 			long workTime = System.currentTimeMillis();
 			
-			//collector.emit(new Values<Object>(curURL, doc, contentType));
-			
+//			collector.emit(new Values<Object>(curURL, doc, contentType));
 //			long end = System.currentTimeMillis();
 //			log.info(curURL + " crawled ---> working Time: " + (workTime - start) + " ms " 
 //					+ "emit time: " + (end - workTime) + " ms");
 			log.info(curURL + " crawled ---> crawling Time: " + (workTime - start) + " ms ");
-			
 			start = System.currentTimeMillis();
-			
-			
+						
 			/* Part of previous Download Bolt */
 			String type = contentType;
 			String url = curURL;
@@ -133,15 +126,11 @@ public class CrawlerBolt implements IRichBolt{
 				linklist.add(link.attr("abs:href"));
 			}
 			
-			long parsingTime = System.currentTimeMillis();
-			
-			collector.emit(new Values<Object>(url, linklist));
-			
+			long parsingTime = System.currentTimeMillis();			
+			collector.emit(new Values<Object>(url, linklist));			
 			long end = System.currentTimeMillis();
 			log.info(url + " downloaded ---> Downloading Time: " + (downloadTime - start) + " ms " 
-					+ "Parsing time: " + (parsingTime - downloadTime) + " ms " + "emit time: " + (end - downloadTime) + " ms");
-			
-			
+					+ "Parsing time: " + (parsingTime - downloadTime) + " ms " + "emit time: " + (end - downloadTime) + " ms");		
 			
 		} catch (Exception e) {
 			StringWriter sw = new StringWriter();
@@ -150,8 +139,7 @@ public class CrawlerBolt implements IRichBolt{
 			log.error(curURL);
 			log.error(sw.toString()); // stack trace as a string
 		} 
-		
-		
+				
 	}
 	
     /**

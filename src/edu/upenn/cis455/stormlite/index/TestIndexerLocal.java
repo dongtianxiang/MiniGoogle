@@ -4,31 +4,12 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-<<<<<<< HEAD
-=======
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.jsoup.*;
-import org.jsoup.nodes.Document;
->>>>>>> 833d3ecdc98a575700cc107d278bea0c9d07be42
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.Jsoup;
 
-<<<<<<< HEAD
-=======
-import java.io.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-
-import org.jsoup.select.Elements;
-import edu.stanford.nlp.simple.*;
-
-
->>>>>>> 833d3ecdc98a575700cc107d278bea0c9d07be42
 public class TestIndexerLocal {
 	
 	// Entry-point for indexer
@@ -41,13 +22,15 @@ public class TestIndexerLocal {
 		File stop = new File("./stopwords.txt");
 		Scanner sc;
 		try {
+			
 			sc = new Scanner(stop);
 			while (sc.hasNext()) {
 				String w = sc.nextLine();
 				stops.put(w, 1);
 			}
+		
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
@@ -146,7 +129,6 @@ public class TestIndexerLocal {
 				}				
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
