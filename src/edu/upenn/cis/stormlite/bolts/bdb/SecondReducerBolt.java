@@ -3,10 +3,14 @@ package edu.upenn.cis.stormlite.bolts.bdb;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.log4j.Logger;
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
@@ -18,14 +22,16 @@ import edu.upenn.cis.stormlite.tuple.Tuple;
 import edu.upenn.cis455.database.DBInstance;
 import edu.upenn.cis455.database.DBManager;
 import edu.upenn.cis455.database.Node;
-
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 public class SecondReducerBolt implements IRichBolt {
 	
 	public static Logger log = Logger.getLogger(SecondReducerBolt.class);
+//	Logger log = LoggerFactory.getLogger(SecondReducerBolt.class);
 	public static Map<String, String> config;
 	public static DBInstance graphDB;
 	public static DBInstance tempDB;
-	
+	public int count = 0;
     public String executorId = UUID.randomUUID().toString();
 	public Fields schema = new Fields("key");
 	public OutputCollector collector;
@@ -34,6 +40,8 @@ public class SecondReducerBolt implements IRichBolt {
 	public File outfile;
 	public FileWriter outputWriter;
 	public int eosREQUIRED;
+	private FileWriterQueue fwq;
+	public static AtomicBoolean eosSent = new AtomicBoolean();
 	
 	@Override
 	public String getExecutorId() {
@@ -53,23 +61,30 @@ public class SecondReducerBolt implements IRichBolt {
 	@Override
 	public void execute(Tuple input) {
 		
-    	if (sentEOS) {   		
+    	if (eosSent.get()) {   
+    		
 	        if (!input.isEndOfStream()) {
-	        	throw new RuntimeException("We received data after we thought the stream had ended!");
+	        	log.error("Server# " + serverIndex + "::"+executorId+" Firstary MAYDAY MAYDAY! " + input.getStringByField("key") + " / " + input.getStringByField("value"));
+	        	log.error("We received data after we thought the stream had ended!");
+	        	return;
+//	        	throw new RuntimeException("We received data after we thought the stream had ended!");
 	        }
+	        log.error("Server# " + serverIndex + "::"+executorId+" Firstary MAYDAY MAYDAY! EOS AGAIN!!!!!");
 		}
     	else if (input.isEndOfStream()) {
-    		
-	        eosREQUIRED -= 1;
+    		eosREQUIRED -= 1;
+    		log.info("Server#" + serverIndex + "::"+executorId+"EOS Received(reducer2): " + (++count)+"/"+(eosREQUIRED+count));			
+	        
 	        if (eosREQUIRED == 0) {
-	        	
-	        	log.info("start second level reduction");	   
+	        	eosSent.set(true);
+	        	log.info("start second level reduction");	
+	        	config.put("status", "REDUCING2");
 	        	Map<String, List<String>> table;
 	        	synchronized(tempDB) {
 	        		table = tempDB.getTable(executorId);
 	        	}
 	        	
-	        	log.info(table);
+	        	log.info(table.toString());
 	        	
 	        	Iterator<String> iter = table.keySet().iterator();
 	        	while (iter.hasNext()) {
@@ -83,12 +98,17 @@ public class SecondReducerBolt implements IRichBolt {
 		        		for (String ancestor: ancestors) {
 		        			node.addNeighbor(ancestor);
 		        		}
-		        		try {
-							outputWriter.write(String.format("%s\n", node.getID()));
-							outputWriter.flush();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
+		        		fwq.addQueue(String.format("%s\n", node.getID()));
+		        		
+//		        		try {
+//							outputWriter.write(String.format("%s\n", node.getID()));
+//							outputWriter.flush();
+//						} catch (IOException e) {
+//							StringWriter sw = new StringWriter();
+//							PrintWriter pw = new PrintWriter(sw);
+//							e.printStackTrace(pw);
+//							log.error(sw.toString());
+//						}
 		        		graphDB.addNode(node);	
 	        		}   		
 	        	}
@@ -96,8 +116,9 @@ public class SecondReducerBolt implements IRichBolt {
 	        	synchronized(tempDB) {
 	        		tempDB.clearTempData();
 	        	}
-	        	
-	        	config.put("status", "IDLE");	        	
+	        	if(FileWriterQueue.getFileWriterQueueLaterCall().queue.isEmpty()) {
+	        		config.put("status", "IDLE");	  
+	        	}
 //		        log.info("************** Secondary reducer job completed! ******************");
 	        }
 	        
@@ -105,7 +126,8 @@ public class SecondReducerBolt implements IRichBolt {
     	else {   		
     		
     		if (eosREQUIRED == 0) {
-    			throw new IllegalStateException();
+    			log.error("We received data after we thought the stream had ended!");
+    			return;
     		}
     		
     		String key = input.getStringByField("value");
@@ -152,21 +174,27 @@ public class SecondReducerBolt implements IRichBolt {
 		}
 		
 		String outputFileName = "names.txt";
+//		String outputFileName = executorId;
 		outfile = new File(outfileDir, outputFileName);
 		
-		try {
-			outputWriter = new FileWriter(outfile, true);
-		} 
-		catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			outputWriter = new FileWriter(outfile, true);
+//		} 
+//		catch (IOException e) {
+//			e.printStackTrace();
+//		}
+		
+		this.fwq = FileWriterQueue.getFileWriterQueue(outfile, context);
 		
 		// if database instances do not exist, they should
 		// be automatically created
 		graphDB = DBManager.getDBInstance(graphDataDir);
 		tempDB  = DBManager.getDBInstance(databaseDir);
 		
-		eosREQUIRED = Integer.parseInt(numWorkers);			
+		int reducerNum = Integer.parseInt(stormConf.get("reduceExecutors"));
+		int reducer2Num = Integer.parseInt(stormConf.get("reduce2Executors"));
+		int workerNums = Integer.parseInt(numWorkers);	
+		eosREQUIRED = (workerNums - 1) * reducerNum * reducer2Num + reducerNum;
         this.collector = collector;
 	}
 

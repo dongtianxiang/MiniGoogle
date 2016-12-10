@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
+import edu.upenn.cis.stormlite.bolts.bdb.FileWriterQueue;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 
 /**
@@ -42,6 +43,7 @@ public class TopologyContext {
 	int mapOutputs = 0;
 	
 	int reduceOutputs = 0;
+	
 	
 //	Map<String, Integer> sendOutputs = new HashMap<>();
 	
