@@ -36,12 +36,12 @@
 
     .content-wrap {
       height: 80px;
-      width: 610px;
+      width: 650px;
       margin-left: 335px;
     }
 
     .block {
-      height: 300px;
+      height: 320px;
       width: 100%;
     }
 
@@ -59,21 +59,21 @@
     </style>
   </head> 
   
-  <body background="../img/background.jpg" style="background-attachment: fixed; background-repeat: no-repeat;">  
+  <body background="http://wallpapers-and-backgrounds.net/wp-content/uploads/2016/01/classic-hd-background_1_1280x720.jpg" style="background-attachment: fixed;">  
 
     <nav class="transparent" role="navigation">
       <div class="nav-wrapper">        
-        
+         <a  class="brand-logo center logo">Quantum Engine</a>      
       </div>
     </nav>
 
     <div class="block">
-      <a class="slogen" >please allow 30 days for search results</a>
+      
     </div>
 
-    <div id="searchblock" class="content-wrap" >
-      <form name="search_form" method="POST" id="searchform" action="results">
-        <input class="searchlogo placeholder" type="text" name="searchquery" style="width:450px; height:45px; padding-top:17px; padding-left:120px;" value placeholder="  Enter your query keywords... ">
+    <div id="searchblock" class="content-wrap transparent" >
+      <form name="search_form" method="POST" id="searchform" action="/query">
+        <input class="searchlogo placeholder transparent" type="text" name="searchquery" style="width:470px; height:45px; padding-top:17px; padding-left:120px;" value placeholder="  Enter your query keywords... ">
       </form>
     </div>
 

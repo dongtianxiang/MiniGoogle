@@ -67,7 +67,7 @@ public class TestIndexerLocal {
 			// regex filter to get only legal words
 			Pattern pan = Pattern.compile("[a-zA-Z0-9.@-]+");
 			Pattern pan2 = Pattern.compile("[a-zA-Z]+");
-						
+			Pattern pan3 = Pattern.compile("[0-9]+,*[0-9]*");			
 			for (Element e: es) {
 				String nodeName = e.nodeName(), text = e.ownText().trim();
 //				System.out.println(e.nodeName() + ": " + e.ownText());			
@@ -77,33 +77,49 @@ public class TestIndexerLocal {
 					for (edu.stanford.nlp.simple.Sentence s: sentences) {
 //						System.out.println("sentence:" + s);
 						List<String> words = s.lemmas();
-						Matcher m, m2;
+						Matcher m, m2, m3;
 						for (String w: words) {
 							allWords++;
 							w = w.trim();	// trim
 							m = pan.matcher(w);
 							m2 = pan2.matcher(w);
+							m3 = pan3.matcher(w);
 							if (m.matches()) {
 								if (m2.find()){
 									if (!w.equalsIgnoreCase("-rsb-")&&!w.equalsIgnoreCase("-lsb-")
 											&&!w.equalsIgnoreCase("-lrb-")&&!w.equalsIgnoreCase("-rrb-")
 											&&!w.equalsIgnoreCase("-lcb-")&&!w.equalsIgnoreCase("-rcb-")){
 										w = w.toLowerCase();
-										String weight = "1";
 										String value;
 										if ( !stops.containsKey(w)) {
 											// all legal words must be indexed with weight
 											legalWords++;
+											String weight = "1";
 											if (nodeName.equalsIgnoreCase("title")) {
 												weight = "2";
 											} 
 											value = url + ":" + nodeName + ":" + weight;
 										} else {
-											weight = "0";
 											value = url;
 										}
-										System.out.println("key: " + w + " value: " + value);
+//										System.out.println("key: " + w + " value: " + value);
 									}
+								} else {
+									// illegal word: extract number only - eg 2014
+									// only index but no weight
+									if (m3.matches()) {
+//										System.out.println("number:" + w);
+										String value = url;
+									}	
+								}
+							}
+							// illegal word, extract numbers only - 36,000 -> 36000
+							// only index but no weight
+							else {
+								if (m3.matches()){
+									w = w.replaceAll(",", "");
+									String value = url;
+//									System.out.println("number:" + w);
 								}
 							}
 						}
