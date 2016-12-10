@@ -5,6 +5,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -16,7 +18,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jsoup.nodes.Element;
+
 import org.jsoup.select.Elements;
 import edu.stanford.nlp.simple.*;
 
@@ -24,10 +26,11 @@ import edu.stanford.nlp.simple.*;
 public class TestIndexerLocal {
 	// Entry-point for indexer
 	private static Hashtable<String, Integer> stops = new Hashtable<>();
-	
+	private static Logger log = Logger.getLogger(TestIndexerLocal.class);
 	
 	public static void main(String[] args) {
 		// prepare stoplist
+		PropertyConfigurator.configure("./resources/log4j.properties");
 		File stop = new File("./stopwords.txt");
 		Scanner sc;
 		try {
@@ -38,13 +41,16 @@ public class TestIndexerLocal {
 			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			log.error(sw);
 		}
 	
 		File doc = new File(args[0]);
 		
 		if (!doc.exists()) {
-			System.out.println("File not exist.");
+			log.fatal("File not exist.");
 			System.exit(-1);
 		}
 		parse(doc, "google.com");
@@ -70,12 +76,12 @@ public class TestIndexerLocal {
 			Pattern pan3 = Pattern.compile("[0-9]+,*[0-9]*");			
 			for (Element e: es) {
 				String nodeName = e.nodeName(), text = e.ownText().trim();
-//				System.out.println(e.nodeName() + ": " + e.ownText());			
+				log.info(e.nodeName() + ": " + e.ownText());			
 				if (text != null && !text.isEmpty() && text.length() != 0 ){					
 					edu.stanford.nlp.simple.Document tagContent = new edu.stanford.nlp.simple.Document(text);
 					List<edu.stanford.nlp.simple.Sentence> sentences = tagContent.sentences();
 					for (edu.stanford.nlp.simple.Sentence s: sentences) {
-//						System.out.println("sentence:" + s);
+						log.info("sentence:" + s);
 						List<String> words = s.lemmas();
 						Matcher m, m2, m3;
 						for (String w: words) {
@@ -102,13 +108,13 @@ public class TestIndexerLocal {
 										} else {
 											value = url;
 										}
-//										System.out.println("key: " + w + " value: " + value);
+										log.info("key: " + w + " value: " + value);
 									}
 								} else {
 									// illegal word: extract number only - eg 2014
 									// only index but no weight
 									if (m3.matches()) {
-//										System.out.println("number:" + w);
+										log.info("number:" + w);
 										String value = url;
 									}	
 								}
@@ -119,7 +125,7 @@ public class TestIndexerLocal {
 								if (m3.matches()){
 									w = w.replaceAll(",", "");
 									String value = url;
-//									System.out.println("number:" + w);
+									log.info("number:" + w);
 								}
 							}
 						}

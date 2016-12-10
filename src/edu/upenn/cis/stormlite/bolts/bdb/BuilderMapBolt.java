@@ -54,13 +54,20 @@ public class BuilderMapBolt implements IRichBolt {
 //			log.info("Server " + serverIndex + " has received " + src + " -> " + Arrays.toString(links));
 			
 			for (String link: links) {
+				log.info("Server#"+serverIndex+"::"+executorId+" emitting "+src+"/"+link + " at time:"+System.currentTimeMillis());
 				collector.emit(new Values<Object>(src, link));
 			}
 		}
 		else {
     		eosNeeded--;    		
     		if (eosNeeded == 0) {
-    			log.info("Mapping phase completed");	   
+    			log.info("Server#"+serverIndex+"::"+executorId+" Mapping phase completed at "+System.currentTimeMillis());
+    			try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
         		collector.emitEndOfStream();
     		}
 		}
@@ -81,12 +88,12 @@ public class BuilderMapBolt implements IRichBolt {
         	throw new RuntimeException("Mapper class doesn't know how many input spout executors");
         }
         
-//		int numMappers = Integer.parseInt(stormConf.get("mapExecutors"));	
-//		int numSpouts  = Integer.parseInt(stormConf.get("spoutExecutors"));		
+		int numMappers = Integer.parseInt(stormConf.get("mapExecutors"));	
+		int numSpouts  = Integer.parseInt(stormConf.get("spoutExecutors"));		
 		int numWorkers = Integer.parseInt(stormConf.get("workers"));
 //        eosNeeded = ((numWorkers - 1) * numMappers  + 1) * numSpouts;	
-		eosNeeded = numWorkers;
-        log.debug("Num EOS required for MapBolt: " + eosNeeded);
+		eosNeeded = (numWorkers-1) * numSpouts * numMappers + numSpouts;
+        log.info("Num EOS required for MapBolt: " + eosNeeded);
 	}
 
 	@Override
