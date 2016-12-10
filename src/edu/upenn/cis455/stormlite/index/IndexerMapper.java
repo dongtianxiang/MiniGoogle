@@ -181,20 +181,23 @@ public class IndexerMapper implements IRichBolt {
 											}
 											if(!weights.containsKey(w)) {
 												collector.emit(new Values<Object>(w, url));
+												weights.put(w, weight);
+											} else {
+												weights.put(w, weights.get(w)+weight);
 											}
-											weights.compute(w, (k, v) -> (v == null) ? weight : v+weight);
 //											value = url + ":" + nodeName + ":" + weight;
-										} else {
-											value = url;
-										}
-										System.out.println("key: " + w + " value: " + value);
+										} 
+//											else {
+//											value = url;
+//										}
+//										System.out.println("key: " + w + " value: " + value);
 									}
 								} else {
 									// illegal word: extract number only - eg 2014
 									// only index but no weight
 									if (m3.matches()) {
-										System.out.println("number:" + w);
-										String value = url;
+//										System.out.println("number:" + w);
+//										String value = url;
 									}	
 								}
 							}
@@ -202,9 +205,9 @@ public class IndexerMapper implements IRichBolt {
 							// only index but no weight
 							else {
 								if (m3.matches()){
-									w = w.replaceAll(",", "");
-									String value = url;
-									System.out.println("number:" + w);
+//									w = w.replaceAll(",", "");
+//									String value = url;
+//									System.out.println("number:" + w);
 								}
 							}
 						}

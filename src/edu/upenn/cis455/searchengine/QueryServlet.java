@@ -1,5 +1,6 @@
 package edu.upenn.cis455.searchengine;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.regex.Matcher;
@@ -20,10 +21,23 @@ import edu.stanford.nlp.simple.Sentence;
 public class QueryServlet extends HttpServlet {
 	
 //	static ConcurrentLinkedQueue<String> theQ = new ConcurrentLinkedQueue<String>();
+	Hashtable<String, Integer> stops = new Hashtable<>();
 	static ExecutorService executor;
+	ArrayList<String> waitlist = new ArrayList<String>();
+	
 	@Override
 	public void init(){
         executor = Executors.newFixedThreadPool(5);
+        File stop = new File("./stopwords.txt");
+        try {
+        	Scanner sc = new Scanner(stop);
+        	while (sc.hasNext()) {
+        		String s = sc.nextLine();
+        		stops.put(s, 1);
+        	}
+        } catch (IOException e) {
+        	e.printStackTrace();
+        }
 	}
 	
 	
@@ -49,21 +63,25 @@ public class QueryServlet extends HttpServlet {
 							&&!w.equalsIgnoreCase("-lrb-")&&!w.equalsIgnoreCase("-rrb-")
 							&&!w.equalsIgnoreCase("-lcb-")&&!w.equalsIgnoreCase("-rcb-")){
 						w = w.toLowerCase();
+						if ( !stops.containsKey(w)) {
+							// not stop word
+							WorkerThread wt = new WorkerThread(w);
+							System.out.println("Now start retrieving word " + w);
+							executor.execute(wt);
+						} else {
+							// stop word
+							waitlist.add(w);
+						}
 					}
 				} else {
 					if (m3.matches()) {
 						w = w.replaceAll(",", "");
-					}	
+					}
+					waitlist.add(w);
 				}
 			}
-			System.out.println("Now start computing query...");
 		}
-	
-		resp.setStatus(HttpServletResponse.SC_OK);
-		resp.setContentType("text/html");
-        PrintWriter pw = resp.getWriter();
-        pw.println("Query:" + query);
-        pw.flush();
+			
 	}
 
 }

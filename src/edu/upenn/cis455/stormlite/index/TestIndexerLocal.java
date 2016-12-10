@@ -24,6 +24,7 @@ import edu.stanford.nlp.simple.*;
 
 
 public class TestIndexerLocal {
+	
 	// Entry-point for indexer
 	private static Hashtable<String, Integer> stops = new Hashtable<>();
 	private static Logger log = Logger.getLogger(TestIndexerLocal.class);
@@ -90,32 +91,36 @@ public class TestIndexerLocal {
 							m = pan.matcher(w);
 							m2 = pan2.matcher(w);
 							m3 = pan3.matcher(w);
+							String value = null;
 							if (m.matches()) {
 								if (m2.find()){
 									if (!w.equalsIgnoreCase("-rsb-")&&!w.equalsIgnoreCase("-lsb-")
 											&&!w.equalsIgnoreCase("-lrb-")&&!w.equalsIgnoreCase("-rrb-")
 											&&!w.equalsIgnoreCase("-lcb-")&&!w.equalsIgnoreCase("-rcb-")){
 										w = w.toLowerCase();
-										String value;
 										if ( !stops.containsKey(w)) {
 											// all legal words must be indexed with weight
 											legalWords++;
 											String weight = "1";
 											if (nodeName.equalsIgnoreCase("title")) {
 												weight = "2";
-											} 
-											value = url + ":" + nodeName + ":" + weight;
+											}
+											// emit from here
+											value = w + ":" + weight;
 										} else {
-											value = url;
+											// stopword: emit from here
+											value = w;
 										}
-										log.info("key: " + w + " value: " + value);
+//										log.info("key: " + w + " value: " + value);
 									}
 								} else {
 									// illegal word: extract number only - eg 2014
 									// only index but no weight
 									if (m3.matches()) {
 										log.info("number:" + w);
-										String value = url;
+//										String value = url;
+										value = w;
+										//emit from here
 									}	
 								}
 							}
@@ -124,9 +129,11 @@ public class TestIndexerLocal {
 							else {
 								if (m3.matches()){
 									w = w.replaceAll(",", "");
-									String value = url;
+//									String value = url;
 									log.info("number:" + w);
 								}
+								// emit from here
+								value = w;
 							}
 						}
 					}	
