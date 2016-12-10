@@ -33,7 +33,9 @@ public class RobotMap {
 	
 	final int MAX_VISITED_SIZE_ON_HOST = 100;
 	
-	public RobotMap() {}
+	public RobotMap() {
+		
+	}
 	
 	public RobotMap(String hostName, String url) {
 		this.hostName = hostName;
