@@ -1,6 +1,5 @@
 package edu.upenn.cis.stormlite.bolts.bdb;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 

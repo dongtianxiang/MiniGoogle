@@ -18,8 +18,9 @@ public class WorkerThread implements Runnable{
 				while (sc.hasNext()) {
 					String record = sc.nextLine();
 				}
+				
+				
 			} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 			}
         }

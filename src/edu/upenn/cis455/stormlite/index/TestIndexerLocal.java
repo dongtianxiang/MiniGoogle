@@ -4,22 +4,9 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.jsoup.*;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.Jsoup;
-
-import java.io.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import edu.stanford.nlp.simple.*;
-
 
 public class TestIndexerLocal {
 	
@@ -59,7 +46,7 @@ public class TestIndexerLocal {
 	 */
 	public static void parse(File doc, String url){
 		int legalWords = 0;
-		int allWords = 0;
+		int allWords   = 0;
 		try {
 			org.jsoup.nodes.Document d = Jsoup.parse(doc, "UTF-8", "");
 			d.select(":containsOwn(\u00a0)").remove();

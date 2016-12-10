@@ -1,10 +1,10 @@
 package edu.upenn.cis455.crawler.bolts;
 
-import java.io.IOException;
+//import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.LinkedList;
-import java.util.List;
+//import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
