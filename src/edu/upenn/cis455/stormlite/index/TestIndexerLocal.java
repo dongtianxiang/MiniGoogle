@@ -4,24 +4,11 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.jsoup.*;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.Jsoup;
-
-import java.io.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-
-import org.jsoup.select.Elements;
-import edu.stanford.nlp.simple.*;
-
 
 public class TestIndexerLocal {
 	
@@ -35,13 +22,15 @@ public class TestIndexerLocal {
 		File stop = new File("./stopwords.txt");
 		Scanner sc;
 		try {
+			
 			sc = new Scanner(stop);
 			while (sc.hasNext()) {
 				String w = sc.nextLine();
 				stops.put(w, 1);
 			}
+		
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
@@ -66,7 +55,7 @@ public class TestIndexerLocal {
 	 */
 	public static void parse(File doc, String url){
 		int legalWords = 0;
-		int allWords = 0;
+		int allWords   = 0;
 		try {
 			org.jsoup.nodes.Document d = Jsoup.parse(doc, "UTF-8", "");
 			d.select(":containsOwn(\u00a0)").remove();
@@ -140,7 +129,6 @@ public class TestIndexerLocal {
 				}				
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

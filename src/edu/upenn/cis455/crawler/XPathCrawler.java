@@ -5,24 +5,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Calendar;
-import java.util.List;
-import java.util.NoSuchElementException;
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import edu.upenn.cis455.crawler.bolts.*;
-import edu.upenn.cis455.crawler.info.*;
 import edu.upenn.cis455.crawler.storage.*;
 import edu.upenn.cis.stormlite.infrastructure.*;
 import edu.upenn.cis.stormlite.tuple.Fields;
-
 
 /**
  * Main class for Crawler, used to start crawl from provided start URL
@@ -43,7 +33,7 @@ public class XPathCrawler {
 	public XPathCrawler(String startURL, String dbStorePath, int maxSize){
 		this.startURL = startURL;
 		this.maxSize = maxSize;
-		this.urlQueue = new URLFrontierQueue(maxSize);
+		urlQueue = new URLFrontierQueue(maxSize);
 		this.db = DBWrapper.getInstance(dbStorePath);
 		PageDownloader.setup(db);
 	}
@@ -65,11 +55,12 @@ public class XPathCrawler {
 	    String FILTER_BOLT = "FILTER_BOLT";
 	    String RECORD_BOLT = "RECORD_BOLT";
 	    
-        Configuration config = new Configuration();
+//        Configuration config = new Configuration();
       
         DBWrapper db = DBWrapper.getInstance("dbPath");
-		if(db.getFrontierQueueSize() == 0)
-        	this.urlQueue.pushURL(startURL);
+		if(db.getFrontierQueueSize() == 0) {
+        	urlQueue.pushURL(startURL);
+		}
         
         URLSpout spout = new URLSpout();
         CrawlerBolt boltA = new CrawlerBolt();

@@ -12,9 +12,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.springframework.core.io.ClassPathResource;
 
-import edu.upenn.cis455.mapreduce.servers.MasterServer;
-
-
 public class SearchEngineServer {
 	
 	public static Server server;
