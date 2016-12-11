@@ -23,13 +23,13 @@ import edu.upenn.cis455.crawler.XPathCrawler;
 import edu.upenn.cis455.crawler.storage.DBWrapper;
 
 public class IndexerSpouts implements IRichSpout{
-	public static Logger log = Logger.getLogger(LinksFileSpout.class);
+	public static Logger log = Logger.getLogger(IndexerSpouts.class);
 	public String executorId = UUID.randomUUID().toString();
 	public SpoutOutputCollector collector;
 	public Fields schema = new Fields("url");	
 	@SuppressWarnings("rawtypes")
 	public Map config;
-	public AtomicBoolean eofSent;	
+	public AtomicBoolean eosSent = new AtomicBoolean();	
 	public String serverIndex;
 	private DBWrapper db;
 	private String dbPath = "./dtianx";
@@ -54,6 +54,7 @@ public class IndexerSpouts implements IRichSpout{
 		this.config = config;
 		this.collector = collector;
 		config.put("status", "IDLE");
+		dbPath = config.get("inputDir");
 		if (config.containsKey("workerIndex")) {
     		serverIndex = (String)config.get("workerIndex");
     		db  = DBWrapper.getInstance(dbPath +serverIndex);
@@ -68,7 +69,7 @@ public class IndexerSpouts implements IRichSpout{
 
 	@Override
 	public void nextTuple() {
-		if (db != null && !eofSent.get()) {
+		if (db != null && !eosSent.get()) {
 //			Queue<String> memoryQueue = new LinkedList<>();
 //			db.pollFromFrontierQueue(1000, memoryQueue);
 //			while(!memoryQueue.isEmpty()) {
@@ -79,12 +80,14 @@ public class IndexerSpouts implements IRichSpout{
 //				db.pollFromFrontierQueue(1000, memoryQueue);
 //			}
 			List<String> urls = db.outLinksList();
+			db.close();
+//			System.err.println(urls);
 			for(String url: urls) {
 				collector.emit(new Values<Object>(url));
 			}
 			log.info("Server#"+serverIndex+" Finished reading urls from db" + " and emitting EOS");
 			collector.emitEndOfStream();
-			eofSent.set(true);
+			eosSent.set(true);
 			
 		} else {
 			log.fatal("Server#"+serverIndex+": db is null or eos received in spouts");

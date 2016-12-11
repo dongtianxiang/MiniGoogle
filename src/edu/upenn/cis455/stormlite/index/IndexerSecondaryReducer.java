@@ -110,7 +110,7 @@ public class IndexerSecondaryReducer implements IRichBolt {
 				synchronized (tempDB) {
 					tempDB.clearTempData();
 				}
-				if (FileWriterQueue.getFileWriterQueueLaterCall().queue.isEmpty()) {
+				if (fwq.queue.isEmpty()) {
 					config.put("status", "IDLE");
 				}
 				// log.info("************** Secondary reducer job completed!
@@ -131,7 +131,7 @@ public class IndexerSecondaryReducer implements IRichBolt {
 		String numWorkers = config.get("workers");
 
 		outfile = new File(config.get("outputDir"), executorId);
-		this.fwq = FileWriterQueue.getFileWriterQueue(outfile, context);
+		this.fwq = FileWriterQueue.getFileWriterQueueFromMap(outfile, context);
 
 		int reducerNum = Integer.parseInt(stormConf.get("reduceExecutors"));
 		int reducer2Num = Integer.parseInt(stormConf.get("reduce2Executors"));

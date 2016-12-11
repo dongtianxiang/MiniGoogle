@@ -4,9 +4,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -15,6 +18,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,6 +34,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
 import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.FileWriterQueue;
 import edu.upenn.cis.stormlite.infrastructure.Job;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
@@ -36,6 +42,7 @@ import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Tuple;
 import edu.upenn.cis.stormlite.tuple.Values;
+import edu.upenn.cis.stormlite.utils.AWSCredentialReader;
 import edu.upenn.cis455.crawler.PageDownloader;
 import edu.upenn.cis455.crawler.storage.DBWrapper;
 
@@ -48,8 +55,10 @@ public class IndexerMapper implements IRichBolt {
 	public Integer eosNeeded = 0;
 	public String serverIndex = null;
 	private DBWrapper db;
+	public AtomicBoolean eosSent = new AtomicBoolean();	
+	private int maxOccur = 1;
 	private static Set<String> stops = new HashSet<>();
-	private Map<String, Integer> weights = new HashMap<>();
+	
 	static {
 		File stop = new File("./stopwords.txt");
 		Scanner sc;
@@ -66,6 +75,7 @@ public class IndexerMapper implements IRichBolt {
 	}
 	private TopologyContext context;
 	AWSCredentials credentials;
+	private static FileWriterQueue fwq;
 
 	public IndexerMapper() {
 		// TODO Auto-generated constructor stub
@@ -90,27 +100,80 @@ public class IndexerMapper implements IRichBolt {
 
 	@Override
 	public void execute(Tuple input) {
-		String url = input.getStringByField("url");
-		InputStream in = PageDownloader.downloadfileS3(credentials, url);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-		String line;
-		try {
-			while((line = reader.readLine())!=null) {
-			System.err.println(line);
+		if(input.isEndOfStream()) {
+			if(eosSent.get()) {
+				log.error("Server#"+serverIndex+"::"+executorId+" Error!!! Illegal state !!! EOS again.");
+				return;
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			eosNeeded --;
+			if(eosNeeded == 0) {
+				eosSent.set(true);
+				try {
+					Thread.sleep(15);
+				} catch (InterruptedException e) {
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					e.printStackTrace(pw);
+					log.error(sw);
+				}
+				collector.emitEndOfStream();
+			}
+		} else {
+			Map<String, Integer> weights = new HashMap<>();
+			String url = input.getStringByField("url");
+//			log.info("Receieved url as "+url);
+			InputStream in = PageDownloader.downloadfileS3(credentials, url);
+			if(in == null) return;
+			try {
+				parse(in, url, weights);	
+			} catch (IOException e) {
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				e.printStackTrace(pw);
+				log.error(sw);
+			}
+			
+			for(String key: weights.keySet()) {
+//				System.err.println(fwq);
+				double wt = weights.get(key)*1.0/maxOccur;
+				String str = String.format("url:%s, key:%s, weight:%.3f", url, key, wt);
+				fwq.addQueue(str);
+			}
+			
+			
+			//		String line;		
+//			try {
+//				while((line = reader.readLine())!=null) {
+//					System.err.println(line);
+//				}
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 		}
+		
 	}
 
 	@Override
 	public void prepare(Map<String, String> stormConf, TopologyContext context, OutputCollector collector) {
+		maxOccur = 1;
 		this.config = stormConf;
 		this.context = context;
 		this.collector = collector;
+		String outputFileDir = config.get("outputDir");
+		File outfile = new File(outputFileDir, executorId);
+		try {
+			credentials = AWSCredentialReader.getCredential();
+		} catch (IOException e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			log.error(sw);
+		}
 		
-		credentials = new BasicAWSCredentials(System.getProperty("KEY"), System.getProperty("ID"));
+		fwq = FileWriterQueue.getFileWriterQueueFromMap(outfile, context);
+		
+		
 		int numMappers = Integer.parseInt(stormConf.get("mapExecutors"));
 		int numSpouts = Integer.parseInt(stormConf.get("spoutExecutors"));
 		int numWorkers = Integer.parseInt(stormConf.get("workers"));
@@ -138,7 +201,7 @@ public class IndexerMapper implements IRichBolt {
 	 * @param doc
 	 * @throws IOException 
 	 */
-	public void parse(InputStream in, List<String> keyWords, String url) throws IOException{
+	public void parse(InputStream in, String url, Map<String, Integer> weights) throws IOException{
 		int legalWords = 0;
 		int allWords = 0;
 		try {
@@ -151,7 +214,7 @@ public class IndexerMapper implements IRichBolt {
 			Pattern pan3 = Pattern.compile("[0-9]+,*[0-9]*");			
 			for (Element e: es) {
 				String nodeName = e.nodeName(), text = e.ownText().trim();
-				System.out.println(e.nodeName() + ": " + e.ownText());			
+//				log.info(e.nodeName() + ": " + e.ownText());			
 				if (text != null && !text.isEmpty() && text.length() != 0 ){					
 					edu.stanford.nlp.simple.Document tagContent = new edu.stanford.nlp.simple.Document(text);
 					List<edu.stanford.nlp.simple.Sentence> sentences = tagContent.sentences();
@@ -177,13 +240,17 @@ public class IndexerMapper implements IRichBolt {
 											legalWords++;
 											int weight = 1;
 											if (nodeName.equalsIgnoreCase("title")) {
-												weight = 2;
+												//TODO 
+												//may need to be tuned
+												weight = 1;
 											}
 											if(!weights.containsKey(w)) {
-												collector.emit(new Values<Object>(w, url));
+												collector.emit(new Values<Object>(url, w));
 												weights.put(w, weight);
 											} else {
-												weights.put(w, weights.get(w)+weight);
+												int occur = weights.get(w)+weight;
+												weights.put(w, occur);
+												maxOccur = Math.max(maxOccur, occur);
 											}
 //											value = url + ":" + nodeName + ":" + weight;
 										} 
