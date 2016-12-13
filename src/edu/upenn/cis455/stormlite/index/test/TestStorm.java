@@ -22,6 +22,9 @@ import edu.upenn.cis.stormlite.spouts.bdb.LinksFileSpout;
 import edu.upenn.cis.stormlite.spouts.bdb.LinksSpout;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis455.mapreduce.servlets.MasterServlet;
+import edu.upenn.cis455.stormlite.index.IndexerFirstaryReducer;
+import edu.upenn.cis455.stormlite.index.IndexerMapper;
+import edu.upenn.cis455.stormlite.index.IndexerSpouts;
 
 public class TestStorm {
 
@@ -34,37 +37,40 @@ public class TestStorm {
 		int numMappers = 2;
 		int numReducers = 2;
 		int numSpouts = 1;
-		int numReducers2 = 2;
+//		int numReducers2 = 2;
 
-		String inputDBDir = "./dtianx";
+		String inputDir = "./dtianx";
 		String outputDir = "indexerResults";
 		String jobName = "indexer";
 
 		
 		/*SET AWS KEY ID*/
-		FileReader f = null;
-		try {
-			f = new FileReader(new File("./conf/config.properties"));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		BufferedReader bf = new BufferedReader(f);
-		System.setProperty("KEY", bf.readLine());
-		System.setProperty("ID", bf.readLine());
+//		FileReader f = null;
+//		try {
+//			f = new FileReader(new File("./conf/config.properties"));
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		BufferedReader bf = new BufferedReader(f);
+//		String key = bf.readLine();
+//		String id  = bf.readLine();
+//		System.err.println(key);
+//		System.err.println(id);
+//		System.setProperty("KEY",key);
+//		System.setProperty("ID", id);
 		
 		
-		
-		LinksFileSpout spout = new LinksSpout();
-		BuilderMapBolt mapBolt = new BuilderMapBolt();
-		FirstaryReduceBolt reduceBolt = new FirstaryReduceBolt();
-		SecondReducerBolt postBolt = new SecondReducerBolt();
+		IndexerSpouts spout = new IndexerSpouts();
+		IndexerMapper mapBolt = new IndexerMapper();
+		IndexerFirstaryReducer reduceBolt = new IndexerFirstaryReducer();
+//		SecondReducerBolt postBolt = new SecondReducerBolt();
 
 		// build topology
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout(SPOUT, spout, numSpouts);
 		builder.setBolt(MAP_BOLT, mapBolt, numMappers).shuffleGrouping(SPOUT);
 		builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("word"));
-		builder.setBolt(REDUCE_BOLT_2, postBolt, numReducers2).fieldsGrouping(REDUCE_BOLT, new Fields("url"));
+		//builder.setBolt(REDUCE_BOLT_2, postBolt, numReducers2).fieldsGrouping(REDUCE_BOLT, new Fields("url"));
 
 		Topology topo = builder.createTopology();
 
@@ -73,9 +79,10 @@ public class TestStorm {
 		config.put("spoutExecutors", (new Integer(numSpouts)).toString());
 		config.put("mapExecutors", (new Integer(numMappers)).toString());
 		config.put("reduceExecutors", (new Integer(numReducers)).toString());
-		config.put("reduce2Executors", (new Integer(numReducers2)).toString());
-		config.put("inputDBDir", inputDBDir);
+//		config.put("reduce2Executors", (new Integer(numReducers2)).toString());
+		config.put("inputDir", inputDir);
 		config.put("outputDir", outputDir);
+		config.put("databaseDir", "foobar");
 		config.put("job", jobName);
 		config.put("workers", "2");
 		/*

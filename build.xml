@@ -173,6 +173,7 @@
 		<delete dir="storage"/>
 		<delete file="result1.0"/>
 		<delete file="result1.1"/>
+		<delete dir="indexerResults"/>
 	</target>
 	
 </project>

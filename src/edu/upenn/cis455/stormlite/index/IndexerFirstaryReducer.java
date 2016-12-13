@@ -2,6 +2,8 @@ package edu.upenn.cis455.stormlite.index;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,7 @@ public class IndexerFirstaryReducer implements IRichBolt {
 //	public static Logger log = Logger.getLogger(FirstaryReduceBolt.class);
 	public Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
-	public Fields schema = new Fields("word", "url"); 
+	public Fields schema = new Fields("url", "word"); 
 	public OutputCollector collector;
 	public Integer eosNeeded = 0;
 //	public static DBInstance graphDB;
@@ -44,7 +46,7 @@ public class IndexerFirstaryReducer implements IRichBolt {
 	private FileWriterQueue fwq;
 	private int count = 0;
 	private TopologyContext context;
-	public static AtomicBoolean eosSent;
+	public static AtomicBoolean eosSent = new AtomicBoolean();
 	
 	
 	public IndexerFirstaryReducer() {
@@ -100,25 +102,29 @@ public class IndexerFirstaryReducer implements IRichBolt {
 					//key: word, value: urls 
 					String key = keyIt.next();					
 					List<String> values = table.get(key);
-					fwq.addQueue(String.format("keyword: %s, count: %s\n", key, values.size()));
-					for(String url: values) {
-						collector.emit(new Values<Object>(url, key));
-					}
+					fwq.addQueue(String.format("keyword: %s, DOC countS: %s\n", key, values.size()));
 				}
 					
 				synchronized(tempDB) {
 					tempDB.clearTempData();	
 				}
-				
+				/*
 				try {
-					Thread.sleep(50);
+					Thread.sleep(15);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					e.printStackTrace(pw);
+					log.error(sw);
 				}
 				
 				collector.emitEndOfStream();
 				log.info("Server#"+serverIndex+"::"+executorId+" emits eos to reducer2.");
+	        	*/
+	        	if(fwq.queue.isEmpty()) {
+	        		config.put("status", "IDLE");	  
+	        	}
+				
 			}
     	}
     	else {
@@ -142,7 +148,7 @@ public class IndexerFirstaryReducer implements IRichBolt {
 		this.context = context;
 		this.collector = collector;
 		outfile = new File(config.get("outputDir"), executorId);
-		this.fwq = FileWriterQueue.getFileWriterQueue(outfile, context);
+		this.fwq = FileWriterQueue.getFileWriterQueueFromMap(outfile, context);
 		
 		int numMappers  = Integer.parseInt(stormConf.get("mapExecutors"));
 		int numReducers = Integer.parseInt(stormConf.get("reduceExecutors"));
