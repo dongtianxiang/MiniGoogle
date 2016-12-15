@@ -15,7 +15,7 @@ import org.springframework.core.io.ClassPathResource;
 public class SearchEngineServer {
 	
 	public static Server server;
-	private int port = 8000;
+	private int port = 8080;
 
 	
 	public SearchEngineServer() throws Exception {
@@ -33,9 +33,9 @@ public class SearchEngineServer {
 	}
 	
 	public static void main(String[] args) throws Exception {		
-//    	Properties props = new Properties();
-//    	props.load(new FileInputStream("./resources/log4j.properties"));
-//    	PropertyConfigurator.configure(props);
+    	Properties props = new Properties();
+    	props.load(new FileInputStream("./resources/log4j.properties"));
+    	PropertyConfigurator.configure(props);
 		new SearchEngineServer();
 	}
 

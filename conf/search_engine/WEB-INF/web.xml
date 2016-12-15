@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN" "http://java.sun.com/j2ee/dtds/web-app_2_2.dtd">
+	<webapp>
+		<display-name>Quantum Engine</display-name>		
+		<servlet>
+			<servlet-name>Main</servlet-name>
+			<servlet-class>edu.upenn.cis455.searchengine.MainInterface</servlet-class>
+		</servlet>
+		<servlet>
+			<servlet-name>Query</servlet-name>
+			<servlet-class>edu.upenn.cis455.searchengine.QueryServlet</servlet-class>
+		</servlet>
+		<servlet>
+			<servlet-name>Result</servlet-name>
+			<servlet-class>edu.upenn.cis455.searchengine.ResultServlet</servlet-class>
+		</servlet>
+		
+		<servlet-mapping>
+			<servlet-name>Main</servlet-name>
+			<url-pattern>/</url-pattern>
+		</servlet-mapping>	
+		<servlet-mapping>
+			<servlet-name>Query</servlet-name>
+			<url-pattern>/query</url-pattern>
+		</servlet-mapping>	
+		<servlet-mapping>
+			<servlet-name>Result</servlet-name>
+			<url-pattern>/result</url-pattern>
+		</servlet-mapping>			
+	</webapp>
+
