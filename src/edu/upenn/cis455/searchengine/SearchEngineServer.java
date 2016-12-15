@@ -12,13 +12,10 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.springframework.core.io.ClassPathResource;
 
-import edu.upenn.cis455.mapreduce.servers.MasterServer;
-
-
 public class SearchEngineServer {
 	
 	public static Server server;
-	private int port = 8000;
+	private int port = 8080;
 
 	
 	public SearchEngineServer() throws Exception {
@@ -27,7 +24,8 @@ public class SearchEngineServer {
 		WebAppContext webapp = new WebAppContext();	
 		webapp.setDescriptor("./conf/search_engine/WEB-INF/web.xml");
 		webapp.setResourceBase(new ClassPathResource(".").getURI().toString());
-//		System.out.println("!!!" + new ClassPathResource("./html").getURI().toString());
+		
+		// can not load local resources
 		handlers.addHandler(webapp);
 		server.setHandler(handlers);
 		server.start();	
@@ -35,9 +33,9 @@ public class SearchEngineServer {
 	}
 	
 	public static void main(String[] args) throws Exception {		
-//    	Properties props = new Properties();
-//    	props.load(new FileInputStream("./resources/log4j.properties"));
-//    	PropertyConfigurator.configure(props);
+    	Properties props = new Properties();
+    	props.load(new FileInputStream("./resources/log4j.properties"));
+    	PropertyConfigurator.configure(props);
 		new SearchEngineServer();
 	}
 

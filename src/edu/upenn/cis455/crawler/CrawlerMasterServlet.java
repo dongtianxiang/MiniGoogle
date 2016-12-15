@@ -33,10 +33,10 @@ import edu.upenn.cis455.crawler.bolts.URLSpout;
 public class CrawlerMasterServlet extends HttpServlet {
 
   static final long serialVersionUID = 455555001;
-  private static final String SPOUT  = "URL_SPOUT";
-  private static final String MAP_BOLT = "MAP_BOLT";
-  private static final String REDUCE_BOLT = "REDUCE_BOLT";
-  private static final String RESULT_BOLT  = "RES_BOLT";
+//  private static final String SPOUT  = "URL_SPOUT";
+//  private static final String MAP_BOLT = "MAP_BOLT";
+//  private static final String REDUCE_BOLT = "REDUCE_BOLT";
+//  private static final String RESULT_BOLT  = "RES_BOLT";
   
   // note that this it's statically initiated
   static Map<String, CrawlerWorkerInformation> workers;  
@@ -246,13 +246,13 @@ public class CrawlerMasterServlet extends HttpServlet {
 			String jobClass = "";
 		  
 			// forward restoration
-			if (inputDir == null) {			
-				inputDir = "";
-			}
-			
-			if (outputDir == null) {
-				outputDir = "";
-			}
+//			if (inputDir == null) {			
+//				inputDir = "";
+//			}
+//			
+//			if (outputDir == null) {
+//				outputDir = "";
+//			}
 			
 			String jobName = request.getParameter("jobName");
 			Integer numMappers = null, numReducers = null;

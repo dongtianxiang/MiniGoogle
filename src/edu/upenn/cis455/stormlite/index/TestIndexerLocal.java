@@ -4,47 +4,43 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.jsoup.*;
-import org.jsoup.nodes.Document;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.Jsoup;
 
-import java.io.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import edu.stanford.nlp.simple.*;
-
-
 public class TestIndexerLocal {
+	
 	// Entry-point for indexer
 	private static Hashtable<String, Integer> stops = new Hashtable<>();
-	
+	private static Logger log = Logger.getLogger(TestIndexerLocal.class);
 	
 	public static void main(String[] args) {
 		// prepare stoplist
+		PropertyConfigurator.configure("./resources/log4j.properties");
 		File stop = new File("./stopwords.txt");
 		Scanner sc;
 		try {
+			
 			sc = new Scanner(stop);
 			while (sc.hasNext()) {
 				String w = sc.nextLine();
 				stops.put(w, 1);
 			}
+		
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			log.error(sw);
 		}
 	
 		File doc = new File(args[0]);
 		
 		if (!doc.exists()) {
-			System.out.println("File not exist.");
+			log.fatal("File not exist.");
 			System.exit(-1);
 		}
 		parse(doc, "google.com");
@@ -59,7 +55,7 @@ public class TestIndexerLocal {
 	 */
 	public static void parse(File doc, String url){
 		int legalWords = 0;
-		int allWords = 0;
+		int allWords   = 0;
 		try {
 			org.jsoup.nodes.Document d = Jsoup.parse(doc, "UTF-8", "");
 			d.select(":containsOwn(\u00a0)").remove();
@@ -70,12 +66,12 @@ public class TestIndexerLocal {
 			Pattern pan3 = Pattern.compile("[0-9]+,*[0-9]*");			
 			for (Element e: es) {
 				String nodeName = e.nodeName(), text = e.ownText().trim();
-//				System.out.println(e.nodeName() + ": " + e.ownText());			
+				log.info(e.nodeName() + ": " + e.ownText());			
 				if (text != null && !text.isEmpty() && text.length() != 0 ){					
 					edu.stanford.nlp.simple.Document tagContent = new edu.stanford.nlp.simple.Document(text);
 					List<edu.stanford.nlp.simple.Sentence> sentences = tagContent.sentences();
 					for (edu.stanford.nlp.simple.Sentence s: sentences) {
-//						System.out.println("sentence:" + s);
+						log.info("sentence:" + s);
 						List<String> words = s.lemmas();
 						Matcher m, m2, m3;
 						for (String w: words) {
@@ -84,32 +80,37 @@ public class TestIndexerLocal {
 							m = pan.matcher(w);
 							m2 = pan2.matcher(w);
 							m3 = pan3.matcher(w);
+							String value = null;
 							if (m.matches()) {
 								if (m2.find()){
 									if (!w.equalsIgnoreCase("-rsb-")&&!w.equalsIgnoreCase("-lsb-")
 											&&!w.equalsIgnoreCase("-lrb-")&&!w.equalsIgnoreCase("-rrb-")
 											&&!w.equalsIgnoreCase("-lcb-")&&!w.equalsIgnoreCase("-rcb-")){
 										w = w.toLowerCase();
-										String value;
 										if ( !stops.containsKey(w)) {
 											// all legal words must be indexed with weight
 											legalWords++;
 											String weight = "1";
 											if (nodeName.equalsIgnoreCase("title")) {
 												weight = "2";
-											} 
-											value = url + ":" + nodeName + ":" + weight;
+											}
+											// emit from here
+											value = w + ":" + weight;
+											System.out.println(value);
 										} else {
-											value = url;
+											// stopword: emit from here
+											value = w;
 										}
-//										System.out.println("key: " + w + " value: " + value);
+//										log.info("key: " + w + " value: " + value);
 									}
 								} else {
 									// illegal word: extract number only - eg 2014
 									// only index but no weight
 									if (m3.matches()) {
-//										System.out.println("number:" + w);
-										String value = url;
+										log.info("number:" + w);
+//										String value = url;
+										value = w;
+										//emit from here
 									}	
 								}
 							}
@@ -118,16 +119,17 @@ public class TestIndexerLocal {
 							else {
 								if (m3.matches()){
 									w = w.replaceAll(",", "");
-									String value = url;
-//									System.out.println("number:" + w);
+//									String value = url;
+									log.info("number:" + w);
 								}
+								// emit from here
+								value = w;
 							}
 						}
 					}	
 				}				
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

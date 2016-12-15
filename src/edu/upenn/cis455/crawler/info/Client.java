@@ -1,44 +1,22 @@
 package edu.upenn.cis455.crawler.info;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.Socket;
+
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 
-import edu.upenn.cis455.crawler.bolts.*;;
+//import edu.upenn.cis455.crawler.bolts.*;
 
 /**
  * Helper Class to get the information of the given link. Including execute HEAD request for basic info,
@@ -73,9 +51,9 @@ public class Client {
 	 * @param isGET true means excuting GET request; false means excuting HEAD request.
 	 * @return InputStream returned by server for the respond's body ONLY.
 	 */
-	public InputStream executeGET(boolean isGET){
-		String method = isGET ? "GET" : "HEAD";
+	public InputStream executeGET(boolean isGET){	
 		
+//		String method = isGET ? "GET" : "HEAD";	
 		if(url.startsWith("https")) {
 			HttpsURLConnection c = null;
 			
