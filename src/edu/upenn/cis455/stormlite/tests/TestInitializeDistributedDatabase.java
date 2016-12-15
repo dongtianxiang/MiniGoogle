@@ -27,11 +27,10 @@ public class TestInitializeDistributedDatabase {
 	private static final String WRAPPER_BOLT  = "FIXER";
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
-		
-		int numMappers  = 1;
-		int numReducers = 1;
+		int numMappers  = 2;
+		int numReducers = 2;
 		int numSpouts   = 1;
-		int numFixers   = 1;
+		int numFixers   = 2;
 		
 		String inputDir  = "test_data" ; 
 		String outputDir = "urls";
@@ -56,6 +55,7 @@ public class TestInitializeDistributedDatabase {
         config.put("spoutExecutors",  (new Integer(numSpouts)).toString());
         config.put("mapExecutors",    (new Integer(numMappers)).toString());
         config.put("reduceExecutors", (new Integer(numReducers)).toString());
+        config.put("reduce2Executors", (new Integer(numFixers)).toString());
         config.put("inputDir", inputDir);
         config.put("outputDir", outputDir);
         config.put("job", jobName);       
@@ -64,7 +64,7 @@ public class TestInitializeDistributedDatabase {
         config.put("databaseDir" , "storage");
         config.put("status", "IDLE");
         config.put("numThreads", "10");
-        
+       
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        
         mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);        

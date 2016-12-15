@@ -96,7 +96,7 @@ public abstract class LinksFileSpout implements IRichSpout {
 					String src  = parts[0];
 					String links = parts[1];
 					
-//					log.info("Server " + serverIndex + " LinksFileSpout emitting: " + Arrays.toString(parts));
+					log.info("Server " + serverIndex + " LinksFileSpout emitting: " + Arrays.toString(parts));
 
 					collector.emit(new Values<Object>(src, links));
 				} 

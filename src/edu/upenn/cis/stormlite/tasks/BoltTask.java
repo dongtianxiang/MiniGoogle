@@ -49,6 +49,7 @@ public class BoltTask implements Runnable {
 		try {
 			bolt.execute(tuple);
 		} catch (Exception e) {
+			e.printStackTrace();
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);

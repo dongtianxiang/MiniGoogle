@@ -14,6 +14,7 @@
 		<fileset dir="target/master/WEB-INF/classes"/>
 		<fileset dir="target/worker/WEB-INF/classes"/>
 		<fileset dir="classes"/>
+		<fileset dir="${inputlib.dir}" includes="stanford*.jar"/>
 	</path>
 	
 	<target name="init">
@@ -62,6 +63,7 @@
 		<copy todir="${web-inf.lib.dir}" overwrite="true">
 			<fileset dir="${inputlib.dir}">
 				<include name="*.jar"/>
+				<exclude name="stanford*.jar"/>
 			</fileset>
 		</copy>
 		<jar destfile="${web-inf.lib.dir}${file.separator}master.jar" update="true">
@@ -171,6 +173,7 @@
 		<delete dir="storage"/>
 		<delete file="result1.0"/>
 		<delete file="result1.1"/>
+		<delete dir="indexerResults"/>
 	</target>
 	
 </project>
