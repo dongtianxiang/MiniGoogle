@@ -1,33 +1,38 @@
 package edu.upenn.cis455.searchengine;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
+
 import edu.stanford.nlp.simple.Sentence;
 
+@SuppressWarnings("serial")
 public class QueryServlet extends HttpServlet {
-	
-//	static ConcurrentLinkedQueue<String> theQ = new ConcurrentLinkedQueue<String>();
+
 	Hashtable<String, Integer> stops = new Hashtable<>();
-	static ExecutorService executor;
-	ArrayList<String> waitlist = new ArrayList<String>();
+	public static Logger log = Logger.getLogger(QueryServlet.class);
+	
+	File db = new File("./fakedb.txt");
+	PrintWriter pw;
 	
 	@Override
 	public void init(){
-        executor = Executors.newFixedThreadPool(5);
         File stop = new File("./stopwords.txt");
         try {
         	Scanner sc = new Scanner(stop);
@@ -35,6 +40,7 @@ public class QueryServlet extends HttpServlet {
         		String s = sc.nextLine();
         		stops.put(s, 1);
         	}
+        	sc.close();
         } catch (IOException e) {
         	e.printStackTrace();
         }
@@ -44,6 +50,8 @@ public class QueryServlet extends HttpServlet {
 	@Override
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
     		IOException{
+		File q = new File("./query.txt");
+		pw = new PrintWriter(q);
 		String query = req.getParameter("searchquery");		
 		Pattern pan = Pattern.compile("[a-zA-Z0-9.@-]+");
 		Pattern pan2 = Pattern.compile("[a-zA-Z]+");
@@ -65,23 +73,45 @@ public class QueryServlet extends HttpServlet {
 						w = w.toLowerCase();
 						if ( !stops.containsKey(w)) {
 							// not stop word
-							WorkerThread wt = new WorkerThread(w);
-							System.out.println("Now start retrieving word " + w);
-							executor.execute(wt);
+							Scanner sc = new Scanner(db);
+							while (sc.hasNextLine()) {
+								String line = sc.nextLine();
+								String[] parts = line.split("=");
+								if (parts[0].equalsIgnoreCase(w)) {
+									pw.println(w + "->" + parts[1] + "->" + lemmas);
+								}
+							}
 						} else {
-							// stop word
-							waitlist.add(w);
+							// stop
 						}
 					}
 				} else {
 					if (m3.matches()) {
 						w = w.replaceAll(",", "");
 					}
-					waitlist.add(w);
 				}
-			}
+			}			
 		}
-			
+		
+		pw.close();
+		SearchComputeTopology sct = new SearchComputeTopology();
+		try {
+			sct.runMapreduce();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ServerSocket ss = new ServerSocket(8080);
+		Socket s = ss.accept();
+		InputStream in = s.getInputStream();
+		BufferedReader br = new BufferedReader(new InputStreamReader(in));
+		String nextLine = br.readLine();
+		while (nextLine != null && !nextLine.isEmpty()) {
+			log.info(nextLine + "\n");
+		}
 	}
 
 }

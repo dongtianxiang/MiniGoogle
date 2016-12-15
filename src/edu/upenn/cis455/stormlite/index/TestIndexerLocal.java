@@ -100,6 +100,7 @@ public class TestIndexerLocal {
 											}
 											// emit from here
 											value = w + ":" + weight;
+											System.out.println(value);
 										} else {
 											// stopword: emit from here
 											value = w;
