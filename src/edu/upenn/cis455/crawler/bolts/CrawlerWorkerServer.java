@@ -136,7 +136,7 @@ public class CrawlerWorkerServer {
 			@Override
 			public Object handle(Request arg0, Response arg1) {
 				
-				cluster = new DistributedCluster(200);
+				cluster = new DistributedCluster(50);
 				WorkerJob workerJob = null;
 				try {
 					workerJob = om.readValue(arg0.body(), WorkerJob.class);
