@@ -55,6 +55,12 @@ public class PRMapBolt implements IRichBolt {
     		if (eosNeeded == 0) {
 //    			log.info("Mapping phase completed");	    			
     		}
+    		
+    		try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
     		collector.emitEndOfStream();
 		}
 	}

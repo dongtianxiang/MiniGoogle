@@ -8,8 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.SecondReducerBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildFirstStageReducer;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildSecondStageReducer;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
@@ -27,10 +27,10 @@ public class TestInitializeDistributedDatabase {
 	private static final String WRAPPER_BOLT  = "FIXER";
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
-		int numMappers  = 2;
-		int numReducers = 2;
+		int numMappers  = 1;
+		int numReducers = 1;
 		int numSpouts   = 1;
-		int numFixers   = 2;
+		int numFixers   = 1;
 		
 		String inputDir  = "test_data" ; 
 		String outputDir = "urls";
@@ -38,8 +38,8 @@ public class TestInitializeDistributedDatabase {
 				
 		LinksFileSpout spout     = new LinksSpout();		
 	    BuilderMapBolt mapBolt   = new BuilderMapBolt();
-	    FirstaryReduceBolt reduceBolt = new FirstaryReduceBolt();
-	    SecondReducerBolt postBolt = new SecondReducerBolt();
+	    GraphBuildFirstStageReducer reduceBolt = new GraphBuildFirstStageReducer();
+	    GraphBuildSecondStageReducer postBolt = new GraphBuildSecondStageReducer();
 	    
 	    // build topology
 		TopologyBuilder builder = new TopologyBuilder();			    			    
@@ -63,7 +63,7 @@ public class TestInitializeDistributedDatabase {
         config.put("graphDataDir", "graphStore");
         config.put("databaseDir" , "storage");
         config.put("status", "IDLE");
-        config.put("numThreads", "10");
+        config.put("numThreads", "2");
        
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        

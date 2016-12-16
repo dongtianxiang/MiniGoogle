@@ -25,8 +25,8 @@ import edu.upenn.cis455.database.DBInstance;
 import edu.upenn.cis455.database.DBManager;
 import edu.upenn.cis455.database.Node;
 
-public class FirstaryReduceBolt implements IRichBolt {
-	Logger log = Logger.getLogger(FirstaryReduceBolt.class);
+public class GraphBuildFirstStageReducer implements IRichBolt {
+	Logger log = Logger.getLogger(GraphBuildFirstStageReducer.class);
 //	public static Logger log = Logger.getLogger(FirstaryReduceBolt.class);
 	public static Map<String, String> config;
     public String executorId = UUID.randomUUID().toString();
@@ -79,78 +79,61 @@ public class FirstaryReduceBolt implements IRichBolt {
 				
 				eosSent.set(true);
 				
-				log.info("start first-level reduction");				
+				log.info("start first stage reduction");				
 				config.put("status", "REDUCING");				
 				Map<String, List<String>> table;
-				
-				synchronized(tempDB) {
-					table = tempDB.getTable(executorId);	
-				}
-				
-				log.info("Server# " + serverIndex + " " + table);				
-				Iterator<String> keyIt = table.keySet().iterator();	
-				
-				while (keyIt.hasNext()) {
-					String key = keyIt.next();					
-					Node node;
-					Iterator<String> valueIt = table.get(key).iterator();					
-			        if (!graphDB.hasNode(key)) {			        	
-			        	node  = new Node(key);		
-//			        	try {
-//							outputWriter.write(String.format("%s\n", key));
-//				        	outputWriter.flush();
-//						} catch (IOException e) {
-//							e.printStackTrace();
-//						}
-			        	fwq.addQueue(String.format("%s\n", key));
-			        }
-			        else {
-			        	node = graphDB.getNode(key);
-			        }					
-					while (valueIt.hasNext()) {
-						String nextVal = valueIt.next();
-//						try{
-						node.addNeighbor(nextVal);
-						
-//						}catch(Exception e) {
-//							e.printStackTrace();
-//							System.err.println("node:"+node);
-//							System.err.println("nextVal:"+nextVal);
-//						}
-						collector.emit(new Values<Object>(key, nextVal));
-					}
-					//System.err.println("time: "+System.currentTimeMillis()+":"+executorId+" updates the node:"+node);
-		        	graphDB.addNode(node);
-				}
-				
-//				try {
-//					outputWriter.close();
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}			
-				synchronized(tempDB) {
-					tempDB.clearTempData();	
-				}
+				table = tempDB.getTable(executorId);					
+//				log.info("Server# " + serverIndex + " " + table);
 				
 				try {
-					Thread.sleep(50);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Iterator<String> keyIt = table.keySet().iterator();	
+					while (keyIt.hasNext()) {
+						String key = keyIt.next();					
+						Node node;
+						List<String> vals = table.get(key);
+						Iterator<String> valueIt = vals.iterator();					
+				        if (!graphDB.hasNode(key)) {			        	
+				        	node  = new Node(key);		
+				        	fwq.addQueue(String.format("%s\n", key));
+				        }
+				        else {
+				        	node = graphDB.getNode(key);
+				        }
+				        
+				        log.info("Server#" + serverIndex + " added " + node.getID() + " -> " + vals);
+
+						while (valueIt.hasNext()) {
+							String nextVal = valueIt.next();
+							node.addNeighbor(nextVal);
+							
+							collector.emit(new Values<Object>(key, nextVal));
+						}		        						
+						graphDB.addNode(node);
+					} 
+					
+					log.info("-- first stage reduction complete --");	
+					log.info("-- MR job complete --");	
 				}
-				
+				catch (NullPointerException e) {
+//					e.printStackTrace();
+				}							
+				synchronized(tempDB) {
+					tempDB.clearTempData();	
+				}				
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}				
 				collector.emitEndOfStream();
-				log.info("Server#"+serverIndex+"::"+executorId+" emits eos to reducer2.");
+//				log.info("Server#"+serverIndex+"::"+executorId+" emits eos to reducer2.");
 			}
     	}
     	else {
-    		
     	
-    		
-    		
     		String key = input.getStringByField("key");
 	        String value = input.getStringByField("value");	        	              
-	        log.info("Server# " + serverIndex +"::"+executorId+ " Firstary reducer received: " + key + " / " + value);
+	        // log.info("Server# " + serverIndex +"::"+executorId+ " Firstary reducer received: " + key + " / " + value);
 	        synchronized(tempDB) {
 	        	tempDB.addKeyValue(executorId, key, value);
 	        }

@@ -25,7 +25,7 @@ public class Node {
 		this.id = id;
 		neighbors = new LinkedList<>();
 		converge = false;
-		rank = 1;
+		rank = 100;
 	}
 	
 	public void resetRank() {

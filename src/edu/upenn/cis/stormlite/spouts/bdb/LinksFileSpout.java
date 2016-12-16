@@ -56,7 +56,6 @@ public abstract class LinksFileSpout implements IRichSpout {
         		rootDir += "/";
         	}
         	
-        	
         	StringBuilder targetPathBuilder = new StringBuilder(rootDir + filename);
         	// If we have a worker index, read appropriate file among xyz.txt.0, xyz.txt.1, etc.
         	if (conf.containsKey("workerIndex")) {
@@ -94,10 +93,8 @@ public abstract class LinksFileSpout implements IRichSpout {
 					log.debug(getExecutorId() + " read from file " + getFilename() + ": " + line);					
 					String[] parts = line.split(" -> ");
 					String src  = parts[0];
-					String links = parts[1];
-					
-					log.info("Server " + serverIndex + " LinksFileSpout emitting: " + Arrays.toString(parts));
-
+					String links = parts[1];					
+					log.debug("Server " + serverIndex + " LinksFileSpout emitting: " + Arrays.toString(parts));
 					collector.emit(new Values<Object>(src, links));
 				} 
 				else if (!eofSent) {

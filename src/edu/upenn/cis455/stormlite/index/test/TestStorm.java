@@ -12,8 +12,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.SecondReducerBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildFirstStageReducer;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildSecondStageReducer;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;

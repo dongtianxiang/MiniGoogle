@@ -26,7 +26,7 @@ public class PRReduceBolt implements IRichBolt {
 	public Job reduceJob;
 	public OutputCollector collector;
 	public Integer eosNeeded = 0;
-	public DBInstance tempDB;
+	static public DBInstance tempDB;
 	public boolean sentEof = false;
 	public int count = 0;
 	public double d;
@@ -83,8 +83,10 @@ public class PRReduceBolt implements IRichBolt {
 			        Double realVal = Double.parseDouble(value) * d;
 			        
 			        log.debug("Reduce bolt received: " + key + " / " + value);  
-			        tempDB.addKeyValue(executorId, key, (new Double(realVal * d)).toString());
-			        tempDB.synchronize();
+			        synchronized(tempDB) {
+				        tempDB.addKeyValue(executorId, key, (new Double(realVal * d)).toString());
+				        tempDB.synchronize();
+			        }
 		    	}		
 	    	
 		} catch (Exception e) {
