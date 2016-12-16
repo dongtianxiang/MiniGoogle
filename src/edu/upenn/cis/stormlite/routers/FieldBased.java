@@ -17,11 +17,14 @@
  */
 package edu.upenn.cis.stormlite.routers;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.tuple.Fields;
+import edu.upenn.cis455.crawler.info.URLInfo;
 
 /**
  * Does hash partitioning on the tuple to determine
@@ -59,7 +62,24 @@ public class FieldBased extends StreamRouter {
 			throw new IllegalArgumentException("Field-based grouping without a shard attribute");
 		
 		for (Integer i: fieldsToHash){
-			hash ^= tuple.get(i).hashCode();
+			String sharedField = (String)tuple.get(i);
+			if(sharedField.startsWith("https://") || sharedField.startsWith("http://")) {
+				try{
+					URLInfo info = new URLInfo(sharedField);
+					String hostname = info.getHostName();
+					hash ^= hostname.hashCode();
+				} catch (Exception e) {
+					log.error(shardFields);
+					e.printStackTrace();
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					e.printStackTrace(pw);
+					log.error(sw.toString());  // stack trace as a string
+				}
+			} else {
+				hash ^= sharedField.hashCode();
+			}
+			//hash ^= tuple.get(i).hashCode();
 		}
 		
 		hash = hash % getBolts().size();

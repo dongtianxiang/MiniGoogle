@@ -57,7 +57,7 @@ public class CrawlerMasterServlet extends HttpServlet {
 							Long time = (new Date()).getTime();							
 							CrawlerWorkerInformation info = workers.get(key);
 							Long lastCheckIn = info.lastCheckIn;							
-							if (time > lastCheckIn + 10000) {
+							if (time > lastCheckIn + 30000) {    // decide as offline if no checked in over 30 s
 								list.add(key);
 							}
 							
@@ -197,41 +197,7 @@ public class CrawlerMasterServlet extends HttpServlet {
 			  out.println("<p>");
 			  out.println("<form method=\"GET\" action=\"create\">");
 			  
-		  out.println("</div>");			  
-		  out.println("<div>");		  	 		  
-			  // class name
-			  out.println("Job Class Name: ");
-			  out.println("<input type=\"text\" name=\"className\" value=\"\"> <br>");		  		  
-		  out.println("</div>");		  
-		  out.println("<div>");		  
- 		  
-		  // class name
-			  out.println("Job Name: ");
-			  out.println("<input type=\"text\" name=\"jobName\" value=\"\"> <br>");		  	  
-		  out.println("</div>");
-		  out.println("<div>");
-		  // input directory
-		  out.println("Input Directory: ");
-		  out.println("<input type=\"text\" name=\"inputDir\" value=\"\"> <br>");		  
-		  out.println("</div>");		
-		  
-		  out.println("<div>");
-		  // output directory
-		  out.println("Output Directory: ");
-		  out.println("<input type=\"text\" name=\"outputDir\" value=\"\"> <br>");		  
-		  out.println("</div>");
-		  
-		  out.println("<div>");
-		  // number of map threads
-		  out.println("Number of Mappers: ");
-		  out.println("<input type=\"text\" name=\"numMappers\" value=\"\"> <br>");		  
-		  out.println("</div>");
-		  
-		  out.println("<div>");
-		  // number of reducer threads
-		  out.println("Number of Reducers: ");
-		  out.println("<input type=\"text\" name=\"numReducers\" value=\"\"> <br>");	  		  
-		  out.println("</div>");
+		  out.println("</div>");			  	  
 		  
 		  // submit button
 		  out.println("<div>");
@@ -242,37 +208,8 @@ public class CrawlerMasterServlet extends HttpServlet {
   
 	  }
 	  else if (URI.startsWith("/create")) {
-			String inputDir = "";
-			String outputDir = "";
-			String jobClass = "";
-		  
-			// forward restoration
-//			if (inputDir == null) {			
-//				inputDir = "";
-//			}
-//			
-//			if (outputDir == null) {
-//				outputDir = "";
-//			}
-			
-			String jobName = request.getParameter("jobName");
-			Integer numMappers = null, numReducers = null;
-			
-			try {	
-				numMappers  = Integer.parseInt(request.getParameter("numMappers"));
-				numReducers = Integer.parseInt(request.getParameter("numReducers"));				
-									
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-			if (jobClass == null || inputDir == null || outputDir == null || numMappers == null || numReducers == null) {
-				
-				// invalid input
-			}
-			else {
-				distributeWorker(2, numMappers, numReducers, inputDir, outputDir, jobName);
-			}
+
+			distributeWorker();
 			
 			response.sendRedirect("status");
 	  }
@@ -350,7 +287,7 @@ public class CrawlerMasterServlet extends HttpServlet {
 		return conn;
   }
   
-  public static void distributeWorker(int numSpouts, int numMappers, int numReducers, String inputDir, String outputDir, String jobName) throws IOException {
+  public static void distributeWorker() throws IOException {
 		String URL_SPOUT = "URL_SPOUT";
 		String CRAWLER_BOLT = "CRAWLER_BOLT";
 		String FILTER_BOLT = "FILTER_BOLT";
@@ -368,14 +305,13 @@ public class CrawlerMasterServlet extends HttpServlet {
 		builder.setSpout(URL_SPOUT, spout, 3);
 		  
 		builder.setBolt(CRAWLER_BOLT, boltA, 10).fieldsGrouping(URL_SPOUT, new Fields("url"));    
-		builder.setBolt(FILTER_BOLT, boltD, 15).fieldsGrouping(CRAWLER_BOLT, new Fields("url"));
-		builder.setBolt(RECORD_BOLT, boltE, 150).fieldsGrouping(FILTER_BOLT, new Fields("extractedLink"));
+		builder.setBolt(FILTER_BOLT, boltD, 10).fieldsGrouping(CRAWLER_BOLT, new Fields("url"));
+		builder.setBolt(RECORD_BOLT, boltE, 10).fieldsGrouping(FILTER_BOLT, new Fields("extractedLink"));
 		
 		Topology topo = builder.createTopology();	  
         
         // create configuration object
-        Configuration config = new Configuration();        
-        config.put("job", jobName);       
+        Configuration config = new Configuration();           
         config.put("seedURL", "https://www.facebook.com/");
         config.put("maxFileSize", "20");
         
@@ -383,8 +319,8 @@ public class CrawlerMasterServlet extends HttpServlet {
         ObjectMapper mapper = new ObjectMapper();	        
         mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);        
         
-        String[] workersList = new String[]{"172.31.60.134:8000", "172.31.52.13:8001"};   
-//        String[] workersList = new String[]{"127.0.0.1:8000", "127.0.0.1:8001"};    
+        String[] workersList = new String[]{"172.31.60.134:8000", "172.31.52.13:8001", "172.31.16.183:8002", "172.31.55.47:8003", "172.31.25.146:8004"};   
+//        String[] workersList = new String[]{"127.0.0.1:8000", "127.0.0.1:8001"};    	
         config.put("workerList", Arrays.toString(workersList));		        
         
 		try {

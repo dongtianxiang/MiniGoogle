@@ -4,8 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import java.util.HashMap;
+import java.util.HashSet;
+
 import java.util.List;
 import java.util.Queue;
+
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import com.sleepycat.je.DatabaseException;
@@ -367,42 +375,42 @@ public class DBWrapper {
 	
 	public static void main(String[] args) throws IOException{
 		DBWrapper db = DBWrapper.getInstance("./dtianx0");
-//		String URL = "https://www.google.com/";
+//		String URL = "http://www.alumni.upenn.edu/s/1587/gid2/16/start.aspx?sid=1587&gid=2&pgid=731";
 //		String keyName = DigestUtils.sha1Hex(URL); 
 //		System.out.println(keyName);
 		
-		System.out.println(db.getFrontierQueueSize());
 		System.out.println(db.getOutLinksSize());
+		System.out.println("getting data from dtianx0");
 		List<String> res = db.outLinksList();
+		List<String> visted = db.visitedURLList();
+		Set<String> set0 = new HashSet<>();
+		System.out.println("adding data into set");
 		for(String url : res) {
+			set0.add(url);
 			System.out.println(url);
-			//System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
+//			System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
 		}
-		System.out.println();
 		System.out.println();
 		System.out.println("************************");
 		System.out.println();
-		System.out.println();
 		db.close();
 		
-		DBWrapper db1 = DBWrapper.getInstance("./dtianx1");
-		List<String> res1 = db1.outLinksList();
 		
-		for(String url : res1) {
+		for(String url : visted) {
 			System.out.println(url);
-			if(res.contains(url)) System.err.println(url + " contained in both");
 		}
 		
-		RobotCache.isValid("https://www.lendingtree.com/");
-		URLInfo i = new URLInfo("https://www.lendingtree.com/");
-		System.out.println(i.getHostName());
-		RobotCache.setCurrentTime("https://www.lendingtree.com/");
-		System.out.println(db1.getRobotVisitedSize("www.lendingtree.com"));
+		DBWrapper db1 = DBWrapper.getInstance("./dtianx1");
+		System.out.println("getting data from dtianx1");
+
 		
-		System.out.println(RobotCache.isValid("https://www.lendingtree.com/"));
-//		System.out.println(System.setProperty("AWS_ID", "aaa"));
-//		System.out.println(System.getProperty("AWS_ID"));
-		
+		List<String> res1 = db1.outLinksList();
+		System.out.println("checking start: ");
+		for(String url : res1) {
+//			System.out.println(url);
+//			if(set0.contains(url)) System.err.println(url + " contained in both");
+		}
+		System.out.println("checking ended! ");
 
 	}
 }

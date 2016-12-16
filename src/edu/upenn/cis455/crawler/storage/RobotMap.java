@@ -155,8 +155,11 @@ public class RobotMap {
 	public boolean isURLValid(String url){
 		URLInfo urlinfo = new URLInfo(url);
 		String path = urlinfo.getFilePath();
-
-		if(visitedSize > MAX_VISITED_SIZE_ON_HOST) {
+		
+		if(hostName.equals("en.wikipedia.org") || hostName.equals("www.amazon.com")) {
+			// do nothing, no checking for these hosts.
+		}
+		else if (visitedSize > MAX_VISITED_SIZE_ON_HOST) {
 			return false;
 		}
 		

@@ -27,9 +27,9 @@ public class TestPageRankTopologyDistributed {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		
-		int numMappers  = 2;
-		int numReducers = 2;
-		int numSpouts = 1;
+		int numMappers  = 1;
+		int numReducers = 1;
+		int numSpouts   = 1;
 		
 		String jobClass  = "edu.upenn.cis455.mapreduce.jobs.PageRankJob" ;
 		String inputDir  = "urls" ; 
@@ -65,7 +65,7 @@ public class TestPageRankTopologyDistributed {
         config.put("status", "IDLE");
         config.put("graphDataDir", "graphStore");
         config.put("databaseDir" , "storage");
-        config.put("numThreads", "10");
+        config.put("numThreads", "2");
         
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        

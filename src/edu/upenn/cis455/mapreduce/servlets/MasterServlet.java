@@ -22,8 +22,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.SecondReducerBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildFirstStageReducer;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildSecondStageReducer;
 import edu.upenn.cis.stormlite.bolts.pagerank.PRMapBolt;
 import edu.upenn.cis.stormlite.bolts.pagerank.PRReduceBolt;
 import edu.upenn.cis.stormlite.bolts.pagerank.PRResultBolt;
@@ -40,10 +40,6 @@ import edu.upenn.cis455.mapreduce.servers.WorkerInformation;
 public class MasterServlet extends HttpServlet {
 
   static final long serialVersionUID = 455555001;
-//  private static final String SPOUT  = "LINK_SPOUT";
-//  private static final String MAP_BOLT = "MAP_BOLT";
-//  private static final String REDUCE_BOLT = "REDUCE_BOLT";
-//  private static final String RESULT_BOLT  = "RES_BOLT";
   private static final Integer totalWorkers = 2;
   private static Integer availableWorkers = 0;
   

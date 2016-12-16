@@ -15,7 +15,7 @@ import org.apache.log4j.Logger;
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
 import edu.upenn.cis.stormlite.bolts.bdb.FileWriterQueue;
-import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildFirstStageReducer;
 import edu.upenn.cis.stormlite.infrastructure.Job;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;

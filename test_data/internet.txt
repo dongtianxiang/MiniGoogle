@@ -1,11 +1,11 @@
-U-haul -> USPS, UPS, Go Puff
-USPS -> Go Puff, U-haul, UPS
+U-haul -> USPS, UPS, Go Puff, Google
+USPS -> Go Puff, U-haul, UPS, Google
 Google -> Amazon, Facebook, LinkedIn
-Amazon -> Snapchat, Ford, GE, Microsoft
+Amazon -> Snapchat, Ford, GE, Microsoft, Google
 Boeing -> Lockheed, Schlumberger, Honeywell
 NYTimes -> Washington Post, New Yorker, Times, PlayBoy
 facebook -> twitter, ebay, SpaceX, Google
 Tesla -> Toyota, Subaru, Ford, Honda
-Chevron -> Shell, Twillio, OneSubSea
+Chevron -> Shell, Twillio, OneSubSea, Google
 Times -> Washington Post, New Yorker, PlayBoy
-Go Puff -> U-haul, Caviar, USPS, UPS
+Go Puff -> U-haul, Caviar, USPS, UPS, Google

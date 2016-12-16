@@ -136,7 +136,7 @@ public class CrawlerWorkerServer {
 			@Override
 			public Object handle(Request arg0, Response arg1) {
 				
-				cluster = new DistributedCluster(200);
+				cluster = new DistributedCluster(50);
 				WorkerJob workerJob = null;
 				try {
 					workerJob = om.readValue(arg0.body(), WorkerJob.class);
@@ -158,6 +158,9 @@ public class CrawlerWorkerServer {
 				
 				if(workerIndex.equals("0")) seedURL = "https://www.facebook.com/";
 				if(workerIndex.equals("1")) seedURL = "http://www.upenn.edu/";
+				if(workerIndex.equals("2")) seedURL = "https://en.wikipedia.org/wiki/Main_Page/";
+				if(workerIndex.equals("3")) seedURL = "https://www.amazon.com/";
+				if(workerIndex.equals("4")) seedURL = "http://www.cnn.com/";
 				
 				if(db.getFrontierQueueSize() == 0)
 		        	crawler.urlQueue.pushURL(seedURL);
