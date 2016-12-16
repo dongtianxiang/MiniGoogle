@@ -1,5 +1,4 @@
 package edu.upenn.cis455.searchengine;
-
 import java.io.BufferedReader;
 
 import java.io.File;
@@ -112,6 +111,7 @@ public class QueryServlet extends HttpServlet {
 		while (nextLine != null && !nextLine.isEmpty()) {
 			log.info(nextLine + "\n");
 		}
+
 	}
 
 }

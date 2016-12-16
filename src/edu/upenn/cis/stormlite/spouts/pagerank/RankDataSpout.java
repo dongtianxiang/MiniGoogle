@@ -56,8 +56,7 @@ public class RankDataSpout implements IRichSpout {
         	urlFileDir += "/" + serverIndex;
         }
 		nodesStore = DBManager.getDBInstance(targetDirectory);		
-		
-		//
+
 		sourceUrlFile = new File(urlFileDir, "names.txt");
 		
 		try  {

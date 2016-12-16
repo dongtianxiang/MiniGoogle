@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+
 import java.util.HashMap;
 import java.util.HashSet;
+
 import java.util.List;
 import java.util.Queue;
+
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -399,6 +402,7 @@ public class DBWrapper {
 		
 		DBWrapper db1 = DBWrapper.getInstance("./dtianx1");
 		System.out.println("getting data from dtianx1");
+
 		
 		List<String> res1 = db1.outLinksList();
 		System.out.println("checking start: ");
