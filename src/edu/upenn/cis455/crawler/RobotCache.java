@@ -23,7 +23,11 @@ public class RobotCache {
 	}
 	
 	public static boolean isValid(String url) {
-		addRobot(url);
+		try{
+			addRobot(url);
+		} catch (Exception e) {    // in case the HTTPConnection for robots.txt fails, leading to NullPointerException
+			return false;
+		}
 		URLInfo urlinfo = new URLInfo(url);
 		String hostName = urlinfo.getHostName();
 		if(hostName == null) return false;

@@ -376,21 +376,26 @@ public class DBWrapper {
 //		String keyName = DigestUtils.sha1Hex(URL); 
 //		System.out.println(keyName);
 		
-		System.out.println(db.getFrontierQueueSize());
 		System.out.println(db.getOutLinksSize());
 		System.out.println("getting data from dtianx0");
 		List<String> res = db.outLinksList();
+		List<String> visted = db.visitedURLList();
 		Set<String> set0 = new HashSet<>();
 		System.out.println("adding data into set");
 		for(String url : res) {
 			set0.add(url);
-//			System.out.println(url);
+			System.out.println(url);
 //			System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
 		}
 		System.out.println();
 		System.out.println("************************");
 		System.out.println();
 		db.close();
+		
+		
+		for(String url : visted) {
+			System.out.println(url);
+		}
 		
 		DBWrapper db1 = DBWrapper.getInstance("./dtianx1");
 		System.out.println("getting data from dtianx1");
@@ -399,7 +404,7 @@ public class DBWrapper {
 		System.out.println("checking start: ");
 		for(String url : res1) {
 //			System.out.println(url);
-			if(set0.contains(url)) System.err.println(url + " contained in both");
+//			if(set0.contains(url)) System.err.println(url + " contained in both");
 		}
 		System.out.println("checking ended! ");
 
