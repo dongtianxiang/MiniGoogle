@@ -57,7 +57,7 @@ public class CrawlerMasterServlet extends HttpServlet {
 							Long time = (new Date()).getTime();							
 							CrawlerWorkerInformation info = workers.get(key);
 							Long lastCheckIn = info.lastCheckIn;							
-							if (time > lastCheckIn + 10000) {
+							if (time > lastCheckIn + 30000) {    // decide as offline if no checked in over 30 s
 								list.add(key);
 							}
 							
