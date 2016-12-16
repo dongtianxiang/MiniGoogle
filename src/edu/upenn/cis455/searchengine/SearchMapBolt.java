@@ -41,11 +41,11 @@ public class SearchMapBolt implements IRichBolt{
 	}
 
 	@Override
-	public void execute(Tuple input) {
-		
-		if (!input.isEndOfStream()) {			
+	public void execute(Tuple input) {		
+		if (!input.isEndOfStream()) {	
+			log.info("mapper receives: " + input.toString());
 			String s = input.getStringByField("value");
-			String[] pairs = s.split("->");	//word; doc:weight; [lemmas]
+			String[] pairs = s.split("->");				//word; doc:weight; [lemmas]
 			int index = pairs[1].indexOf(":");
 			String doc = pairs[1].substring(0, index);	// get doc			
 			String weight = pairs[1].substring(index + 1); 
@@ -92,7 +92,7 @@ public class SearchMapBolt implements IRichBolt{
 		int numSpouts  = Integer.parseInt(stormConf.get("spoutExecutors"));		
 		int numWorkers = Integer.parseInt(stormConf.get("workers"));
         eosNeeded = ((numWorkers - 1) * numMappers  + 1) * numSpouts;	
-        log.info("Num EOS required for MapBolt: " + eosNeeded);
+//        log.info("Num EOS required for MapBolt: " + eosNeeded);
 	}
 
 	@Override

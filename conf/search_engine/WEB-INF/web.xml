@@ -21,11 +21,12 @@
 		</servlet-mapping>	
 		<servlet-mapping>
 			<servlet-name>Query</servlet-name>
-			<url-pattern>/query</url-pattern>
+			<url-pattern>/query/*</url-pattern>
 		</servlet-mapping>	
 		<servlet-mapping>
 			<servlet-name>Result</servlet-name>
 			<url-pattern>/result</url-pattern>
-		</servlet-mapping>			
+		</servlet-mapping>
+					
 	</webapp>
 

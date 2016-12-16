@@ -124,7 +124,8 @@ public class CrawlerMasterServlet extends HttpServlet {
 		  
 		  if (port        == null || 
 			  keysRead    == null || 
-			  keysWritten == null ) {
+			  keysWritten == null ) 
+			{
 			  
 			  response.setStatus(400);
 			  response.setContentType("text/html");
