@@ -28,9 +28,9 @@ public class TestInitializeDistributedDatabase {
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
 		int numMappers  = 1;
-		int numReducers = 1;
 		int numSpouts   = 1;
-		int numFixers   = 1;
+		int numFirstReducers = 1;
+		int numSecondaryReducers = 1;
 		
 		String inputDir  = "test_data" ; 
 		String outputDir = "urls";
@@ -45,17 +45,17 @@ public class TestInitializeDistributedDatabase {
 		TopologyBuilder builder = new TopologyBuilder();			    			    
         builder.setSpout(SPOUT, spout, numSpouts);
         builder.setBolt(MAP_BOLT, mapBolt, numMappers).shuffleGrouping(SPOUT);		        
-        builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
-        builder.setBolt(WRAPPER_BOLT, postBolt, numFixers).fieldsGrouping(REDUCE_BOLT, new Fields("value"));
+        builder.setBolt(REDUCE_BOLT, reduceBolt, numFirstReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
+        builder.setBolt(WRAPPER_BOLT, postBolt, numSecondaryReducers).fieldsGrouping(REDUCE_BOLT, new Fields("value"));
         
         Topology topo = builder.createTopology();
         
         // create configuration object
         Configuration config = new Configuration();        
-        config.put("spoutExecutors",  (new Integer(numSpouts)).toString());
-        config.put("mapExecutors",    (new Integer(numMappers)).toString());
-        config.put("reduceExecutors", (new Integer(numReducers)).toString());
-        config.put("reduce2Executors", (new Integer(numFixers)).toString());
+        config.put("spoutExecutors",   (new Integer(numSpouts)).toString());
+        config.put("mapExecutors",     (new Integer(numMappers)).toString());
+        config.put("reduceExecutors",  (new Integer(numFirstReducers)).toString());
+        config.put("reduce2Executors", (new Integer(numSecondaryReducers)).toString());
         config.put("inputDir", inputDir);
         config.put("outputDir", outputDir);
         config.put("job", jobName);       

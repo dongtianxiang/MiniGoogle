@@ -11,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,8 @@ import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Tuple;
 import edu.upenn.cis455.database.DBInstance;
+import edu.upenn.cis455.database.DBManager;
+import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -40,14 +43,12 @@ import spark.Spark;
 public class WorkerServer {
 	
 	static Logger log = Logger.getLogger(WorkerServer.class);	
-//	public static DistributedCluster cluster;
-	
 	public DistributedCluster cluster;
 	
     List<TopologyContext> contexts = new ArrayList<>();
 	static List<String> topologies = new ArrayList<>();
+	DBInstance nodesStore;
 	
-	public static DBInstance mapReduceTempStore;
 	
 	public int myPortNumber;
 	public String myAddress;
@@ -55,6 +56,8 @@ public class WorkerServer {
 	public Configuration currJobConfig;
 	public String tempStore;
 	public String workerIndex;
+	public String graphStore;
+	public String serverIndex;
 	
 	public static Map<String, Thread> checkers = new HashMap<>();
 	
@@ -65,8 +68,14 @@ public class WorkerServer {
 		currJobConfig = new Configuration();
 		workerIndex = config.get("workerIndex");
 		myPortNumber = myPort;
-		setPort(myPort);
 		myAddress = myAddr;
+		graphStore = "graphStore";
+		serverIndex = config.get("workerIndex");
+		
+		DBManager.createDBInstance(graphStore + "/" + serverIndex);
+		nodesStore = DBManager.getDBInstance(graphStore + "/" + serverIndex);
+		
+		setPort(myPort);
 		
 		Runnable messenger = new Runnable(){
 			@Override
@@ -162,7 +171,7 @@ public class WorkerServer {
 				config.put("keysWritten", "0");
 				config.put("databaseDir", tempStore);
 				config.put("workerIndex", workerIndex);
-				config.put("graphDataDir", "graphStore");
+				config.put("graphDataDir", graphStore);
 								
 				File inDirTest  = (inputDirectory.equals("")) ? new File("./") : new File(inputDirectory);
 				File outDirTest = (inputDirectory.equals("")) ? new File("./") : new File(inputDirectory);
@@ -184,6 +193,27 @@ public class WorkerServer {
 	            return "Job launched";
 			}
         	
+        });
+        
+        Spark.get(new Route("/lookupURL") {
+        	@Override
+        	public Object handle(Request req, Response res) {
+        		
+        		String[] kvPairs = req.queryString().split("&");         		
+        		StringBuilder builder = new StringBuilder(); 
+        		for (String pair: kvPairs) {
+        			String url = (pair.split("="))[1];
+        			log.info("looking up " + url);
+        			if (nodesStore.hasNode(url)) {
+        				builder.append(
+        					String.format("%s, rank:%.2f\n", "Server # " 
+        									+ serverIndex + " contains URL: " + url, 
+        										nodesStore.getNode(url).getRank())
+        				);
+        			}
+        		}
+        		return builder.toString();
+        	}
         });
         
         Spark.post(new Route("/runjob") {

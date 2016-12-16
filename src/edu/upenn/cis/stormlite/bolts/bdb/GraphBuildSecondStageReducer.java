@@ -27,13 +27,13 @@ import edu.upenn.cis455.database.Node;
 public class GraphBuildSecondStageReducer implements IRichBolt {
 	
 	public static Logger log = Logger.getLogger(GraphBuildSecondStageReducer.class);
-//	Logger log = LoggerFactory.getLogger(SecondReducerBolt.class);
+
 	public static Map<String, String> config;
 	public static DBInstance graphDB;
 	public static DBInstance tempDB;
 	public int count = 0;
     public String executorId = UUID.randomUUID().toString();
-	public Fields schema = new Fields("key");
+//	public Fields schema = new Fields("key");
 	public OutputCollector collector;
 	public boolean sentEOS = false;
 	public String serverIndex;
@@ -41,7 +41,6 @@ public class GraphBuildSecondStageReducer implements IRichBolt {
 	public File linksfile;
 	public int eosREQUIRED;
 	private FileWriterQueue fwq;
-	private FileWriterQueue fwq2;
 	public static AtomicBoolean eosSent = new AtomicBoolean();
 	
 	@Override
@@ -51,7 +50,7 @@ public class GraphBuildSecondStageReducer implements IRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(schema);
+//		declarer.declare(schema);
 	}
 
 	@Override
@@ -79,9 +78,12 @@ public class GraphBuildSecondStageReducer implements IRichBolt {
 	        	log.info("-- Start second stage reduction --");	
 	        	config.put("status", "REDUCING2");
 	        	Map<String, List<String>> table;
+	        	
 	        	synchronized(tempDB) {
 	        		table = tempDB.getTable(executorId);
 	        	}
+	        	
+	        	if (table == null) return;
 	        	
 	        	Iterator<String> iter = table.keySet().iterator();
 	        	while (iter.hasNext()) {
@@ -182,7 +184,7 @@ public class GraphBuildSecondStageReducer implements IRichBolt {
 
 	@Override
 	public Fields getSchema() {
-		return schema;
+		return null;
 	}
 
 }

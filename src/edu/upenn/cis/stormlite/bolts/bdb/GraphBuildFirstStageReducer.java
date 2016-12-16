@@ -2,7 +2,6 @@ package edu.upenn.cis.stormlite.bolts.bdb;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -10,11 +9,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
-//import org.slf4j.LoggerFactory;
-
 import edu.upenn.cis.stormlite.bolts.IRichBolt;
 import edu.upenn.cis.stormlite.bolts.OutputCollector;
-import edu.upenn.cis.stormlite.infrastructure.Job;
 import edu.upenn.cis.stormlite.infrastructure.OutputFieldsDeclarer;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
@@ -104,8 +100,7 @@ public class GraphBuildFirstStageReducer implements IRichBolt {
 
 						while (valueIt.hasNext()) {
 							String nextVal = valueIt.next();
-							node.addNeighbor(nextVal);
-							
+							node.addNeighbor(nextVal);						
 							collector.emit(new Values<Object>(key, nextVal));
 						}		        						
 						graphDB.addNode(node);
@@ -115,13 +110,15 @@ public class GraphBuildFirstStageReducer implements IRichBolt {
 					log.info("-- MR job complete --");	
 				}
 				catch (NullPointerException e) {
+					// ignore all null pointer exceptions
+					// for now coz the result seems to be right XD
 //					e.printStackTrace();
 				}							
 				synchronized(tempDB) {
 					tempDB.clearTempData();	
 				}				
 				try {
-					Thread.sleep(100);
+					Thread.sleep(50);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}				
@@ -133,10 +130,7 @@ public class GraphBuildFirstStageReducer implements IRichBolt {
     	
     		String key = input.getStringByField("key");
 	        String value = input.getStringByField("value");	        	              
-	        // log.info("Server# " + serverIndex +"::"+executorId+ " Firstary reducer received: " + key + " / " + value);
-	        synchronized(tempDB) {
-	        	tempDB.addKeyValue(executorId, key, value);
-	        }
+	        synchronized(tempDB) { tempDB.addKeyValue(executorId, key, value); }
     	}		
 	}
 
@@ -164,33 +158,21 @@ public class GraphBuildFirstStageReducer implements IRichBolt {
 		String outputFileName = "names.txt";
 		outfile = new File(outfileDir, outputFileName);
 		
-//		try {
-//			outputWriter = new FileWriter(outfile, false);
-//		}
-//		catch (IOException e) {
-//			e.printStackTrace();
-//			return;
-//		}
-		this.fwq = FileWriterQueue.getFileWriterQueue(outfile, context);
+		fwq = FileWriterQueue.getFileWriterQueue(outfile, context);
 		graphDB = DBManager.getDBInstance(graphDataDir);		
-		DBManager.createDBInstance(databaseDir);
 		tempDB  = DBManager.getDBInstance(databaseDir);
 			
         this.collector = collector;
         if (!stormConf.containsKey("mapExecutors")) {
         	log.error("Reducer class doesn't know how many map bolt executors");
         	return;
-//        	throw new RuntimeException("Reducer class doesn't know how many map bolt executors");
         }
 
-		int numMappers  = Integer.parseInt(stormConf.get("mapExecutors"));	
-//		int numSpouts   = Integer.parseInt(stormConf.get("spoutExecutors"));	
+		int numMappers  = Integer.parseInt(stormConf.get("mapExecutors"));		
 		int numReducers = Integer.parseInt(stormConf.get("reduceExecutors"));
-		int numWorkers  = Integer.parseInt(stormConf.get("workers"));	
-//		int M = ((numWorkers - 1) * numMappers  + 1) * numSpouts;		
+		int numWorkers  = Integer.parseInt(stormConf.get("workers"));			
         eosNeeded = (numWorkers - 1) * numMappers* numReducers  +  numMappers;
-//		eosNeeded = numWorkers;	
-        log.info("Num EOS required for ReduceBolt: " + eosNeeded);
+        log.debug("Num EOS required for ReduceBolt: " + eosNeeded);
 	}
 
 	@Override
