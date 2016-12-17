@@ -8,8 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.upenn.cis.stormlite.bolts.bdb.BuilderMapBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.FirstaryReduceBolt;
-import edu.upenn.cis.stormlite.bolts.bdb.SecondReducerBolt;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildFirstStageReducer;
+import edu.upenn.cis.stormlite.bolts.bdb.GraphBuildSecondStageReducer;
 import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.Topology;
 import edu.upenn.cis.stormlite.infrastructure.TopologyBuilder;
@@ -27,10 +27,10 @@ public class TestInitializeDistributedDatabase {
 	private static final String WRAPPER_BOLT  = "FIXER";
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
-		int numMappers  = 2;
-		int numReducers = 2;
+		int numMappers  = 1;
 		int numSpouts   = 1;
-		int numFixers   = 2;
+		int numFirstReducers = 1;
+		int numSecondaryReducers = 1;
 		
 		String inputDir  = "test_data" ; 
 		String outputDir = "urls";
@@ -38,24 +38,24 @@ public class TestInitializeDistributedDatabase {
 				
 		LinksFileSpout spout     = new LinksSpout();		
 	    BuilderMapBolt mapBolt   = new BuilderMapBolt();
-	    FirstaryReduceBolt reduceBolt = new FirstaryReduceBolt();
-	    SecondReducerBolt postBolt = new SecondReducerBolt();
+	    GraphBuildFirstStageReducer reduceBolt = new GraphBuildFirstStageReducer();
+	    GraphBuildSecondStageReducer postBolt = new GraphBuildSecondStageReducer();
 	    
 	    // build topology
 		TopologyBuilder builder = new TopologyBuilder();			    			    
         builder.setSpout(SPOUT, spout, numSpouts);
         builder.setBolt(MAP_BOLT, mapBolt, numMappers).shuffleGrouping(SPOUT);		        
-        builder.setBolt(REDUCE_BOLT, reduceBolt, numReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
-        builder.setBolt(WRAPPER_BOLT, postBolt, numFixers).fieldsGrouping(REDUCE_BOLT, new Fields("value"));
+        builder.setBolt(REDUCE_BOLT, reduceBolt, numFirstReducers).fieldsGrouping(MAP_BOLT, new Fields("key"));
+        builder.setBolt(WRAPPER_BOLT, postBolt, numSecondaryReducers).fieldsGrouping(REDUCE_BOLT, new Fields("value"));
         
         Topology topo = builder.createTopology();
         
         // create configuration object
         Configuration config = new Configuration();        
-        config.put("spoutExecutors",  (new Integer(numSpouts)).toString());
-        config.put("mapExecutors",    (new Integer(numMappers)).toString());
-        config.put("reduceExecutors", (new Integer(numReducers)).toString());
-        config.put("reduce2Executors", (new Integer(numFixers)).toString());
+        config.put("spoutExecutors",   (new Integer(numSpouts)).toString());
+        config.put("mapExecutors",     (new Integer(numMappers)).toString());
+        config.put("reduceExecutors",  (new Integer(numFirstReducers)).toString());
+        config.put("reduce2Executors", (new Integer(numSecondaryReducers)).toString());
         config.put("inputDir", inputDir);
         config.put("outputDir", outputDir);
         config.put("job", jobName);       
@@ -63,7 +63,7 @@ public class TestInitializeDistributedDatabase {
         config.put("graphDataDir", "graphStore");
         config.put("databaseDir" , "storage");
         config.put("status", "IDLE");
-        config.put("numThreads", "10");
+        config.put("numThreads", "2");
        
         WorkerJob job = new WorkerJob(topo, config);
         ObjectMapper mapper = new ObjectMapper();	        

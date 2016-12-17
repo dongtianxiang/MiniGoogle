@@ -34,7 +34,7 @@ import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Tuple;
 import edu.upenn.cis455.crawler.XPathCrawler;
 import edu.upenn.cis455.crawler.storage.DBWrapper;
-import edu.upenn.cis455.database.DBInstance;
+//import edu.upenn.cis455.database.DBInstance;
 import spark.Request;
 import spark.Response;
 import spark.Route;

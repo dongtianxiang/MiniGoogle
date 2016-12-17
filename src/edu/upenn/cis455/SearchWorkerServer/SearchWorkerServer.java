@@ -1,18 +1,23 @@
-package edu.upenn.cis455.mapreduce.servers;
+package edu.upenn.cis455.SearchWorkerServer;
 
 import static spark.Spark.setPort;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -29,101 +34,97 @@ import edu.upenn.cis.stormlite.infrastructure.WorkerHelper;
 import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Tuple;
-import edu.upenn.cis455.database.DBInstance;
-import edu.upenn.cis455.database.DBManager;
-import spark.QueryParamsMap;
+import edu.upenn.cis455.searchengine.DataWork;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 import spark.Spark;
 
-/**
- * Simple listener for worker creation 
- */
-public class WorkerServer {
+public class SearchWorkerServer {
 	
-	static Logger log = Logger.getLogger(WorkerServer.class);	
-	public DistributedCluster cluster;
+	static Logger log = Logger.getLogger(SearchWorkerServer.class);	
+	public static DistributedCluster cluster;
 	
     List<TopologyContext> contexts = new ArrayList<>();
 	static List<String> topologies = new ArrayList<>();
-	DBInstance nodesStore;
-	
 	
 	public int myPortNumber;
 	public String myAddress;
 	public Thread checker;
 	public Configuration currJobConfig;
-	public String tempStore;
+	public String tempDir;
 	public String workerIndex;
-	public String graphStore;
-	public String serverIndex;
+	public String masterAddr;
+	public String inputFile;
 	
 	public static Map<String, Thread> checkers = new HashMap<>();
 	
-	public WorkerServer(int myPort, Map<String, String> config, String myAddr) 
-			throws MalformedURLException, FileNotFoundException {
+	private Hashtable<String, Integer> lexicon = new Hashtable<>();
+	
+	public SearchWorkerServer(int myPort, Map<String, String> config, String myAddr) {
 			
 		log.info("Creating server listener at socket " + myPort);
 		currJobConfig = new Configuration();
 		workerIndex = config.get("workerIndex");
+		
 		myPortNumber = myPort;
-		myAddress = myAddr;
-		graphStore = "graphStore";
-		serverIndex = config.get("workerIndex");
-		
-		DBManager.createDBInstance(graphStore + "/" + serverIndex);
-		nodesStore = DBManager.getDBInstance(graphStore + "/" + serverIndex);
-		
 		setPort(myPort);
+		myAddress = myAddr;
+		masterAddr = config.get("master");
 		
+		tempDir = config.get("tempDir");
+		File dir = new File(tempDir);
+		dir.mkdirs();
+		inputFile = tempDir + "/query.txt";
+ 
+        // TODO: construct in-memory lexicon here 
+		if (workerIndex.equals("1")) {
+			lexicon.put("apple", 1);
+		} else {
+			lexicon.put("company", 1);
+		}
+		      		
 		Runnable messenger = new Runnable(){
 			@Override
 			public void run() {
-				while (true) {				
-					StringBuilder masterAddr = new StringBuilder(config.get("master"));	
+				while (true) {		
 					try {
 						synchronized(this) {
+							StringBuilder masterAddr = new StringBuilder(config.get("master"));	
 							
 							if (!masterAddr.toString().startsWith("http://")) {
 								masterAddr = new StringBuilder("http://" + masterAddr.toString());
 							}
-							String currJob     = currJobConfig.get("job");
-							String keysRead    = currJobConfig.get("keysRead");
-							String keysWritten = currJobConfig.get("keyWritten");
-							String status      = currJobConfig.get("status");						
-							if (status == null) status = "IDLE";							
-							if (status.equals("IDLE") && cluster != null && cluster.running()) {
-								cluster.shutdown();
-							}						
+							
 							masterAddr.append("/workerstatus?");							
-							masterAddr.append("port=" + myPort);								
-							masterAddr.append("&job=" +         (currJob == null ?     "N/A" : currJob));																							
-							masterAddr.append("&keysRead=" +    (keysRead == null ?    "N/A" : keysRead));						
-							masterAddr.append("&keysWritten=" + (keysWritten == null ? "N/A" : keysRead));
-							masterAddr.append("&status=" +      (status == null ?      "N/A" : status));							
+							masterAddr.append("port=" + myPort);
+							
 							try {								
 								URL masterURL = new URL(masterAddr.toString());									
 								HttpURLConnection conn = (HttpURLConnection)masterURL.openConnection();
 								conn.setRequestProperty("Content-Type", "text/html");
 								StringBuilder builder = new StringBuilder();								
-								log.debug(builder.append("Worker Status Report: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString());
+								log.info(builder.append("Worker check-in: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString()
+										+ " with " + masterAddr);
 							}
 							catch (ConnectException e) {
-								log.info("WorkerServer cannot contact MasterServer");
+								log.info("SearchWorkerServer cannot contact MasterServer");
 							}							
-							// interval for background check
-							wait(5000);								
+							// TODO interval for background check： 0.1s
+							wait(10000);								
 						}						
 					} 
 					catch (InterruptedException e) {
 						break;
 					} 
-					catch (IOException e) {
-						e.printStackTrace();
+					catch (Exception e) {
+						StringWriter sw = new StringWriter();
+						PrintWriter pw = new PrintWriter(sw);
+						e.printStackTrace(pw);
+						log.error(sw.toString()); // stack trace as a string
 					}
 				}
-				log.info("WorkerServer has stopped.");
+				log.info("SearchWorkerServer has stopped.");
 			}
 		};
 		
@@ -139,17 +140,11 @@ public class WorkerServer {
 			@Override
 			public Object handle(Request arg0, Response arg1) {
 				
-				try {
-					synchronized(this) {
-						wait(1000);
-					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				
+				cluster = new DistributedCluster(1);
 				WorkerJob workerJob = null;
 				try {
 					workerJob = om.readValue(arg0.body(), WorkerJob.class);
+					
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -158,28 +153,8 @@ public class WorkerServer {
 				
 				Configuration config = workerJob.getConfig();
 				currJobConfig = config;
-				
-				// other information about job should be already in configuration object
-				String inputDirectory  = config.get("inputDir");	
-				tempStore = config.get("databaseDir");
-				
-				int numThreads = Integer.parseInt(config.get("numThreads"));
-				
-				cluster = new DistributedCluster(numThreads);
-				
-				config.put("keysRead",    "0");
-				config.put("keysWritten", "0");
-				config.put("databaseDir", tempStore);
-				config.put("workerIndex", workerIndex);
-				config.put("graphDataDir", graphStore);
-								
-				File inDirTest  = (inputDirectory.equals("")) ? new File("./") : new File(inputDirectory);
-				File outDirTest = (inputDirectory.equals("")) ? new File("./") : new File(inputDirectory);
-				outDirTest.mkdirs();
-				
-				if (!inDirTest.isDirectory() || !outDirTest.isDirectory()) {
-					log.info("Invalid user inputs. Job initialization failed.");
-				}
+				config.put("inputDir", tempDir);
+	        				
 	        	try {		        		
 	        		log.info("Processing job definition request" + config.get("job") + " on machine " + config.get("workerIndex"));		        				        		
 					synchronized (topologies) {
@@ -192,28 +167,6 @@ public class WorkerServer {
 				}
 	            return "Job launched";
 			}
-        	
-        });
-        
-        Spark.get(new Route("/lookupURL") {
-        	@Override
-        	public Object handle(Request req, Response res) {
-        		
-        		String[] kvPairs = req.queryString().split("&");         		
-        		StringBuilder builder = new StringBuilder(); 
-        		for (String pair: kvPairs) {
-        			String url = (pair.split("="))[1];
-        			log.info("looking up " + url);
-        			if (nodesStore.hasNode(url)) {
-        				builder.append(
-        					String.format("%s, rank:%.2f\n", "Server # " 
-        									+ serverIndex + " contains URL: " + url, 
-        										nodesStore.getNode(url).getRank())
-        				);
-        			}
-        		}
-        		return builder.toString();
-        	}
         });
         
         Spark.post(new Route("/runjob") {
@@ -239,6 +192,9 @@ public class WorkerServer {
 					if (contexts.isEmpty()) {
 						log.error("No topology context -- were we initialized??");			
 					}
+//			    	if (!tuple.isEndOfStream()) {
+//			    		contexts.get(contexts.size() - 1).incSendOutputs(router.getKey(tuple.getValues()));	
+//			    	}
 			    	if (tuple.isEndOfStream()) {
 						router.executeEndOfStreamLocally(contexts.get(contexts.size() - 1));
 			    	}
@@ -248,7 +204,11 @@ public class WorkerServer {
 			    	return "OK";
 				}
 				catch (Exception e) {
-					e.printStackTrace();					
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					e.printStackTrace(pw);
+					log.error(sw.toString()); // stack trace as a string
+					
 					arg1.status(500);
 					return e.getMessage();
 				}
@@ -259,11 +219,67 @@ public class WorkerServer {
         Spark.get(new Route("/shutdown") {
 
 			@Override
-			public Object handle(Request arg0, Response arg1) {				
-				shutdown(myAddr);
+			public Object handle(Request arg0, Response arg1) {	
+				shutdown(myAddr);				
 				System.exit(0);
 				return "OK";
 			}
+        });
+        
+        Spark.post(new Route("/retrieve"){
+        	
+        	@Override
+        	public Object handle(Request arg0, Response arg1) {
+        		File f = new File(inputFile);
+        		if (f.exists()) {
+        			f.delete();
+        		}
+        		String query = null;
+				try {
+					query = (String) om.readValue(arg0.body(), HashMap.class).get("query");
+	        		String[] queryList = query.split(" ");
+	        		int listSize = queryList.length;
+	        		ArrayList<Thread> threads = new ArrayList<>();
+	        		
+	        		for (int i = 0; i < listSize; i++) {
+	        			String word = queryList[i];
+	        			if (!lexicon.containsKey(word)) {
+	        				continue;
+	        			}
+	        			Thread t = new Thread(new DataWork(word, inputFile, Integer.parseInt(workerIndex)));
+	        			threads.add(t);
+	        			t.start();
+	        		}
+	        		
+	        		int threadSize = threads.size();
+	        		try {
+	            		for (int i = 0; i < threadSize; i++) {
+	            			threads.get(i).join();
+	            		}
+	        		} catch (InterruptedException e) {
+	        			e.printStackTrace();
+	        		}
+	        			        		
+	        		if ( !masterAddr.startsWith("http://") ) {
+	        			masterAddr = "http://" + masterAddr;
+	        		}
+	        		
+					URL url = new URL( masterAddr + "/query/intermediate");
+					HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+					conn.setDoOutput(true);
+					conn.setRequestMethod("POST");
+					OutputStream out = conn.getOutputStream();
+					DataOutputStream d = new DataOutputStream(out);
+					d.write("I finished my work\n".getBytes());
+					InputStream in = conn.getInputStream();
+					
+	        		return "OK";
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				return "Server Error";					
+        	}
         });
         
 	}
@@ -279,12 +295,13 @@ public class WorkerServer {
 		else {
 			
 			String[] addresses = WorkerHelper.getWorkers(config);
-			String myAddress = addresses[Integer.valueOf(config.get("workerIndex"))];						
+			String myAddress = addresses[Integer.valueOf(config.get("workerIndex"))];				
+			
 			log.info("Initializing worker " + myAddress);			
 			URL url;		
 			try {				
 				url = new URL(myAddress);
-				new WorkerServer(url.getPort(), config, myAddress);		
+				new SearchWorkerServer(url.getPort(), config, myAddress);		
 				
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
@@ -292,13 +309,13 @@ public class WorkerServer {
 		}
 	}
 	
-	public void shutdown(String addr) {
+	public static void shutdown(String addr) {
 		shutdown();
 		checkers.get(addr).interrupt();
 		checkers.remove(addr);		
 	}
 
-	public void shutdown() {		
+	public static void shutdown() {		
 		synchronized(topologies) {
 			for (String topo: topologies)
 				if (cluster != null) {
@@ -311,7 +328,7 @@ public class WorkerServer {
 	}
 	
 	/**
-	 * Helper class for invoking WorkerServer Node from ANT script
+	 * Helper class for invoking CrawlerWorkerServer Node from ANT script
 	 * @param args
 	 * arg0: List of workers represented as a single string [IP_1, IP_2, ..., IP_N]
 	 * arg1: Index of current server among the workers list
@@ -333,11 +350,13 @@ public class WorkerServer {
 		}
 		
 		Configuration conf = new Configuration();
-		conf.put("workerList",  args[0]);  // For testing, List like config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
-		conf.put("workerIndex", args[1]);  // For testing, number of 0, 1
-		conf.put("master",      args[2]);  // For testing, "127.0.0.1:8080"
-		conf.put("databaseDir", args[3]);  // For testing, local db path
-		
-		WorkerServer.createWorker(conf);		
+		conf.put("workerList",  args[0]); // For testing, List like config.put("workerList", "[127.0.0.1:8001,127.0.0.1:8002]");
+		conf.put("workerIndex", args[1]); // For testing, number of 0, 1
+		conf.put("master",      args[2]); // For testing, "127.0.0.1:8080"
+		conf.put("tempDir", args[3]); 	  // The location where mapreduce reads from
+				    
+		SearchWorkerServer.createWorker(conf);		
 	}
+	
+
 }

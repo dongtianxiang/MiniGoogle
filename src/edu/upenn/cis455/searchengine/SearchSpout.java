@@ -45,6 +45,7 @@ public class SearchSpout implements IRichSpout {
 		declarer.declare(schema);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void open(Map<String, String> conf, TopologyContext topo, SpoutOutputCollector collector) {
 		// TODO Auto-generated method stub

@@ -4,11 +4,8 @@ import java.io.FileInputStream;
 import java.util.Properties;
 
 import org.apache.log4j.PropertyConfigurator;
-import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.springframework.core.io.ClassPathResource;
 

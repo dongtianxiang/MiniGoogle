@@ -53,14 +53,14 @@ public class BuilderMapBolt implements IRichBolt {
 //			log.info("Server " + serverIndex + " has received " + src + " -> " + Arrays.toString(links));
 			
 			for (String link: links) {
-				log.info("Server#"+serverIndex+"::"+executorId+" emitting "+src+"/"+link + " at time:"+System.currentTimeMillis());
+//				log.info("Server#"+serverIndex+"::"+executorId+" emitting "+src+"/"+link + " at time:"+System.currentTimeMillis());
 				collector.emit(new Values<Object>(src, link));
 			}
 		}
 		else {
     		eosNeeded--;    		
     		if (eosNeeded == 0) {
-    			log.info("Server#"+serverIndex+"::"+executorId+" Mapping phase completed at "+System.currentTimeMillis());
+    			log.info("Server# "+serverIndex+" :: "+executorId+" Mapping phase completed at "+System.currentTimeMillis());
     			try {
 					Thread.sleep(50);
 				} catch (InterruptedException e) {

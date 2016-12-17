@@ -10,10 +10,16 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
+import java.util.Collections;
 
 import org.apache.log4j.Logger;
 
@@ -35,7 +41,7 @@ public class SearchResultBolt implements IRichBolt{
 	public int eosRequired = 0;  
     public int eosReceived = 0;
     public static Map<String, String> config;    
-    private Hashtable<String, String> docList = new Hashtable<>();
+    private Hashtable<String, Double> docList = new Hashtable<>();
 
 	@Override
 	public String getExecutorId() {
@@ -55,41 +61,51 @@ public class SearchResultBolt implements IRichBolt{
 
 	@Override
 	public void execute(Tuple input) {
-		if (!input.isEndOfStream()) {	
-			String key = input.getStringByField("key");
-			String weight = input.getStringByField("value");
-			int index = key.indexOf(":");
-			String doc = key.substring(0, index);
-			docList.put(doc, weight);
+		if (!input.isEndOfStream()) {
+			synchronized (this) {
+				log.info("result receive:" + input.toString());
+				String key = input.getStringByField("key");
+				double weight = Double.parseDouble(input.getStringByField("value"));
+				int index = key.indexOf(":");
+				String doc = key.substring(0, index);
+				docList.put(doc, weight);
+			}
 		}
 		else {
 			eosReceived++;
-			if (eosRequired == eosReceived) {			
+			if (eosRequired == eosReceived) {
+		        Set<Entry<String, Double>> set = docList.entrySet();
+		        List<Entry<String, Double>> list = new ArrayList<Entry<String, Double>>(set);
+		        Collections.sort(list, new Comparator<Map.Entry<String, Double>>() {
+		            public int compare(Map.Entry<String, Double> o1,
+		                    Map.Entry<String, Double> o2) {
+		                return o1.getValue().compareTo(o2.getValue());
+		            }
+		        });
+				
 				log.info("*** Finish computing *");
 				log.info(docList.toString());
-				
+								
 				// Send HTTP Request to result servlet
 				try {
-					URL myURL = new URL("http://localhost:8080");					
+					URL myURL = new URL("http://127.0.0.1:8080/query/sort");					
 					HttpURLConnection conn = (HttpURLConnection) myURL.openConnection();
+					conn.setDoOutput(true);
 					conn.setRequestMethod("POST");					
 					OutputStream out = conn.getOutputStream();
-					log.info("making http request");
 				    DataOutputStream wr = new DataOutputStream(out);
 				    for (String key: docList.keySet()) {
-				    	String weight = docList.get(key);
+				    	double weight = docList.get(key);
 				    	wr.write((key + ":" + weight).getBytes());
 				    }
-				    
-				    
+						    
 				} catch (Exception e) {
 					// url failed
-				}
-				
+				}				
 				config.put("status", "IDLE");
 				cleanup();
 			}
-			log.debug("EOS Receved: " + eosReceived);
+//			log.debug("EOS Receved: " + eosReceived);
 		}
 	}
 

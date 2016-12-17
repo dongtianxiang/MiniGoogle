@@ -24,9 +24,7 @@ public class SearchJob implements Job {
 	public void reduce(String key, Iterator<String> values, Context context) {
 		// TODO Auto-generated method stub
 		String[] list = key.split(":");
-		int length = list[1].length();
-		String query = key.substring(1, length - 1);
-		String[] lemmas = query.split(",");
+		String[] lemmas = list[1].split(",");
 		int count = 0;
 		double weight = 0;
 		while (values.hasNext()) {
@@ -36,7 +34,7 @@ public class SearchJob implements Job {
 			weight += wordWeight;
 			count++;
 		}
-		if (count == list.length) {
+		if (count == lemmas.length) {
 			context.write(key, String.valueOf(weight));
 		}
 	}

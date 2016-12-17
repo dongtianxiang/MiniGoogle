@@ -60,7 +60,7 @@ public class SearchReduceBolt implements IRichBolt{
 		        }
 			}
 	    	else if (input.isEndOfStream()) {	
-				log.info("EOS Received: " + (++count));			
+//				log.info("EOS Received: " + (++count));			
 				eosNeeded--;
 				if (eosNeeded == 0) {					
 					for (String doc: temp.keySet()) {
@@ -71,6 +71,7 @@ public class SearchReduceBolt implements IRichBolt{
 				collector.emitEndOfStream();
 	    	} else {
 	    		// key: doc; value: word:weight:[lemmas]
+	    		log.info("reducer receives key:" + input.getStringByField("key") + " value:" + input.getStringByField("value"));
 	    		String doc = input.getStringByField("key");
 	    		String[] pairs = input.getStringByField("value").split(":");
 	    		if (count == 0) {

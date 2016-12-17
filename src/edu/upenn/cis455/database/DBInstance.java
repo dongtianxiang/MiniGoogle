@@ -30,6 +30,9 @@ public class DBInstance {
 			econfig.setTransactional(true);			
 			File dataDir = new File(envDirectory);
 			
+			
+			System.out.println(dataDir.getAbsolutePath());
+			
 			if (!dataDir.exists()) {
 				if(!dataDir.mkdirs()) {
 					throw new IllegalArgumentException();
@@ -150,6 +153,20 @@ public class DBInstance {
 		index.delete(ID);
 	}
 	
+	public void showNodesData() {
+		
+		PrimaryIndex<String, Node> index = store.getPrimaryIndex(String.class, Node.class);		
+		EntityCursor<Node> cursor = index.entities();				
+		List<String> nodeIDs = new LinkedList<>();		
+		while (true) {
+			Node node = cursor.next();
+			if (node == null) break;
+			nodeIDs.add(node.getID());
+		}
+		cursor.close(); // close cursor otherwise you'll get deadlock		
+		System.out.println(nodeIDs);
+	}
+	
 	public void clearTempData() {
 		
 		PrimaryIndex<String, BoltData> index = store.getPrimaryIndex(String.class, BoltData.class);
@@ -182,7 +199,6 @@ public class DBInstance {
 		for (String nodeID: nodeIDs) {
 			index.delete(nodeID);
 		}
-		System.out.println("Graph data in database " + envDirectory + " has been cleared.");
-		
+		System.out.println("Graph data in database " + envDirectory + " has been cleared.");		
 	}
 }

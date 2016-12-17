@@ -24,21 +24,21 @@ import edu.upenn.cis455.database.DBManager;
 import edu.upenn.cis455.database.Node;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
-public class SecondReducerBolt implements IRichBolt {
+public class GraphBuildSecondStageReducer implements IRichBolt {
 	
-	public static Logger log = Logger.getLogger(SecondReducerBolt.class);
-//	Logger log = LoggerFactory.getLogger(SecondReducerBolt.class);
+	public static Logger log = Logger.getLogger(GraphBuildSecondStageReducer.class);
+
 	public static Map<String, String> config;
 	public static DBInstance graphDB;
 	public static DBInstance tempDB;
 	public int count = 0;
     public String executorId = UUID.randomUUID().toString();
-	public Fields schema = new Fields("key");
+//	public Fields schema = new Fields("key");
 	public OutputCollector collector;
 	public boolean sentEOS = false;
 	public String serverIndex;
 	public File outfile;
-	public FileWriter outputWriter;
+	public File linksfile;
 	public int eosREQUIRED;
 	private FileWriterQueue fwq;
 	public static AtomicBoolean eosSent = new AtomicBoolean();
@@ -50,7 +50,7 @@ public class SecondReducerBolt implements IRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(schema);
+//		declarer.declare(schema);
 	}
 
 	@Override
@@ -61,13 +61,11 @@ public class SecondReducerBolt implements IRichBolt {
 	@Override
 	public void execute(Tuple input) {
 		
-    	if (eosSent.get()) {   
-    		
+    	if (eosSent.get()) {      		
 	        if (!input.isEndOfStream()) {
 	        	log.error("Server# " + serverIndex + "::"+executorId+" Firstary MAYDAY MAYDAY! " + input.getStringByField("key") + " / " + input.getStringByField("value"));
 	        	log.error("We received data after we thought the stream had ended!");
 	        	return;
-//	        	throw new RuntimeException("We received data after we thought the stream had ended!");
 	        }
 	        log.error("Server# " + serverIndex + "::"+executorId+" Firstary MAYDAY MAYDAY! EOS AGAIN!!!!!");
 		}
@@ -77,21 +75,22 @@ public class SecondReducerBolt implements IRichBolt {
 	        
 	        if (eosREQUIRED == 0) {
 	        	eosSent.set(true);
-	        	log.info("start second level reduction");	
+	        	log.info("-- Start second stage reduction --");	
 	        	config.put("status", "REDUCING2");
 	        	Map<String, List<String>> table;
+	        	
 	        	synchronized(tempDB) {
 	        		table = tempDB.getTable(executorId);
 	        	}
 	        	
-	        	log.info(table.toString());
+	        	if (table == null) return;
 	        	
 	        	Iterator<String> iter = table.keySet().iterator();
 	        	while (iter.hasNext()) {
 	        		
 	        		String dest = iter.next();        		
 	        		if (!graphDB.hasNode(dest)) {
-	        			
+	        			        			
 		        		Node node = new Node(dest); 		
 		        		List<String> ancestors = table.get(dest);	
 		        		node.addNeighbor(node.getID());
@@ -99,41 +98,27 @@ public class SecondReducerBolt implements IRichBolt {
 		        			node.addNeighbor(ancestor);
 		        		}
 		        		fwq.addQueue(String.format("%s\n", node.getID()));
-		        		
-//		        		try {
-//							outputWriter.write(String.format("%s\n", node.getID()));
-//							outputWriter.flush();
-//						} catch (IOException e) {
-//							StringWriter sw = new StringWriter();
-//							PrintWriter pw = new PrintWriter(sw);
-//							e.printStackTrace(pw);
-//							log.error(sw.toString());
-//						}
+	    	        	log.info(String.format("Server#" + serverIndex + " added %s", ancestors + " <- " + node.getID()));
 		        		graphDB.addNode(node);	
 	        		}   		
-	        	}
+	        	}	      
 	        	
-	        	synchronized(tempDB) {
-	        		tempDB.clearTempData();
-	        	}
+	        	log.info("-- Second stage reduction complete --");	
+	        	tempDB.clearTempData();	        	
 	        	if(FileWriterQueue.getFileWriterQueueLaterCall().queue.isEmpty()) {
 	        		config.put("status", "IDLE");	  
 	        	}
-//		        log.info("************** Secondary reducer job completed! ******************");
-	        }
-	        
+				log.info("-- MR job complete --");	
+	        }	        
     	}
-    	else {   		
-    		
+    	else {   		    		
     		if (eosREQUIRED == 0) {
     			log.error("We received data after we thought the stream had ended!");
     			return;
-    		}
-    		
+    		}   		
     		String key = input.getStringByField("value");
     		String value = input.getStringByField("key");
-	        log.info("Server#" + serverIndex + ": Secondary reducer received: " + value + " -> " + key); 	
-	        
+	        log.debug("Server# " + serverIndex + ":: Secondary reducer received: " + value + " -> " + key); 	
 	        synchronized(tempDB) {
 	        	tempDB.addKeyValue(executorId, key, value);
 	        }
@@ -174,17 +159,10 @@ public class SecondReducerBolt implements IRichBolt {
 		}
 		
 		String outputFileName = "names.txt";
-//		String outputFileName = executorId;
 		outfile = new File(outfileDir, outputFileName);
+		linksfile = new File(outfileDir, "links.txt");
 		
-//		try {
-//			outputWriter = new FileWriter(outfile, true);
-//		} 
-//		catch (IOException e) {
-//			e.printStackTrace();
-//		}
-		
-		this.fwq = FileWriterQueue.getFileWriterQueue(outfile, context);
+		fwq = FileWriterQueue.getFileWriterQueue(outfile, context);
 		
 		// if database instances do not exist, they should
 		// be automatically created
@@ -206,7 +184,7 @@ public class SecondReducerBolt implements IRichBolt {
 
 	@Override
 	public Fields getSchema() {
-		return schema;
+		return null;
 	}
 
 }
