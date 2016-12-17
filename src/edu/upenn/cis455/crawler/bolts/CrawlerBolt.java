@@ -68,6 +68,22 @@ public class CrawlerBolt implements IRichBolt{
 	@Override
 	public void cleanup() {}
 	
+	
+	private String removeHashTagInURL(String link) {
+		String[] split = link.split("#");
+		return split[0];
+	}
+	
+	private String removeQueryString(String link) {
+		String[] split = link.split("\\?");
+		return split[0];
+	}
+	
+	private boolean isMailTo(String link) {
+		if(link.startsWith("mailto")) return true;
+		return false;
+	}
+	
     /**
      * Process a tuple received from the stream, incrementing our
      * counter and outputting a result
@@ -123,7 +139,12 @@ public class CrawlerBolt implements IRichBolt{
 			Queue<String> linklist = new LinkedList<String>();
 			Elements links = doc.select("a[href]");
 			for (Element link : links) {
-				linklist.add(link.attr("abs:href"));
+				String urlExtracted = link.attr("abs:href");      // get extracted URL
+				if(isMailTo(urlExtracted)) continue;
+				urlExtracted = removeHashTagInURL(urlExtracted);  // remove hashtag from links
+				urlExtracted = removeQueryString(urlExtracted);   // remove query strings
+				
+				linklist.add(urlExtracted);
 			}
 			
 			long parsingTime = System.currentTimeMillis();			

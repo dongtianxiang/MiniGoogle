@@ -2,6 +2,7 @@ package edu.upenn.cis455.crawler.storage;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -374,43 +375,18 @@ public class DBWrapper {
 	
 	
 	public static void main(String[] args) throws IOException{
-		DBWrapper db = DBWrapper.getInstance("./dtianx0");
-//		String URL = "http://www.alumni.upenn.edu/s/1587/gid2/16/start.aspx?sid=1587&gid=2&pgid=731";
-//		String keyName = DigestUtils.sha1Hex(URL); 
-//		System.out.println(keyName);
-		
-		System.out.println(db.getOutLinksSize());
-		System.out.println("getting data from dtianx0");
-		List<String> res = db.outLinksList();
-		List<String> visted = db.visitedURLList();
-		Set<String> set0 = new HashSet<>();
-		System.out.println("adding data into set");
-		for(String url : res) {
-			set0.add(url);
-			System.out.println(url);
-//			System.out.println("  db1 contains: " + db1.visitedURLcontains(url));
+		DBWrapper db = DBWrapper.getInstance("./dtianx1");
+		List<String> links = db.outLinksList();
+		PrintWriter writer = new PrintWriter("dtianx1.txt", "UTF-8");
+		for(String url : links) {
+			writer.print(url);
+			writer.print(" -> ");
+			List<String> outlinks = db.getOutLinksList(url);
+			for(int i = 0; i < outlinks.size(); i++) {
+				writer.print(outlinks.get(i) + " ");
+			}
+			writer.println();
 		}
-		System.out.println();
-		System.out.println("************************");
-		System.out.println();
-		db.close();
-		
-		
-		for(String url : visted) {
-			System.out.println(url);
-		}
-		
-		DBWrapper db1 = DBWrapper.getInstance("./dtianx1");
-		System.out.println("getting data from dtianx1");
-
-		
-		List<String> res1 = db1.outLinksList();
-		System.out.println("checking start: ");
-		for(String url : res1) {
-//			System.out.println(url);
-//			if(set0.contains(url)) System.err.println(url + " contained in both");
-		}
-		System.out.println("checking ended! ");
-
+		writer.close();
 	}
 }

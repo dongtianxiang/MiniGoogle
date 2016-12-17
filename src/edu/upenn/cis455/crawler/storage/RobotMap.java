@@ -158,8 +158,9 @@ public class RobotMap {
 		
 		if(hostName.equals("en.wikipedia.org") || hostName.equals("www.amazon.com")) {
 			// do nothing, no checking for these hosts.
-		}
-		else if (visitedSize > MAX_VISITED_SIZE_ON_HOST) {
+		} else if(hostName.contains("wiki")){
+			return false;
+		} else if (visitedSize > MAX_VISITED_SIZE_ON_HOST) {
 			return false;
 		}
 		
