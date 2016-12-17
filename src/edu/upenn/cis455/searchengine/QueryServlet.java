@@ -1,7 +1,10 @@
 package edu.upenn.cis455.searchengine;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -31,6 +34,7 @@ public class QueryServlet extends HttpServlet {
 	private Hashtable<String, Integer> stops = new Hashtable<>();
 	public static Logger log = Logger.getLogger(QueryServlet.class);
 	private static int count = 0;
+	private Hashtable<String, List<String>> table;
 			
 	@Override
 	public void init(){
@@ -54,30 +58,43 @@ public class QueryServlet extends HttpServlet {
 		String path = req.getRequestURI();
 		
 		// computation
-		if (path.equals("/query/intermediate")) {		
+		if (path.equals("/query/intermediate")) {
+			// get data
+			InputStream in = req.getInputStream();
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+			ObjectMapper om = new ObjectMapper();
+	        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);			
+			
+	        StringBuilder sb = new StringBuilder();
+			String line = br.readLine();
+			while (line != null && !line.isEmpty() ) {
+				sb.append(line + "\n");
+				line = br.readLine();
+			}
+//			Hashtable<String, List<String>> t = om.readValue(sb, java.util.Hashtable.class);
+			
+			
 			count--;
 			if (count == 0) {
 				log.info(" ******* start computing ******** ");
-				distributeWorker(1,1,1,"", "", "edu.upenn.cis455.mapreduce.jobs.SearchJob");
-			}
+				
+				
+				
+				
+				
+				
+			}			
 			return;
 		}
 		
-		else if (path.equals("/query/sort")) {
-			log.info("~~~~~~~~~~~~~~~~~");
-			resp.sendRedirect("/result");
-		}
-				
 		// data retrieval
-		else  {
-			File f = new File("./query.txt");
-			if (f.exists()){
-				f.delete();
-			}
-			
+		else  {		
 			String query = req.getParameter("searchquery");	
 			String afterLemma = "";
+			table = new Hashtable<>();
 			
+			//TODO number of machines
 			count = 2;
 			
 			Pattern pan = Pattern.compile("[a-zA-Z0-9.@-]+");
@@ -222,6 +239,10 @@ public class QueryServlet extends HttpServlet {
 					throw new RuntimeException("Job execution request failed");
 				}
 			}
+			// TODO
+			
+			
+			
 		}
 		catch (JsonProcessingException e) {
 			e.printStackTrace();

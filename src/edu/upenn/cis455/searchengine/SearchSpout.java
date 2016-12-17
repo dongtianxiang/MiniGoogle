@@ -2,6 +2,10 @@ package edu.upenn.cis455.searchengine;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -49,22 +53,30 @@ public class SearchSpout implements IRichSpout {
 	@Override
 	public void open(Map<String, String> conf, TopologyContext topo, SpoutOutputCollector collector) {
 		// TODO Auto-generated method stub
-		 this.collector = collector;
-	        config = conf;
-	        config.put("status", "IDLE");
+		this.collector = collector;
+	    config = conf;
+	    config.put("status", "IDLE");
 	        
-	        String inputFileDir = (String)conf.get("inputDir");
-			docFile = new File(inputFileDir, "query.txt");
-			
-			try  {
-				scanner = new Scanner(docFile);
-				if (!scanner.hasNext()) {
-					throw new IllegalStateException();
-				}
-				
-			} catch (FileNotFoundException e) {
+        String inputFileDir = (String)conf.get("inputDir");
+		docFile = new File(inputFileDir, "query.txt");
+		if (!docFile.exists()) {
+			try {
+				docFile.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+			
+		try  {
+			scanner = new Scanner(docFile);
+			if (!scanner.hasNext()) {
+				throw new IllegalStateException();
+			}
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
