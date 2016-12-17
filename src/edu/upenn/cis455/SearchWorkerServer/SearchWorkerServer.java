@@ -140,7 +140,7 @@ public class SearchWorkerServer {
 			@Override
 			public Object handle(Request arg0, Response arg1) {
 				
-				cluster = new DistributedCluster(1);
+				cluster = new DistributedCluster(5);
 				WorkerJob workerJob = null;
 				try {
 					workerJob = om.readValue(arg0.body(), WorkerJob.class);
@@ -230,25 +230,23 @@ public class SearchWorkerServer {
         	
         	@Override
         	public Object handle(Request arg0, Response arg1) {
-        		File f = new File(inputFile);
-        		if (f.exists()) {
-        			f.delete();
-        		}
+
         		String query = null;
 				try {
 					query = (String) om.readValue(arg0.body(), HashMap.class).get("query");
 	        		String[] queryList = query.split(" ");
 	        		int listSize = queryList.length;
 	        		ArrayList<Thread> threads = new ArrayList<>();
+	        		Hashtable<String, List<String>> temp = new Hashtable<>();
 	        		
 	        		for (int i = 0; i < listSize; i++) {
 	        			String word = queryList[i];
 	        			if (!lexicon.containsKey(word)) {
 	        				continue;
 	        			}
-	        			Thread t = new Thread(new DataWork(word, inputFile, Integer.parseInt(workerIndex)));
-	        			threads.add(t);
-	        			t.start();
+//	        			Thread t = new Thread(new DataWork(word, temp, Integer.parseInt(workerIndex)));
+//	        			threads.add(t);
+//	        			t.start();
 	        		}
 	        		
 	        		int threadSize = threads.size();
@@ -270,9 +268,18 @@ public class SearchWorkerServer {
 					conn.setRequestMethod("POST");
 					OutputStream out = conn.getOutputStream();
 					DataOutputStream d = new DataOutputStream(out);
-					d.write("I finished my work\n".getBytes());
-					InputStream in = conn.getInputStream();
-					
+//					for (String word: temp.keySet()) {
+//						List<String> list = temp.get(word);
+//						for (String weight: list) {
+//							d.write((word + "->" + list + "->[" + query + "]\n").getBytes());
+//						}
+//					}
+					ObjectMapper mapper = new ObjectMapper();	        
+			        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+					String m = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(temp);
+					d.write(m.getBytes());
+					d.flush();
+					InputStream in = conn.getInputStream();				
 	        		return "OK";
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block

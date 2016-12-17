@@ -1,36 +1,21 @@
 package edu.upenn.cis455.searchengine;
 
 import java.util.*;
+
+import javax.servlet.http.HttpServletResponse;
+
 import java.io.*;
 
 public class WorkerThread implements Runnable{
 
-	private String word;
-	private Hashtable<String, String> fakedb;
+	private HttpServletResponse resp;
 	
-    public WorkerThread(String s){
-        this.word=s;
-        fakedb = new Hashtable<>();
-        File f = new File("./fakedb.txt");
-        synchronized (f) { 
-        	try {
-				Scanner sc = new Scanner(f);
-				while (sc.hasNext()) {
-					String record = sc.nextLine();
-				}
-				
-				
-			} catch (FileNotFoundException e) {
-					e.printStackTrace();
-			}
-        }
-
+    public WorkerThread(HttpServletResponse resp){
+        this.resp = resp;
     }
 
     @Override
     public void run() {
-        System.out.println(Thread.currentThread().getName()+" Word = "+word);
-
-       
+              
     }
 }

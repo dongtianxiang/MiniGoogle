@@ -67,7 +67,9 @@ public class SearchReduceBolt implements IRichBolt{
 						List<String> list = temp.get(doc);
 						reduceJob.reduce(doc + ":" + lemmas, list.iterator(), collector);
 					}
-				}			
+					sentEof = true;
+				}
+				Thread.sleep(10);
 				collector.emitEndOfStream();
 	    	} else {
 	    		// key: doc; value: word:weight:[lemmas]

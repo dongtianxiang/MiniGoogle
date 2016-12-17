@@ -4,48 +4,40 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class DataWork implements Runnable {
 	
 	private String word;
-	private String inputFile;
 	private int index;
-	private FileWriter fw;
+	private Hashtable<String, Set<String>> temp;
 	
-	public DataWork(String word, String inputFile, int index) {
+	public DataWork(String word, Hashtable<String, Set<String>> resultTable, int index) {
 		this.word = word;
-		this.inputFile = inputFile;
 		this.index = index;
-		try {
-			fw = new FileWriter(inputFile, true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		temp = resultTable;
 	}
 	
 
 	@Override
 	public void run() {	
 		synchronized (this) {
-			try {
-				if (index == 1) {
-					fw.write("apple->doc1:0.5->[apple,company]\n");
-					fw.write("apple->doc2:0.3->[apple,company]\n");
-					fw.write("apple->doc3:0.42->[apple,company]\n");
-					fw.flush();
-					fw.close();
-				} else {				
-					fw.write("company->doc2:0.25->[apple,company]\n");
-					fw.write("company->doc3:0.2->[apple,company]\n");
-					fw.flush();
-					fw.close();
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (index == 1) {
+				Set<String> l = new HashSet<String>();
+				l.add("doc1:0.25");
+				l.add("doc2:0.3");
+				l.add("doc3:0.1");
+				temp.put("apple", l);					
+			} else {				
+				Set<String> l = new HashSet<String>();
+				l.add("doc1:0.35");
+				l.add("doc4:0.3");
+				l.add("doc6:0.1");
+				temp.put("company", l);
 			}
 		}
 	}
