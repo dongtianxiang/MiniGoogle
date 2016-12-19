@@ -2,13 +2,10 @@ package edu.upenn.cis455.SearchWorkerServer;
 
 import static spark.Spark.setPort;
 
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.ConnectException;
@@ -226,8 +223,7 @@ public class SearchWorkerServer {
 			}
         });
         
-        Spark.post(new Route("/retrieve"){
-        	
+        Spark.post(new Route("/retrieve"){       	
         	@Override
         	public Object handle(Request arg0, Response arg1) {
 
@@ -237,16 +233,16 @@ public class SearchWorkerServer {
 	        		String[] queryList = query.split(" ");
 	        		int listSize = queryList.length;
 	        		ArrayList<Thread> threads = new ArrayList<>();
-	        		Hashtable<String, List<String>> temp = new Hashtable<>();
+	        		Hashtable<String, Hashtable<String, Double>> temp = new Hashtable<>();
 	        		
 	        		for (int i = 0; i < listSize; i++) {
 	        			String word = queryList[i];
 	        			if (!lexicon.containsKey(word)) {
 	        				continue;
 	        			}
-//	        			Thread t = new Thread(new DataWork(word, temp, Integer.parseInt(workerIndex)));
-//	        			threads.add(t);
-//	        			t.start();
+	        			Thread t = new Thread(new DataWork(word, temp, Integer.parseInt(workerIndex)));
+	        			threads.add(t);
+	        			t.start();
 	        		}
 	        		
 	        		int threadSize = threads.size();
@@ -257,30 +253,11 @@ public class SearchWorkerServer {
 	        		} catch (InterruptedException e) {
 	        			e.printStackTrace();
 	        		}
-	        			        		
-	        		if ( !masterAddr.startsWith("http://") ) {
-	        			masterAddr = "http://" + masterAddr;
-	        		}
 	        		
-					URL url = new URL( masterAddr + "/query/intermediate");
-					HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-					conn.setDoOutput(true);
-					conn.setRequestMethod("POST");
-					OutputStream out = conn.getOutputStream();
-					DataOutputStream d = new DataOutputStream(out);
-//					for (String word: temp.keySet()) {
-//						List<String> list = temp.get(word);
-//						for (String weight: list) {
-//							d.write((word + "->" + list + "->[" + query + "]\n").getBytes());
-//						}
-//					}
 					ObjectMapper mapper = new ObjectMapper();	        
 			        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
 					String m = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(temp);
-					d.write(m.getBytes());
-					d.flush();
-					InputStream in = conn.getInputStream();				
-	        		return "OK";
+	        		return m;
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();

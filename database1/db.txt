@@ -1,0 +1,7 @@
+company:en.wikipedia.org/wiki/Apple_Inc:0.10562
+company:en.wikipedia.org/wiki/Company:0.32876
+company:money.cnn.com/quote/profile/profile.html?symb=AAPL:0.188
+company:www.apple.com:about:0.0982765
+company:www.bloomberg.com/quote/AAPL-US:0.112
+company:www.macworld.co.uk/feature/apple/history-ofapple-steve-jobs-what-happened-mac-computer-3606104:0.0087
+company:www.nytimes.com/topic/company/apple-incorporated:0.00232
