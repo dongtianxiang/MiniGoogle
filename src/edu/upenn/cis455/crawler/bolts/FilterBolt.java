@@ -64,11 +64,6 @@ public class FilterBolt implements IRichBolt{
 	@Override
 	public void cleanup() {}
 	
-	private String removeHashTagInURL(String link) {
-		String[] split = link.split("#");
-		return split[0];
-	}
-	
     /**
      * Process a tuple received from the stream, incrementing our
      * counter and outputting a result
@@ -94,7 +89,7 @@ public class FilterBolt implements IRichBolt{
 			}
 			
 			String link = linksToCheck.poll();
-			link = removeHashTagInURL(link);
+			
 			if(!RobotCache.checkDelay(link)) {       
 				// linksToCheck.offer(link);    //  Once delay detected, avoid this host for better crawling performance.
 				log.debug(link + " ******* Delayed");
