@@ -172,8 +172,7 @@ public class IndexerMapper implements IRichBolt {
 		}
 		
 		fwq = FileWriterQueue.getFileWriterQueueFromMap(outfile, context);
-		
-		
+				
 		int numMappers = Integer.parseInt(stormConf.get("mapExecutors"));
 		int numSpouts = Integer.parseInt(stormConf.get("spoutExecutors"));
 		int numWorkers = Integer.parseInt(stormConf.get("workers"));

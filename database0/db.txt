@@ -1,0 +1,9 @@
+apple:en.wikipedia.org/wiki/Apple_Inc:0.2765
+apple:applehostels.com:0.1978
+apple:money.cnn.com/quote/profile/profile.html?symb=AAPL:0.1187
+apple:www.apple.com:0.253399
+apple:www.apple.com/about/:0.165298
+apple:www.bloomberg.com/quote/AAPL-US:0.11872
+apple:www.macworld.co.uk/feature/apple/history-ofapple-steve-jobs-what-happened-mac-computer-3606104:0.08732
+apple:www.nytimes.com/topic/company/apple-incorporated:0.092
+apple:www.yelp.com/biz/apple-store-philadelphia:0.00223

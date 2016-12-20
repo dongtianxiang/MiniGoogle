@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no"/>
+    <title>Quantum Engine</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Molle:400i" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Molle:400i|Questrial" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery.autocomplete.min.js"></script>
+    <script type="text/javascript" src="js/currency-autocomplete.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
+  
+    <style>
+
+    html {
+      font-family: 'Questrial', sans-serif;
+      background-color: #bdbdbd;
+    }
+
+    .logo {
+      font-family: 'Molle', cursive !important; 
+      color: #ffffff;
+    }
+
+    .sidelog{
+      font-size:20px;
+      color: #ffffff;
+    }
+
+    .block {
+      height: 320px;
+      width: 100%;
+    }
+
+    .searchblock {    
+      height: 60px;
+      width: 600px;
+      padding-left: 0px;
+      margin-left: 300px;
+    }
+
+    .input{      
+      height: 50px;
+      width: 350px;
+      margin-left: 150px;
+    }
+
+    ::-webkit-input-placeholder { 
+      color: black;
+      opacity: 0.8
+    }
+    
+    </style>
+  </head> 
+  
+  <body background="grey" style="background-attachment: fixed; height:800px"> 
+
+    <nav >
+      <div class="nav-wrapper grey darken-3" style="height:80px;">
+        <a href="" class="brand-logo logo" style="left:100px; heigth:80px; top:16px" >Quantum Engine</a>       
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+          <li><a href="/about" class="sidelog" style="margin-right: 200px;height: 64px;border-top-width: 10px;margin-top: 16px;">about us</a></li>
+        </ul> 
+      </div>
+    </nav>
+
+    <div class="block" style= "width: 1280px; height: 250px;" ></div>
+
+    <div id="searchblock" class="searchblock">
+      <div class="input-field input">
+        <form method="GET" action="query">       
+          <i class="material-icons prefix small">search</i>
+          <input id="query" type="text" name="query" class="autocomplete" required>
+          <!--
+          <script>
+              $("#query").autocomplete({
+                  source: "http://suggestqueries.google.com/complete/search?client=chrome&q" + #query;
+              });
+          </script> -->
+          <label for="query">please type in your search content </label>  
+        </form>
+      </div>
+    </div>
+
+  </body>
+
+
+</html>

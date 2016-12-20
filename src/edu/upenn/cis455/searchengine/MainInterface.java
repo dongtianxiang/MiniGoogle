@@ -5,23 +5,24 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+@SuppressWarnings("serial")
 public class MainInterface extends HttpServlet{
 	
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
-		File f = new File("./html/materialize/HomePage.html");
+		File f = new File("./html/HomePage.html");
 		StringBuilder sb = new StringBuilder();
 		Scanner sc = new Scanner(f);
 		while (sc.hasNext()){
 			sb.append(sc.nextLine() + "\n");
 		}
+		sc.close();
 		resp.setStatus(HttpServletResponse.SC_OK);
 		resp.setContentType("text/html");
         PrintWriter pw = resp.getWriter();
@@ -29,10 +30,4 @@ public class MainInterface extends HttpServlet{
         pw.flush();
 	}
 	
-	@Override
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
-    		IOException{
-		
-	}
-
 }

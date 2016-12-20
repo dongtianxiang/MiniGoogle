@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no"/>
+    <title>Quantum Engine</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Molle:400i" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Molle:400i|Questrial" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
+  
+    <style>
+
+    html {
+      font-family: 'Questrial', sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    .logo {
+      font-family: 'Molle', cursive !important; 
+      font-size: 20px;
+      color: #ffffff;
+      display: inline-block;
+    }
+
+    .resultblock {
+      height: 90%;
+      width: 90%;
+      padding-left: 30px;
+    }
+
+    .page {
+      height: 10%;
+      width: 100%; 
+      margin-left: 35%;    
+    }
+
+    .pagebutton {
+      font-size: 5px;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    .resultslot {
+      height: 120px;
+      width: 100%;
+      display: inline-block;
+    }
+
+    .page { 
+    	height: 8%;     
+	    padding-top: 10px;
+	    padding-bottom: 10px;	    
+    	margin-top: 0px;
+    	margin-bottom: 0px;
+    }
+
+    .renderpage{
+    	height: 88%;
+      	width: 80%;
+    	margin-top:30px;
+    	margin-bottom: 10px;
+    }
+
+    .resulttitle{
+    	height: 30px;  
+    	font-size:20px;	
+    	padding-left: 50px;
+    	vertical-align: middle;
+    	display: inline-block;
+    }
+
+    .resulturl{
+    	font-size: :10px;
+    	height: 25px; 	
+    	padding-left: 50px;
+    	padding-top: 2px;
+    	vertical-align: middle;
+    	color: #d84315 !important;
+    }
+
+    .resultdescription{
+    	font-size: 12px;
+    	height: 50px;
+    	width: 70%;
+    	padding-left: 50px;
+    	color: #424242 !important;
+    }
+
+    .input{      
+      height: 50px;
+      width: 350px;
+      left: 30px;
+      margin-left: 150px;
+      display: inline-block;
+    }
+    
+    </style>
+  </head> 
+  
+  <body style="background-attachment: fixed; height:800px"> 
+
+    <nav>
+      <div id="navigator" class="nav-wrapper grey darken-3" >
+        <a class="logo left" style="padding-left: 80px;">Quantum Engine</a>  
+        <div class="input-field input">
+	        <form method="GET" action="query">       
+	          <i class="material-icons prefix small">search</i>
+	          <input id="query" type="text" class="autocomplete" name="query" required>
+	          <label id="placeholder" for="query"></label>  
+	        </form>
+      </div>     
+     </div>
+    </nav>
+
+    <div class="resultblock">
+    	<div class="renderpage" >
+    		<li class="resultslot">
+    			<div id="t1" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u1" class="resulturl"></cite>
+    				</div>
+    				<div id="d1" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <li class="resultslot">
+    			<div id="t2" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u2" class="resulturl"></cite>
+    				</div>
+    				<div id="d2" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <li class="resultslot">
+    			<div id="t3" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u3" class="resulturl"></cite>
+    				</div>
+    				<div id="d3" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <li class="resultslot">
+    			<div id="t4" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u4" class="resulturl"></cite>
+    				</div>
+    				<div id="d4" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <li class="resultslot">
+    			<div id="t5" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u5" class="resulturl"></cite>
+    				</div>
+    				<div id="d5" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <li class="resultslot">
+    			<div id="t6" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u6" class="resulturl"></cite>
+    				</div>
+    				<div id="d6" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+    		<li class="resultslot">
+    			<div id="t7" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u7" class="resulturl"></cite>
+    				</div>
+    				<div id="d7" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <li class="resultslot">
+    			<div id="t8" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u8" class="resulturl"></cite>
+    				</div>
+    				<div id="d8" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <li class="resultslot">
+    			<div id="t9" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u9" class="resulturl"></cite>
+    				</div>
+    				<div id="d9" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <li class="resultslot">
+    			<div id="t10" class="resulttitle">
+    				<a href=""></a>
+    			</div>
+    			<div>
+    				<div >
+    					<cite id="u10" class="resulturl"></cite>
+    				</div>
+    				<div id="d10" class="resultdescription"></div>
+    			</div>  			
+    		</li>
+	        <ul class="pagination page">
+			    <li class="disabled pagebutton"><i class="material-icons">library_books</i></a></li>
+			    <li id="p1" class="pagebutton"><a href="/result?query=apple+company&start=0">1</a></li>
+			    <li id="p2" class="waves-effect pagebutton"><a href="/result?&start=10">2</a></li>
+			    <li id="p3" class="waves-effect pagebutton"><a href="/result?&start=20">3</a></li>
+			    <li id="p4" class="waves-effect pagebutton"><a href="/result?&start=30">4</a></li>
+			    <li id="p5" class="waves-effect pagebutton"><a href="/result&start=40">5</a></li>
+			    <li id="p6" class="waves-effect pagebutton"><a href="/result&start=50">6</a></li>
+			    <li id="p7" class="waves-effect pagebutton"><a href="/result&start=60">7</a></li>
+			    <li id="p8" class="waves-effect pagebutton"><a href="/result&start=70">8</a></li>
+			    <li id="p9" class="waves-effect pagebutton"><a href="/result&start=80">9</a></li>		    
+  			</ul>
+    	</div>
+    </div>
+
+    <script>
+    	function makebold(){
+
+    	}
+    </script>
+
+
+  </body>
+
+
+</html>
+
+	
