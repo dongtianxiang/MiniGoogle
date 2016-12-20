@@ -134,97 +134,6 @@ public class SearchWorkerServer {
 		
 		final ObjectMapper om = new ObjectMapper();
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL); 
-              
-        Spark.post(new Route("/definejob") {
-
-			@Override
-			public Object handle(Request arg0, Response arg1) {
-				
-				cluster = new DistributedCluster(5);
-				WorkerJob workerJob = null;
-				try {
-					workerJob = om.readValue(arg0.body(), WorkerJob.class);
-					
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				
-				if (workerJob == null) throw new IllegalStateException();				
-				
-				Configuration config = workerJob.getConfig();
-				currJobConfig = config;
-				config.put("inputDir", tempDir);
-	        				
-	        	try {		        		
-	        		log.info("Processing job definition request" + config.get("job") + " on machine " + config.get("workerIndex"));		        				        		
-					synchronized (topologies) {
-						contexts.add(cluster.submitTopology(config.get("job"), config, workerJob.getTopology()));	
-						topologies.add(config.get("job"));
-					}	
-				} 
-	        	catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				}
-	            return "Job launched";
-			}
-        });
-        
-        Spark.post(new Route("/runjob") {
-			@Override
-			public Object handle(Request arg0, Response arg1) {
-        		log.info("Starting job!");
-				cluster.startTopology();
-				return "Started";
-			}
-        });
-        
-        Spark.post(new Route("/pushdata/:stream") {
-
-			@Override
-			public Object handle(Request arg0, Response arg1) {
-				
-				try {
-					String stream = arg0.params(":stream");					
-					Tuple tuple = om.readValue(arg0.body(), Tuple.class);					
-					log.debug("Worker received: " + tuple + " for " + stream);					
-					// Find the destination stream and route to it
-					StreamRouter router = cluster.getStreamRouter(stream);					
-					if (contexts.isEmpty()) {
-						log.error("No topology context -- were we initialized??");			
-					}
-//			    	if (!tuple.isEndOfStream()) {
-//			    		contexts.get(contexts.size() - 1).incSendOutputs(router.getKey(tuple.getValues()));	
-//			    	}
-			    	if (tuple.isEndOfStream()) {
-						router.executeEndOfStreamLocally(contexts.get(contexts.size() - 1));
-			    	}
-					else {
-						router.executeLocally(tuple, contexts.get(contexts.size() - 1));
-					}					
-			    	return "OK";
-				}
-				catch (Exception e) {
-					StringWriter sw = new StringWriter();
-					PrintWriter pw = new PrintWriter(sw);
-					e.printStackTrace(pw);
-					log.error(sw.toString()); // stack trace as a string
-					
-					arg1.status(500);
-					return e.getMessage();
-				}
-
-			}        	
-        });
-        
-        Spark.get(new Route("/shutdown") {
-
-			@Override
-			public Object handle(Request arg0, Response arg1) {	
-				shutdown(myAddr);				
-				System.exit(0);
-				return "OK";
-			}
-        });
         
         Spark.post(new Route("/retrieve"){
         	
@@ -289,6 +198,15 @@ public class SearchWorkerServer {
         	}
         });
         
+		Spark.get(new Route("/shutdown") {
+
+			@Override
+			public Object handle(Request arg0, Response arg1) {
+				shutdown(myAddr);
+				System.exit(0);
+				return "OK";
+			}
+		});
 	}
 	
 	public static void createWorker(Map<String, String> config) throws FileNotFoundException {
