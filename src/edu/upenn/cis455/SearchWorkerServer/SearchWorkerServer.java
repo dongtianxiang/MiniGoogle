@@ -2,7 +2,6 @@ package edu.upenn.cis455.SearchWorkerServer;
 
 import static spark.Spark.setPort;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -124,7 +123,7 @@ public class SearchWorkerServer {
 		
 		final ObjectMapper om = new ObjectMapper();
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL); 
-                              
+
         Spark.post(new Route("/retrieve"){       	
         	@Override
         	public Object handle(Request arg0, Response arg1) {
@@ -167,7 +166,7 @@ public class SearchWorkerServer {
 				return "Server Error";					
         	}
         });
-        
+
         Spark.get(new Route("/shutdown") {
 
 			@Override
@@ -177,7 +176,6 @@ public class SearchWorkerServer {
 				return "OK";
 			}
         });
-        
 	}
 	
 	public static void createWorker(Map<String, String> config) throws FileNotFoundException {

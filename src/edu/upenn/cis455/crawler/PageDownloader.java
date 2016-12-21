@@ -77,7 +77,7 @@ public class PageDownloader {
 		//db.sync();
 		
 		AWSCredentials credentials = new BasicAWSCredentials(
-				System.getProperty("KEY"),  
+				System.getProperty("KEY"), 
 				System.getProperty("ID"));   
 				
 		uploadfileS3(credentials, url, content);
