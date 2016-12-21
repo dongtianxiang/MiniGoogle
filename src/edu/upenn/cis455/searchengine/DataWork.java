@@ -2,7 +2,7 @@ package edu.upenn.cis455.searchengine;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Hashtable;
+import java.util.*;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
@@ -13,11 +13,11 @@ public class DataWork implements Runnable {
 	
 	private String word;
 	private int index;
-	private Hashtable<String, Hashtable<String, Double>> temp;
+	private HashMap<String, HashMap<String, Double>> temp;
 	private File f;
-	private Hashtable<String, Integer> lexicon = new Hashtable<>();
+	private HashMap<String, Integer> lexicon = new HashMap<>();
 	
-	public DataWork(String word, Hashtable<String, Hashtable<String, Double>> resultTable, int index) {
+	public DataWork(String word, HashMap<String, HashMap<String, Double>> resultTable, int index) {
 		this.word = word;
 		this.index = index;
 		temp = resultTable;
@@ -41,15 +41,16 @@ public class DataWork implements Runnable {
 						String word = list[0];
 						String doc = list[1];
 						double weight = Double.parseDouble(list[2]);
-						Hashtable<String, Double> map;
+						HashMap<String, Double> map;
 						if (temp.containsKey(word)) {
 							map = temp.get(word);
 						} else {
-							map = new Hashtable<>();
+							map = new HashMap<>();
 						}
 						map.put(doc, weight);
 						temp.put(word, map);
 					}
+					sc.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

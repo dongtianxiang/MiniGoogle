@@ -18,8 +18,6 @@ import javax.servlet.http.HttpSession;
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import com.amazonaws.auth.AWSCredentials;
 import edu.upenn.cis.stormlite.utils.AWSCredentialReader;
@@ -28,9 +26,9 @@ import scala.Tuple3;
 
 
 @SuppressWarnings("serial")
-public class ResultServlet extends HttpServlet {
+public class ResultServletMulti extends HttpServlet {
 	
-	public static Logger log = Logger.getLogger(ResultServlet.class);
+	public static Logger log = Logger.getLogger(ResultServletMulti.class);
 	final static int PAGESIZE = 10;
 	final static int sizeLimit = 100;
 	
@@ -53,11 +51,11 @@ public class ResultServlet extends HttpServlet {
 		String q = (String) se.getAttribute("q");
 		int start = Integer.parseInt(req.getParameter("start"));
 		log.info("start:" + start);
-		List<Entry<String, Double>> finallist = (List<Entry<String, Double>>) req.getSession().getAttribute("finallist");
+		List<Tuple2<String,Tuple3<List<String>, Double, List<String>>>> finallist = (List<Tuple2<String, Tuple3<List<String>, Double, List<String>>>>) req.getSession().getAttribute("finallist");
 		
 		log.info(" ******* retrieve pages from S3 ******** ");
 		int listSize = finallist.size();
-		List<Entry<String, Double>> retrieval;
+		List<Tuple2<String,Tuple3<List<String>, Double, List<String>>>> retrieval;
 		// if finallist is enough
 		if (listSize - start >= PAGESIZE) {
 			retrieval = new ArrayList<>(finallist.subList(start, start + PAGESIZE));
@@ -76,10 +74,8 @@ public class ResultServlet extends HttpServlet {
 		AWSCredentials credentials = AWSCredentialReader.getCredential();
 		List<Thread> threads = new ArrayList<>(PAGESIZE);
 		for (int i = 0; i < listSize; i++) {
-			Entry<String,Double>  m = retrieval.get(i);
-			String urlA = m.getKey();
-			String[] l = urlA.split(" ");
-			String url = l[0];
+			Tuple2<String,Tuple3<List<String>, Double, List<String>>> m = retrieval.get(i);
+			String url = m._1();
 //			Thread t = new Thread(new DataWorker(i, url, pages));
 			Thread t = new Thread(new DataWorker(i, url, credentials, pages));
 			threads.add(t);
@@ -99,11 +95,9 @@ public class ResultServlet extends HttpServlet {
         log.info(" ******* start rendering result page ******* ");				        
         File f = new File("./html/FakeResult.html");
         Document resultPage = Jsoup.parse(f, "utf-8");
-        
-        resultPage.getElementById("placeholder").text(q);     
+        resultPage.getElementById("placeholder").text(q);
+                
         int s = pages.size();
-        
-        // fill the body 
         for (int i = 0; i < s; i++) {
         	Hashtable<String, String> map = pages.get(i);
         	String url = map.get("url");
@@ -116,19 +110,14 @@ public class ResultServlet extends HttpServlet {
         	resultPage.getElementById("d" + (i+1)).text(map.get("desc"));
         }
         
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 9; i++) {
         	if ((start / 10 + 1) == i) {
         		resultPage.getElementById("p" + (start / 10 + 1)).addClass("disable");
         	} else {
         		resultPage.getElementById("p" + (start / 10 + 1)).addClass("active");
         	}       	
         }
-        
-        Element em = resultPage.getElementById("page");
-        for (Element e: em.children()) {
-        	
-        }
-             
+                
         PrintWriter pw = resp.getWriter();
         pw.println(resultPage.toString());
         pw.flush();

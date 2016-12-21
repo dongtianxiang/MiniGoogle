@@ -28,9 +28,6 @@ import edu.upenn.cis.stormlite.infrastructure.Configuration;
 import edu.upenn.cis.stormlite.infrastructure.DistributedCluster;
 import edu.upenn.cis.stormlite.infrastructure.TopologyContext;
 import edu.upenn.cis.stormlite.infrastructure.WorkerHelper;
-import edu.upenn.cis.stormlite.infrastructure.WorkerJob;
-import edu.upenn.cis.stormlite.routers.StreamRouter;
-import edu.upenn.cis.stormlite.tuple.Tuple;
 import edu.upenn.cis455.searchengine.DataWork;
 import spark.Request;
 import spark.Response;
@@ -69,18 +66,13 @@ public class SearchWorkerServer {
 		myAddress = myAddr;
 		masterAddr = config.get("master");
 		
-		tempDir = config.get("tempDir");
-		File dir = new File(tempDir);
-		dir.mkdirs();
-		inputFile = tempDir + "/query.txt";
- 
         // TODO: construct in-memory lexicon here 
 		if (workerIndex.equals("1")) {
 			lexicon.put("apple", 1);
 		} else {
 			lexicon.put("company", 1);
 		}
-		      		
+      		
 		Runnable messenger = new Runnable(){
 			@Override
 			public void run() {
@@ -93,13 +85,15 @@ public class SearchWorkerServer {
 								masterAddr = new StringBuilder("http://" + masterAddr.toString());
 							}
 							
-							masterAddr.append("/workerstatus?");							
-							masterAddr.append("port=" + myPort);
+							masterAddr.append("/querymulti/workerstatus");							
 							
 							try {								
 								URL masterURL = new URL(masterAddr.toString());									
 								HttpURLConnection conn = (HttpURLConnection)masterURL.openConnection();
 								conn.setRequestProperty("Content-Type", "text/html");
+								conn.addRequestProperty("Port", String.valueOf(myPort));
+								conn.getResponseCode();
+								
 								StringBuilder builder = new StringBuilder();								
 								log.info(builder.append("Worker check-in: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString()
 										+ " with " + masterAddr);
@@ -107,8 +101,7 @@ public class SearchWorkerServer {
 							catch (ConnectException e) {
 								log.info("SearchWorkerServer cannot contact MasterServer");
 							}							
-							// TODO interval for background check： 0.1s
-							wait(10000);								
+							wait(1000);								
 						}						
 					} 
 					catch (InterruptedException e) {
@@ -131,98 +124,7 @@ public class SearchWorkerServer {
 		
 		final ObjectMapper om = new ObjectMapper();
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL); 
-              
-        Spark.post(new Route("/definejob") {
-
-			@Override
-			public Object handle(Request arg0, Response arg1) {
-				
-				cluster = new DistributedCluster(5);
-				WorkerJob workerJob = null;
-				try {
-					workerJob = om.readValue(arg0.body(), WorkerJob.class);
-					
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				
-				if (workerJob == null) throw new IllegalStateException();				
-				
-				Configuration config = workerJob.getConfig();
-				currJobConfig = config;
-				config.put("inputDir", tempDir);
-	        				
-	        	try {		        		
-	        		log.info("Processing job definition request" + config.get("job") + " on machine " + config.get("workerIndex"));		        				        		
-					synchronized (topologies) {
-						contexts.add(cluster.submitTopology(config.get("job"), config, workerJob.getTopology()));	
-						topologies.add(config.get("job"));
-					}	
-				} 
-	        	catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				}
-	            return "Job launched";
-			}
-        });
-        
-        Spark.post(new Route("/runjob") {
-			@Override
-			public Object handle(Request arg0, Response arg1) {
-        		log.info("Starting job!");
-				cluster.startTopology();
-				return "Started";
-			}
-        });
-        
-        Spark.post(new Route("/pushdata/:stream") {
-
-			@Override
-			public Object handle(Request arg0, Response arg1) {
-				
-				try {
-					String stream = arg0.params(":stream");					
-					Tuple tuple = om.readValue(arg0.body(), Tuple.class);					
-					log.debug("Worker received: " + tuple + " for " + stream);					
-					// Find the destination stream and route to it
-					StreamRouter router = cluster.getStreamRouter(stream);					
-					if (contexts.isEmpty()) {
-						log.error("No topology context -- were we initialized??");			
-					}
-//			    	if (!tuple.isEndOfStream()) {
-//			    		contexts.get(contexts.size() - 1).incSendOutputs(router.getKey(tuple.getValues()));	
-//			    	}
-			    	if (tuple.isEndOfStream()) {
-						router.executeEndOfStreamLocally(contexts.get(contexts.size() - 1));
-			    	}
-					else {
-						router.executeLocally(tuple, contexts.get(contexts.size() - 1));
-					}					
-			    	return "OK";
-				}
-				catch (Exception e) {
-					StringWriter sw = new StringWriter();
-					PrintWriter pw = new PrintWriter(sw);
-					e.printStackTrace(pw);
-					log.error(sw.toString()); // stack trace as a string
-					
-					arg1.status(500);
-					return e.getMessage();
-				}
-
-			}        	
-        });
-        
-        Spark.get(new Route("/shutdown") {
-
-			@Override
-			public Object handle(Request arg0, Response arg1) {	
-				shutdown(myAddr);				
-				System.exit(0);
-				return "OK";
-			}
-        });
-        
+                              
         Spark.post(new Route("/retrieve"){       	
         	@Override
         	public Object handle(Request arg0, Response arg1) {
@@ -233,11 +135,11 @@ public class SearchWorkerServer {
 	        		String[] queryList = query.split(" ");
 	        		int listSize = queryList.length;
 	        		ArrayList<Thread> threads = new ArrayList<>();
-	        		Hashtable<String, Hashtable<String, Double>> temp = new Hashtable<>();
+	        		HashMap<String, HashMap<String, Double>> temp = new HashMap<>();
 	        		
 	        		for (int i = 0; i < listSize; i++) {
 	        			String word = queryList[i];
-	        			if (!lexicon.containsKey(word)) {
+	        			if (!lexicon.containsKey(word)) {  // TODO hashing function deciding word to do
 	        				continue;
 	        			}
 	        			Thread t = new Thread(new DataWork(word, temp, Integer.parseInt(workerIndex)));
@@ -264,6 +166,16 @@ public class SearchWorkerServer {
 				}
 				return "Server Error";					
         	}
+        });
+        
+        Spark.get(new Route("/shutdown") {
+
+			@Override
+			public Object handle(Request arg0, Response arg1) {	
+				shutdown(myAddr);				
+				System.exit(0);
+				return "OK";
+			}
         });
         
 	}
@@ -337,7 +249,6 @@ public class SearchWorkerServer {
 		conf.put("workerList",  args[0]); // For testing, List like config.put("workerList", "[127.0.0.1:8001,127.0.0.1:8002]");
 		conf.put("workerIndex", args[1]); // For testing, number of 0, 1
 		conf.put("master",      args[2]); // For testing, "127.0.0.1:8080"
-		conf.put("tempDir", args[3]); 	  // The location where mapreduce reads from
 				    
 		SearchWorkerServer.createWorker(conf);		
 	}

@@ -1,4 +1,4 @@
-package edu.upenn.cis455.searchengine;
+package edu.upenn.cis455.stormlite.searchengine;
 
 import java.io.DataOutputStream;
 import java.io.File;

@@ -1,4 +1,4 @@
-package edu.upenn.cis455.searchengine;
+package edu.upenn.cis455.stormlite.searchengine;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

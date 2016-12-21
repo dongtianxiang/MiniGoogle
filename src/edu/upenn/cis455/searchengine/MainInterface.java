@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @SuppressWarnings("serial")
 public class MainInterface extends HttpServlet{
-	
+		
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
@@ -28,6 +28,5 @@ public class MainInterface extends HttpServlet{
         PrintWriter pw = resp.getWriter();
         pw.println(sb.toString());
         pw.flush();
-	}
-	
+	}	
 }

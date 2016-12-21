@@ -108,10 +108,10 @@
       <div id="navigator" class="nav-wrapper grey darken-3" >
         <a class="logo left" style="padding-left: 80px;">Quantum Engine</a>  
         <div class="input-field input">
-	        <form method="GET" action="query">       
+	        <form method="GET" action="querymulti">       
 	          <i class="material-icons prefix small">search</i>
 	          <input id="query" type="text" class="autocomplete" name="query" required>
-	          <label id="placeholder" for="query"></label>  
+	          <label id="placeholder" for="query">Please enter your query here</label>  
 	        </form>
       </div>     
      </div>
@@ -229,45 +229,24 @@
     				<div id="d10" class="resultdescription"></div>
     			</div>  			
     		</li>
-	        <ul class="pagination page">
-			    <li class="disabled pagebutton"><i class="material-icons">library_books</i></a></li>
-			    
-
-
-			    <li id="p1" class="pagebutton"><a href="/result?query=apple+company&start=0">1</a></li>
-			    
-
-
-
-
-
-
-			    <li id="p2" class="waves-effect pagebutton"><a href="/result?&start=10">2</a></li>
-
-
-
-
-
-			    <li id="p3" class="waves-effect pagebutton"><a href="/result?&start=20">3</a></li>
-			    <li id="p4" class="waves-effect pagebutton"><a href="/result?&start=30">4</a></li>
-			    <li id="p5" class="waves-effect pagebutton"><a href="/result&start=40">5</a></li>
-			    <li id="p6" class="waves-effect pagebutton"><a href="/result&start=50">6</a></li>
-			    <li id="p7" class="waves-effect pagebutton"><a href="/result&start=60">7</a></li>
-			    <li id="p8" class="waves-effect pagebutton"><a href="/result&start=70">8</a></li>
-			    <li id="p9" class="waves-effect pagebutton"><a href="/result&start=80">9</a></li>		    
+	        <ul id="page" class="pagination page">
+			    <li class="disabled pagebutton"><i class="material-icons">library_books</i></li>
+			    <li id="p1" class="waves-effect pagebutton">
+                    <a id="h1" href="/result?query=" + $("#query").id + "&start=0">1</a>
+                </li>
+			    <li id="p2" class="waves-effect pagebutton"><a id="h2" href="/result?query=" + $("#query").id + "&start=10">2</a></li>
+                <li id="p3" class="waves-effect pagebutton"><a id="h3" href="/result?query=" + "#query" + "&start=20">3</a></li>
+                <li id="p4" class="waves-effect pagebutton"><a id="h4" href="/result?query=" + "#query" + "&start=30">4</a></li>
+                <li id="p5" class="waves-effect pagebutton"><a id="h5" href="/result?query=" + "#query" + "&start=40">5</a></li>
+                <li id="p6" class="waves-effect pagebutton"><a id="h6" href="/result?query=" + "#query" + "&start=50">6</a></li>
+                <li id="p7" class="waves-effect pagebutton"><a id="h7" href="/result?query=" + "#query" + "&start=60">7</a></li>
+                <li id="p8" class="waves-effect pagebutton"><a id="h8" href="/result?query=" + "#query" + "&start=70">8</a></li>
+                <li id="p9" class="waves-effect pagebutton"><a id="h9" href="/result?query=" + "#query" + "&start=80">9</a></li>	    
   			</ul>
     	</div>
     </div>
 
-    <script>
-    	function makebold(){
-
-    	}
-    </script>
-
-
   </body>
-
 
 </html>
 
