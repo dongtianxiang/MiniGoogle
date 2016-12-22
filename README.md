@@ -30,3 +30,6 @@ We built a distributed and scalable search engine with distributed data storage 
 
 ### The main user interface ###
 ![Screen Shot 2016-12-22 at 12.37.00 PM.png](https://bitbucket.org/repo/KEGKdX/images/2204763337-Screen%20Shot%202016-12-22%20at%2012.37.00%20PM.png)
+### Sample search result for 'apple store' ###
+only screenshot part of the result
+![Screen Shot 2016-12-22 at 12.39.24 PM.png](https://bitbucket.org/repo/KEGKdX/images/1235682600-Screen%20Shot%202016-12-22%20at%2012.39.24%20PM.png)
