@@ -28,6 +28,9 @@ We built a distributed and scalable search engine with distributed data storage 
 
 3. We implemented autocompletion feature to the search engine user interface.
 
+### List of source code ###
+All source code is located in /src folder. 
+
 ### How to run search engine ###
 cmd: jara -jar SearchEngine.jar
 
