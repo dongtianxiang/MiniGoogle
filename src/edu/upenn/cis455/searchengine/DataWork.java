@@ -2,6 +2,10 @@ package edu.upenn.cis455.searchengine;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 
@@ -19,8 +23,6 @@ public class DataWork{
 	private Hashtable<String, Integer> lexicon = new Hashtable<>();
 	private SearchDBWrapper db = SearchDBWrapper.getInstance(SearchWorkerServer.tempDir);
 	
-	
-	// TODO: what about using tuple instead of adding ":T", or simply creating Object for transferring. What about: Hashtable<String, Hashtable<String, Tuple2<Boolean, Double>>>
 	public DataWork(String word, Hashtable<String, Hashtable<String, Double>> resultTable, int index) {
 		this.word = word;
 		this.index = index;

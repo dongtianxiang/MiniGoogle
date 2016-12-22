@@ -15,19 +15,19 @@ public class SearchEngineServer {
 	
 	public static Server server;
 	private int port = 8080;
-	
+		
 	public SearchEngineServer() throws Exception {
 		server = new Server(port);
 		HandlerCollection handlers = new HandlerCollection();
 		WebAppContext webapp = new WebAppContext();	
 		webapp.setDescriptor("./conf/search_engine/WEB-INF/web.xml");
 		webapp.setResourceBase("");
-		
+
 		// can not load local resources
 		handlers.addHandler(webapp);
 		server.setHandler(handlers);
 		server.start();	
-		server.join();
+		server.join();		
 	}
 	
 	public static void main(String[] args) throws Exception {		

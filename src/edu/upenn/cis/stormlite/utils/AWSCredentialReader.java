@@ -1,5 +1,7 @@
 package edu.upenn.cis.stormlite.utils;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -17,11 +19,21 @@ public class AWSCredentialReader {
 	// }
 
 	public static AWSCredentials getCredential() throws IOException {
-		Properties prop = new Properties();
-		String propFileName = "./conf/authConfig.properties";
-		InputStream in = new FileInputStream(propFileName);
-		prop.load(in);
-		return new BasicAWSCredentials(prop.getProperty("AWS_KEY"), prop.getProperty("AWS_SECRET"));
+//		Properties prop = new Properties();
+//		String propFileName = "./conf/config.properties";
+//		InputStream in = new FileInputStream(propFileName);
+//		prop.load(in);
+//		return new BasicAWSCredentials(prop.getProperty("AWS_KEY"), prop.getProperty("AWS_SECRET"));
+		FileReader f = null;
+		try {
+			f = new FileReader(new File("./conf/config.properties"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		BufferedReader bf = new BufferedReader(f);
+		System.setProperty("KEY", bf.readLine());
+		System.setProperty("ID", bf.readLine());
+		return new BasicAWSCredentials(System.getProperty("KEY"), System.getProperty("ID"));
 	}
 
 //	public static void main(String[] args) throws Exception {

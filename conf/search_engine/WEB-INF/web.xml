@@ -11,9 +11,22 @@
 			<servlet-class>edu.upenn.cis455.searchengine.QueryServlet</servlet-class>
 		</servlet>
 		<servlet>
+			<servlet-name>QueryMulti</servlet-name>
+			<servlet-class>edu.upenn.cis455.searchengine.QueryServletMulti</servlet-class>
+		</servlet>	
+		<servlet>
 			<servlet-name>Result</servlet-name>
 			<servlet-class>edu.upenn.cis455.searchengine.ResultServlet</servlet-class>
 		</servlet>
+		<servlet>
+			<servlet-name>ResultMulti</servlet-name>
+			<servlet-class>edu.upenn.cis455.searchengine.ResultServletMulti</servlet-class>
+		</servlet>
+		<servlet>
+			<servlet-name>Check</servlet-name>
+			<servlet-class>edu.upenn.cis455.searchengine.MasterServlet</servlet-class>
+		</servlet>
+		
 		
 		<servlet-mapping>
 			<servlet-name>Main</servlet-name>
@@ -22,10 +35,22 @@
 		<servlet-mapping>
 			<servlet-name>Query</servlet-name>
 			<url-pattern>/query/*</url-pattern>
-		</servlet-mapping>	
+		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>QueryMulti</servlet-name>
+			<url-pattern>/querymulti/*</url-pattern>
+		</servlet-mapping>		
 		<servlet-mapping>
 			<servlet-name>Result</servlet-name>
 			<url-pattern>/result</url-pattern>
+		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>ResultMulti</servlet-name>
+			<url-pattern>/resultmulti</url-pattern>
+		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>Check</servlet-name>
+			<url-pattern>/workerstatus</url-pattern>
 		</servlet-mapping>
 					
 	</webapp>

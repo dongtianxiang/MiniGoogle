@@ -142,15 +142,15 @@ public class SearchWorkerServer {
 								masterAddr = new StringBuilder("http://" + masterAddr.toString());
 							}
 							
-//							masterAddr.append("/query/workerstatus");	
 							masterAddr.append("/querymulti/workerstatus");							
-//							masterAddr.append("port=" + myPort);
 							
 							try {								
 								URL masterURL = new URL(masterAddr.toString());									
 								HttpURLConnection conn = (HttpURLConnection)masterURL.openConnection();
 								conn.setRequestProperty("Content-Type", "text/html");
-								conn.setRequestProperty("Port", myPort + "");
+								conn.addRequestProperty("Port", String.valueOf(myPort));
+								conn.getResponseCode();
+								
 								StringBuilder builder = new StringBuilder();								
 								log.info(builder.append("Worker check-in: ").append(conn.getResponseCode()).append(" ").append(conn.getResponseMessage()).toString()
 										+ " with " + masterAddr);
@@ -182,7 +182,7 @@ public class SearchWorkerServer {
 		
 		final ObjectMapper om = new ObjectMapper();
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL); 
-        
+
         Spark.post(new Route("/retrieve"){       	
         	@Override
         	public Object handle(Request arg0, Response arg1) {
@@ -229,7 +229,6 @@ public class SearchWorkerServer {
 					log.info("WritingMap working time ----> " + (endWritingMap - startWritingMap) + "ms");
 					
 					long time2 = System.currentTimeMillis();
-//					log.debug("Returned Message ----> " + temp);
 					log.info("Respond Total Time ----> " + (time2 - time1) + "ms");
 					
 	        		return m;
@@ -241,12 +240,12 @@ public class SearchWorkerServer {
 				return "Server Error";					
         	}
         });
-        
-		Spark.get(new Route("/shutdown") {
+
+        Spark.get(new Route("/shutdown") {
 
 			@Override
-			public Object handle(Request arg0, Response arg1) {
-				shutdown(myAddr);
+			public Object handle(Request arg0, Response arg1) {	
+				shutdown(myAddr);				
 				System.exit(0);
 				return "OK";
 			}
@@ -422,7 +421,6 @@ public class SearchWorkerServer {
 		conf.put("workerList",  args[0]); // For testing, List like config.put("workerList", "[127.0.0.1:8001,127.0.0.1:8002]");
 		conf.put("workerIndex", args[1]); // For testing, number of 0, 1
 		conf.put("master",      args[2]); // For testing, "127.0.0.1:8080"
-		conf.put("tempDir", args[3]); 	  // The location where mapreduce reads from
 				    
 		SearchWorkerServer.createWorker(conf);		
 	}
