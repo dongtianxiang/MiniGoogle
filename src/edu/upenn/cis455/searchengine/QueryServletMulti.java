@@ -42,22 +42,22 @@ public class QueryServletMulti extends HttpServlet {
 	final static String MAXFILESIZE = "1000";
 	final static String STOPLIST = "./resources/stopwords.txt";
 	
-	private Hashtable<String, Integer> stops = new Hashtable<>();
+//	private Hashtable<String, Integer> stops = new Hashtable<>();
 	private SparkWrapper spark;
 	
 	@Override
 	public void init(){
-        File stop = new File(STOPLIST);
-        try {
-        	Scanner sc = new Scanner(stop);
-        	while (sc.hasNext()) {
-        		String s = sc.nextLine();
-        		stops.put(s, 1);
-        	}
-        	sc.close();
-        } catch (IOException e) {
-        	e.printStackTrace();
-        }
+//        File stop = new File(STOPLIST);
+//        try {
+//        	Scanner sc = new Scanner(stop);
+//        	while (sc.hasNext()) {
+//        		String s = sc.nextLine();
+//        		stops.put(s, 1);
+//        	}
+//        	sc.close();
+//        } catch (IOException e) {
+//        	e.printStackTrace();
+//        }
         // prepare spark
         spark = new SparkWrapper();
         spark.init();
@@ -169,13 +169,15 @@ public class QueryServletMulti extends HttpServlet {
 			 * Parse the query using Standford NLP simple API
 			 * If stoplist words or numbers are found, append them to extra list
 			 * Enable searching on stoplist
-			 */
-			String query = req.getParameter("query");
+			 */ 
+			String originalQuery = req.getParameter("query");
+			String query = originalQuery;
 			String queryList = "";
 
-			Pattern pan = Pattern.compile("[a-zA-Z0-9.@-]+");
+//			Pattern pan = Pattern.compile("[a-zA-Z0-9.@-]+");
 			Pattern pan2 = Pattern.compile("[a-zA-Z]+");
 			Pattern pan3 = Pattern.compile("[0-9]+,*[0-9]*");
+			Pattern pan = Pattern.compile("^[a-zA-Z0-9]+[.@&-]*[a-zA-Z0-9]+");
 			Matcher m, m2, m3;
 			int querySize = 0;
 			
@@ -186,18 +188,19 @@ public class QueryServletMulti extends HttpServlet {
 				m = pan.matcher(w);
 				m2 = pan2.matcher(w);
 				m3 = pan3.matcher(w);
+//				m4 = pan4.matcher(w);
 				if (m.matches()) {
-					if (m2.find()){
-			
+					if (m2.find()){			
 						if (!w.equalsIgnoreCase("-rsb-")&&!w.equalsIgnoreCase("-lsb-")
 								&&!w.equalsIgnoreCase("-lrb-")&&!w.equalsIgnoreCase("-rrb-")
 								&&!w.equalsIgnoreCase("-lcb-")&&!w.equalsIgnoreCase("-rcb-")){
 							w = w.toLowerCase();
-							if ( !stops.containsKey(w)) {
+//							if ( !stops.containsKey(w)) {
 								// not stop word
+								w = w.toLowerCase();
 								queryList += w + " ";
 								querySize++;
-							} 
+//							} 
 						}			
 					}
 				}
@@ -221,8 +224,8 @@ public class QueryServletMulti extends HttpServlet {
 	        String[] workersList = worker.toArray(new String[0]);
 	        log.info("workerList: " + workersList);
 		    config.put("workersList", Arrays.toString(workersList));		    
-		    config.put("query", queryList);	
-		   
+		    config.put("query", queryList);
+
 			int j = 0;
 			String user = req.getRemoteAddr();
 			File folder = new File("./query/" + user);
@@ -254,13 +257,13 @@ public class QueryServletMulti extends HttpServlet {
 		
 			log.info(" ********* start computing ********** ");	
 			long t1 = System.currentTimeMillis();
-			List<Tuple2<String,Tuple3<List<String>, Double, List<String>>>> list = spark.startSearchCount("./query/" + user + "/out.txt");
+			List<Tuple3<String, List<String>, Double>> list = spark.startSearchCount("./query/" + user + "/out.txt");
 			long t2 = System.currentTimeMillis();
 					
 			log.info("time consuming: " + (t2 - t1));		        					
 			HttpSession s = req.getSession();	// add to session
 			s.setAttribute("finallist", list); 
-			s.setAttribute("q", query);
+			s.setAttribute("q", originalQuery);
 			
 			resp.sendRedirect("/resultmulti?query=" + query + "&start=0");
 		}

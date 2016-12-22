@@ -63,7 +63,8 @@ public class Retriever implements Runnable {
 						if (l.length > 1) {
 							T = "T";
 						}
-						fw.write(w + " " + doc + " " + weight + " " + T + "\n");
+//						fw.write(w + " " + doc + " " + weight + " " + T + "\n");
+						fw.write(w + "#" + doc + "#" + weight + "#" + T + "\n");
 					}
 				}
 				fw.flush();
