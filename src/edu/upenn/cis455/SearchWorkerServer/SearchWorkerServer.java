@@ -421,6 +421,7 @@ public class SearchWorkerServer {
 		conf.put("workerList",  args[0]); // For testing, List like config.put("workerList", "[127.0.0.1:8001,127.0.0.1:8002]");
 		conf.put("workerIndex", args[1]); // For testing, number of 0, 1
 		conf.put("master",      args[2]); // For testing, "127.0.0.1:8080"
+		conf.put("tempDir",     args[3]); // For testing, "127.0.0.1:8080"
 				    
 		SearchWorkerServer.createWorker(conf);		
 	}
