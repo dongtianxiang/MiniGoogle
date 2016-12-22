@@ -33,6 +33,7 @@ All source code is located in /src folder.
 
 ### How to run search engine ###
 cmd: java -jar SearchEngine.jar
+
 cmd: java -jar SearchWorkerServer.jar $[list of worker IPs] $workerIndex $masterIP $databaseDirectory
 
 ### The main user interface ###
