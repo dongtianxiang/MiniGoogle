@@ -3,10 +3,12 @@ package edu.upenn.cis455.searchengine;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Scanner;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -24,16 +26,19 @@ public class DataWorker implements Runnable {
 	private String url;
 	private AWSCredentials credentials;
 	private List<Hashtable<String, String>> resultList;
-	final static int DLIMIT = 200;
+	final static int DLIMIT = 300;
 	final static int TLIMIT = 80;
-	private String title = "", description = "";
+	private String title = "", description = "", query = "";
 	private int i;
+	private String[] queryList ;
 	
-	public DataWorker(int i, String url, AWSCredentials credentials, List<Hashtable<String, String>> resultList) {
+	public DataWorker(int i, String url, AWSCredentials credentials, List<Hashtable<String, String>> resultList, String query) {
 		this.url = url;
 		this.credentials = credentials;
 		this.resultList = resultList;
 		this.i = i;
+		this.query = query;
+		queryList = query.split(" ");
 	}
 
 	@Override
@@ -41,11 +46,15 @@ public class DataWorker implements Runnable {
 		StringBuilder sb = new StringBuilder();
 //		url = url.replace("/", ".");
 //		File in = new File("./testpage/" + url + ".html");
-		InputStream in = PageDownloader.downloadfileS3(credentials, url);
-		Scanner sc;
-		sc = new Scanner(in);
-		while (sc.hasNext()) {
-			sb.append(sc.nextLine() + "\n");
+		try {
+			InputStream in = PageDownloader.downloadfileS3(credentials, url);
+			Scanner sc;
+			sc = new Scanner(in);
+			while (sc.hasNext()) {
+				sb.append(sc.nextLine() + "\n");
+			}
+		} catch (Exception e) {
+			log.info(e);
 		}
 		getDescription(sb.toString());		
 	}
@@ -112,9 +121,8 @@ public class DataWorker implements Runnable {
 				}
 			}
 		}
-		if (dSize < DLIMIT) {		
-			// select the first <p>
-			Elements em3 = d.select("p");
+		if (dSize < DLIMIT) {
+			Elements em3 = d.select("*");
 			for (Element e: em3) {
 				if (dSize > DLIMIT) {
 					description = description.substring(0, DLIMIT);
@@ -122,27 +130,14 @@ public class DataWorker implements Runnable {
 					dSize += 3;
 					break;
 				}
-				if (e.hasText()) {
-					String ownText = e.text();
-					description += " " + ownText;
-					dSize += ownText.length();
-				}
-			}
-		}
-		if (dSize < DLIMIT) {
-			Elements em4 = d.select("a");
-			for (Element e: em4) {
-				if (dSize > DLIMIT) {
-					description = description.substring(0, DLIMIT);
-					description += "...";
-					dSize += 3;
-					break;
-				}
-				if (e.hasText()) {
-					String ownText = e.text();
-					description += " " + ownText;
-					dSize += ownText.length();
-				}
+				String ownText = e.ownText();
+//				for (String s: queryList) {
+//					if (ownText.toLowerCase().contains(s.toLowerCase())) {
+//						ownText = ownText.replace(s, "<em style=\"font-family: \"Lota\"\">" + s + "</em>");
+//					}
+//				}
+				description += " " + ownText;
+				dSize += ownText.length();
 			}
 		}
 		putData();

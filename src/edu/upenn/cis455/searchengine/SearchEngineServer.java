@@ -36,5 +36,4 @@ public class SearchEngineServer {
     	PropertyConfigurator.configure(props);
 		new SearchEngineServer();
 	}
-
 }

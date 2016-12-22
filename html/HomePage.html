@@ -27,12 +27,14 @@
     html {
       font-family: 'Questrial', sans-serif;
       background-color: #bdbdbd;
+      color: #ffffff;
+      font-size: 15px;
     }
 
     .logo {
       font-family: 'Molle', cursive !important; 
       color: #ffffff;
-      font-size: 30px;
+      font-size: 40px;
     }
 
     .sidelog{
@@ -41,7 +43,7 @@
     }
 
     .block {
-      height: 320px;
+      height: 300px;
       width: 100%;
     }
 
@@ -1142,10 +1144,10 @@
                 "edit"  
               ];
               var tree = tokenTree(availableTags);
-              $( "#query" ).autocomplete({
+              $( '#query' ).autocomplete({
                 source: function(request, response) {
                   console.log(tree.getWords(request.term));
-                  response(tree.getWords(request.term));
+                  response(tree.getWords(request.term).slice(0, 10));
                 }
               });
             });
@@ -1153,23 +1155,25 @@
   </head> 
 
   <body background="https://assets.ello.co/uploads/user/cover_image/980309/ello-285d6d53-52c7-4a4b-a2b6-cd20012d5c68.jpeg" style="background-attachment: fixed; height:800px"> 
-    
-  <div class="nav grey darken-2" style="height:80px;">
-    <a href="" class="brand-logo logo" style="left:100px; heigth:80px; top:16px;" >Quantum Engine</a>       
-    <ul id="nav-mobile" class="right hide-on-med-and-down">
-      <li><a href="/about" class="sidelog" style="margin-right: 200px;height: 64px;border-top-width: 10px;margin-top: 16px;">about us</a></li>
-    </ul> 
-  </div>
 
-    <div class="block" style= "width: 1280px; height: 250px;" ></div>
+  
+    <nav> 
+      <div class="nav-wrapper grey darken-2 middle" style="height:80px;">
+        <a href="/" class="brand-logo logo" style="left:100px; heigth:80px;padding-top:8px;" >Quantum Engine</a>       
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+          <a href="/about" class="sidelog" style="margin-right: 200px;height: 64px;border-top-width: 10px;margin-top: 16px;">about us</a>
+        </ul> 
+      </div>
+    </nav>
+
+    <div class="block" style= "width: 1280px;" ></div>
 
     <div id="searchblock" class="searchblock">
       <div class="input-field input">
         <form method="GET" action="querymulti">       
           <i class="material-icons prefix small">search</i>
           <input id="query" type="text" name="query" class="autocomplete ui-widget" required>
-
-          <label for="query">please type in your search content </label>  
+          <label for="query" >please type in your search content </label>  
         </form>
       </div>
     </div>

@@ -18,6 +18,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import com.amazonaws.auth.AWSCredentials;
 import edu.upenn.cis.stormlite.utils.AWSCredentialReader;
@@ -51,11 +52,11 @@ public class ResultServletMulti extends HttpServlet {
 		String q = (String) se.getAttribute("q");
 		int start = Integer.parseInt(req.getParameter("start"));
 		log.info("start:" + start);
-		List<Tuple2<String,Tuple3<List<String>, Double, List<String>>>> finallist = (List<Tuple2<String, Tuple3<List<String>, Double, List<String>>>>) req.getSession().getAttribute("finallist");
+		List<Tuple3<String, List<String>, Double>> finallist = (List<Tuple3<String, List<String>, Double>>) req.getSession().getAttribute("finallist");
 		
 		log.info(" ******* retrieve pages from S3 ******** ");
 		int listSize = finallist.size();
-		List<Tuple2<String,Tuple3<List<String>, Double, List<String>>>> retrieval;
+		List<Tuple3<String, List<String>, Double>> retrieval;
 		// if finallist is enough
 		if (listSize - start >= PAGESIZE) {
 			retrieval = new ArrayList<>(finallist.subList(start, start + PAGESIZE));
@@ -74,10 +75,10 @@ public class ResultServletMulti extends HttpServlet {
 		AWSCredentials credentials = AWSCredentialReader.getCredential();
 		List<Thread> threads = new ArrayList<>(PAGESIZE);
 		for (int i = 0; i < listSize; i++) {
-			Tuple2<String,Tuple3<List<String>, Double, List<String>>> m = retrieval.get(i);
+			Tuple3<String, List<String>, Double> m = retrieval.get(i);
 			String url = m._1();
 //			Thread t = new Thread(new DataWorker(i, url, pages));
-			Thread t = new Thread(new DataWorker(i, url, credentials, pages));
+			Thread t = new Thread(new DataWorker(i, url, credentials, pages, q));
 			threads.add(t);
 			t.start();
 		}
@@ -89,7 +90,7 @@ public class ResultServletMulti extends HttpServlet {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		log.info(pages);
+//		log.info("final list:" + pages);
 		log.info(" ********** pages preparation ends *********** ");
 		
         log.info(" ******* start rendering result page ******* ");				        
@@ -112,16 +113,20 @@ public class ResultServletMulti extends HttpServlet {
         
         for (int i = 0; i < 9; i++) {
         	if ((start / 10 + 1) == i) {
-        		resultPage.getElementById("p" + (start / 10 + 1)).addClass("disable");
+        		resultPage.getElementById("p" + (start / 10 + 1)).addClass("disabled");
         	} else {
-        		resultPage.getElementById("p" + (start / 10 + 1)).addClass("active");
-        	}       	
+        		resultPage.getElementById("p" + (start / 10 + 1)).removeClass("disabled");
+        	}
         }
+        
+		for (int i = 0; i < 9; i++) {
+			Element em = resultPage.select("#h" + (i + 1)).first();
+			em.attr("href", "/resultmulti?query=" + q + "&start=" + i * 10);
+		}
                 
         PrintWriter pw = resp.getWriter();
         pw.println(resultPage.toString());
-        pw.flush();
-        
+        pw.flush();       
         log.info(" ********** end of this render *********** ");
         
 	}

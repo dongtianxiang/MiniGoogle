@@ -81,7 +81,7 @@ public class ResultServlet extends HttpServlet {
 			String[] l = urlA.split(" ");
 			String url = l[0];
 //			Thread t = new Thread(new DataWorker(i, url, pages));
-			Thread t = new Thread(new DataWorker(i, url, credentials, pages));
+			Thread t = new Thread(new DataWorker(i, url, credentials, pages, q));
 			threads.add(t);
 			t.start();
 		}
