@@ -297,14 +297,16 @@ public class SearchDBWrapper {
 	}
 
 	public static void main(String[] args) throws IOException{
-//		generateHashingDB("./indexerDB/indexer0", "HashingTransfer.txt");
-		
-		SearchDBWrapper db = SearchDBWrapper.getInstance("./indexerDB/indexer0");
-		System.out.println(db.convertHashing("807c07ac250271a828727dd5a8146e5bb03b83b4"));
+//		generateHashingDB("./IndexerDB/indexer2", "HashingTransfer.txt");
+		generatePageRankDB("./DistributedDB/indexer4", "PageRankReadIn.txt");
+		generatePageRankInWord("./DistributedDB/indexer4");
+//		SearchDBWrapper db = SearchDBWrapper.getInstance("./IndexerDB/indexer0");
+//		System.out.println(db.convertHashing("c0c9f27c439972c6b0d3976de6226c08fc310cc6"));
+//		System.out.println(db.getPageRankValue(DigestUtils.sha1Hex("https://maps.google.com/")));
+//		db.close();
 //		long time1 = System.currentTimeMillis();
 //		System.out.println(db.convertHashing("42b66ab5120b79f3e5fbb80385bd745af737c1d7"));
 //		long time2 = System.currentTimeMillis();
 //		System.out.println(time2 - time1 + "ms");
-		db.close();
 	}
 }

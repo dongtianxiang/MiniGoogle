@@ -81,11 +81,11 @@ public class Word {
 		this.title.put(url, true);
 	}
 	
-//	public Map<String, Double> getWeightWithPG() {
-//		return weightWithPG;
-//	}
-//
-//	public void setWeightWithPG(Map<String, Double> weightWithPG) {
-//		this.weightWithPG = weightWithPG;
-//	}
+	public Map<String, Double> getWeightWithPG() {
+		return weightWithPG;
+	}
+
+	public void setWeightWithPG(Map<String, Double> weightWithPG) {
+		this.weightWithPG = weightWithPG;
+	}
 }

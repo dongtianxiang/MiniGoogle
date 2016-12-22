@@ -6,22 +6,22 @@ import com.sleepycat.persist.model.PrimaryKey;
 @Entity
 public class PageRank {
 	@PrimaryKey
-	String word;
+	String url;
 	Double pagerank;
 	
 	public PageRank() {}
 	
 	public PageRank(String url, Double pagerank) {
-		this.word = url;
+		this.url = url;
 		this.pagerank = pagerank;
 	}
 	
 	public String getURL() {
-		return word;
+		return url;
 	}
 
 	public void setURL(String url) {
-		this.word = url;
+		this.url = url;
 	}
 
 	public Double getPagerank() {
