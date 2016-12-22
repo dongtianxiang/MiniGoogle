@@ -1,4 +1,4 @@
-package edu.upenn.cis455.SearchWorkerServer;
+package edu.upenn.cis455.indexer.StoreInfo;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,9 +31,6 @@ import com.sleepycat.persist.EntityCursor;
 import com.sleepycat.persist.EntityStore;
 import com.sleepycat.persist.PrimaryIndex;
 import com.sleepycat.persist.StoreConfig;
-import edu.upenn.cis455.SearchWorkerServer.PageRank;
-import edu.upenn.cis455.SearchWorkerServer.URLhashing;
-import edu.upenn.cis455.SearchWorkerServer.Word;
 
 /**
  * Basic class to connect Berkeley DB, including add and get User, Page, etc. from Database.
@@ -295,18 +292,46 @@ public class SearchDBWrapper {
 		}
 		db.close();
 	}
-
+	
 	public static void main(String[] args) throws IOException{
-//		generateHashingDB("./IndexerDB/indexer2", "HashingTransfer.txt");
-		generatePageRankDB("./DistributedDB/indexer4", "PageRankReadIn.txt");
-		generatePageRankInWord("./DistributedDB/indexer4");
-//		SearchDBWrapper db = SearchDBWrapper.getInstance("./IndexerDB/indexer0");
-//		System.out.println(db.convertHashing("c0c9f27c439972c6b0d3976de6226c08fc310cc6"));
-//		System.out.println(db.getPageRankValue(DigestUtils.sha1Hex("https://maps.google.com/")));
+//		generatePageRankInWord("./indexerDB/indexer0");
+//		generatePageRankDB("./indexerDB/indexer0", "PageRankReadIn.txt");
+//		DBWrapper db = DBWrapper.getInstance("/Users/dongtianxiang/git/CrawlerDB/dtianx4");
+//		System.out.println(db.getOutLinksSize());
 //		db.close();
-//		long time1 = System.currentTimeMillis();
-//		System.out.println(db.convertHashing("42b66ab5120b79f3e5fbb80385bd745af737c1d7"));
-//		long time2 = System.currentTimeMillis();
-//		System.out.println(time2 - time1 + "ms");
+		
+		SearchDBWrapper db = SearchDBWrapper.getInstance("./indexerDB/indexer0");
+		Word w = db.getWord("at&t");
+		Map<String, Double> weight_pg = w.weightWithPG;
+		
+		PriorityQueue<String> pq = new PriorityQueue<String>(10, new Comparator<String>(){
+			@Override
+			public int compare(String a, String b) {
+				return Double.compare(weight_pg.get(a), weight_pg.get(b));
+			}
+		});
+		
+		for(String url : weight_pg.keySet()) {
+			if(pq.size() < 10) {
+				pq.offer(url);
+				continue;
+			}
+			if(weight_pg.get(url) > weight_pg.get(pq.peek()) ) {
+				pq.offer(url);
+				pq.poll();
+			}
+		}
+		
+		while(!pq.isEmpty()) {
+			String url = pq.poll();
+			System.out.println(url);
+			System.out.println("Weight with PageRank: " + weight_pg.get(url));
+			System.out.println("Weight without PageRank: " + w.getWeight(url));
+			System.out.println("Is Title: " + (w.getTitle().get(url) != null));
+			System.out.println("PageRank: " + db.getPageRankValue(url));
+			System.out.println();
+		}
+		
+		db.close();
 	}
 }

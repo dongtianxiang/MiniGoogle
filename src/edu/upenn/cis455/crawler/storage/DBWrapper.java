@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.Environment;
@@ -375,18 +377,26 @@ public class DBWrapper {
 	
 	
 	public static void main(String[] args) throws IOException{
-		DBWrapper db = DBWrapper.getInstance("./dtianx1");
-		List<String> links = db.outLinksList();
-		PrintWriter writer = new PrintWriter("dtianx1.txt", "UTF-8");
-		for(String url : links) {
-			writer.print(url);
-			writer.print(" -> ");
-			List<String> outlinks = db.getOutLinksList(url);
-			for(int i = 0; i < outlinks.size(); i++) {
-				writer.print(outlinks.get(i) + " ");
-			}
-			writer.println();
-		}
-		writer.close();
+		String url = "http://www.upenn.edu/";
+		System.out.println(DigestUtils.sha1Hex(url));
+		
+//		DBWrapper db = DBWrapper.getInstance("./indexerDB/indexer0");
+//		System.out.println(db);
+//		List<String> links = db.outLinksList();
+//		PrintWriter writer = new PrintWriter("dtianx1.txt", "UTF-8");
+//		for(String url : links) {
+//			writer.print(url);
+//			writer.print(" -> ");
+//			List<String> outlinks = db.getOutLinksList(url);
+//			for(int i = 0; i < outlinks.size(); i++) {
+//				writer.print(outlinks.get(i) + " ");
+//			}
+//			writer.println();
+//		}
+//		writer.close();
+		
+//		DBWrapper db = DBWrapper.getInstance("/Users/dongtianxiang/git/CrawlerDB/dtianx4");
+//		System.out.println(db.getOutLinksSize());
+//		db.close();
 	}
 }
