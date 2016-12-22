@@ -32,7 +32,8 @@ We built a distributed and scalable search engine with distributed data storage 
 All source code is located in /src folder. 
 
 ### How to run search engine ###
-cmd: jara -jar SearchEngine.jar
+cmd: java -jar SearchEngine.jar
+cmd: java -jar SearchWorkerServer.jar $[list of worker IPs] $workerIndex $masterIP $databaseDirectory
 
 ### The main user interface ###
 ![Screen Shot 2016-12-22 at 12.37.00 PM.png](https://bitbucket.org/repo/KEGKdX/images/2204763337-Screen%20Shot%202016-12-22%20at%2012.37.00%20PM.png)
