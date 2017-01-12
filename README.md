@@ -1,10 +1,14 @@
 # MiniGoogle #
 
-### Team member:# 
+### Team member:###
 Tianxiang Dong
+
 Yifan Li
+
 Hanyu Yang
+
 Yunwen Deng
+
 
 ### Implemented Features ###
 We built a distributed and scalable search engine with distributed data storage system.
@@ -19,7 +23,7 @@ We built a distributed and scalable search engine with distributed data storage 
 
 5. The search engine retrieves data from storage worker servers directly when a query request arrives. Internally, it runs MapReduce job with Apache Spark to rank and sort and then output the final results to the search engine. The search engine renders result pages back to user.
 
-### Extra Credits ###
+### Extra Work ###
 1. Pagerank Mapreduce job was done with ApacheSpark.
 
 2. We implemented fault tolerance with possible storage machine failure, meaningly if one or two machines are down during searching time, the search engine is still working and provides reliable searching results as well.
